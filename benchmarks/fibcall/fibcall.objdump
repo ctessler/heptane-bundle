@@ -1,0 +1,88 @@
+
+/tmp/fibcall:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 fibcall.c
+004010e8 g       .text	00000000 _fdata
+004090e0 g       *ABS*	00000000 _gp
+00400018 g       .text	00000000 _ftext
+004010e8 g       *ABS*	00000000 __bss_start
+004000b8 g     F .text	00000030 main
+004010e8 g       *ABS*	00000000 _edata
+004010e8 g       *ABS*	00000000 _end
+004010e8 g       *ABS*	00000000 _fbss
+00400018 g     F .text	000000a0 fib
+
+
+
+Disassembly of section .text:
+
+00400018 <fib>:
+  400018:	27bdffe8 	addiu	sp,sp,-24
+  40001c:	afa40018 	sw	a0,24(sp)
+  400020:	24020001 	li	v0,1
+  400024:	afa20004 	sw	v0,4(sp)
+  400028:	afa00008 	sw	zero,8(sp)
+  40002c:	24020002 	li	v0,2
+  400030:	0810001d 	j	400074 <fib+0x5c>
+  400034:	afa20000 	sw	v0,0(sp)
+  400038:	8fa20004 	lw	v0,4(sp)
+  40003c:	00000000 	nop
+  400040:	afa2000c 	sw	v0,12(sp)
+  400044:	8fa30004 	lw	v1,4(sp)
+  400048:	8fa20008 	lw	v0,8(sp)
+  40004c:	00000000 	nop
+  400050:	00621021 	addu	v0,v1,v0
+  400054:	afa20004 	sw	v0,4(sp)
+  400058:	8fa2000c 	lw	v0,12(sp)
+  40005c:	00000000 	nop
+  400060:	afa20008 	sw	v0,8(sp)
+  400064:	8fa20000 	lw	v0,0(sp)
+  400068:	00000000 	nop
+  40006c:	24420001 	addiu	v0,v0,1
+  400070:	afa20000 	sw	v0,0(sp)
+  400074:	8fa20000 	lw	v0,0(sp)
+  400078:	00000000 	nop
+  40007c:	2842001f 	slti	v0,v0,31
+  400080:	10400007 	beqz	v0,4000a0 <fib+0x88>
+  400084:	00000000 	nop
+  400088:	8fa30000 	lw	v1,0(sp)
+  40008c:	8fa20018 	lw	v0,24(sp)
+  400090:	00000000 	nop
+  400094:	0043102a 	slt	v0,v0,v1
+  400098:	1040ffe7 	beqz	v0,400038 <fib+0x20>
+  40009c:	00000000 	nop
+  4000a0:	8fa20004 	lw	v0,4(sp)
+  4000a4:	00000000 	nop
+  4000a8:	afa20010 	sw	v0,16(sp)
+  4000ac:	8fa20010 	lw	v0,16(sp)
+  4000b0:	03e00008 	jr	ra
+  4000b4:	27bd0018 	addiu	sp,sp,24
+
+004000b8 <main>:
+  4000b8:	27bdffe0 	addiu	sp,sp,-32
+  4000bc:	afbf001c 	sw	ra,28(sp)
+  4000c0:	2402001e 	li	v0,30
+  4000c4:	afa20010 	sw	v0,16(sp)
+  4000c8:	8fa40010 	lw	a0,16(sp)
+  4000cc:	0c100006 	jal	400018 <fib>
+  4000d0:	00000000 	nop
+  4000d4:	8fa20010 	lw	v0,16(sp)
+  4000d8:	8fbf001c 	lw	ra,28(sp)
+  4000dc:	27bd0020 	addiu	sp,sp,32
+  4000e0:	03e00008 	jr	ra
+  4000e4:	00000000 	nop

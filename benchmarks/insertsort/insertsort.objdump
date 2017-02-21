@@ -1,0 +1,153 @@
+
+/tmp/insertsort:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+004011f0 l    d  .bss	00000000 .bss
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 insertsort.c
+004011f0 g       .text	00000000 _fdata
+004091e0 g       *ABS*	00000000 _gp
+00400018 g       .text	00000000 _ftext
+004011f0 g       *ABS*	00000000 __bss_start
+00400018 g     F .text	000001d8 main
+004011f0 g       *ABS*	00000000 _edata
+0040121c g       *ABS*	00000000 _end
+004011f0 g     O .bss	0000002c a
+004011f0 g       *ABS*	00000000 _fbss
+
+
+
+Disassembly of section .text:
+
+00400018 <main>:
+  400018:	27bdfff0 	addiu	sp,sp,-16
+  40001c:	3c020040 	lui	v0,0x40
+  400020:	ac4011f0 	sw	zero,4592(v0)
+  400024:	3c020040 	lui	v0,0x40
+  400028:	244211f0 	addiu	v0,v0,4592
+  40002c:	2403000b 	li	v1,11
+  400030:	ac430004 	sw	v1,4(v0)
+  400034:	3c020040 	lui	v0,0x40
+  400038:	244211f0 	addiu	v0,v0,4592
+  40003c:	2403000a 	li	v1,10
+  400040:	ac430008 	sw	v1,8(v0)
+  400044:	3c020040 	lui	v0,0x40
+  400048:	244211f0 	addiu	v0,v0,4592
+  40004c:	24030009 	li	v1,9
+  400050:	ac43000c 	sw	v1,12(v0)
+  400054:	3c020040 	lui	v0,0x40
+  400058:	244211f0 	addiu	v0,v0,4592
+  40005c:	24030008 	li	v1,8
+  400060:	ac430010 	sw	v1,16(v0)
+  400064:	3c020040 	lui	v0,0x40
+  400068:	244211f0 	addiu	v0,v0,4592
+  40006c:	24030007 	li	v1,7
+  400070:	ac430014 	sw	v1,20(v0)
+  400074:	3c020040 	lui	v0,0x40
+  400078:	244211f0 	addiu	v0,v0,4592
+  40007c:	24030006 	li	v1,6
+  400080:	ac430018 	sw	v1,24(v0)
+  400084:	3c020040 	lui	v0,0x40
+  400088:	244211f0 	addiu	v0,v0,4592
+  40008c:	24030005 	li	v1,5
+  400090:	ac43001c 	sw	v1,28(v0)
+  400094:	3c020040 	lui	v0,0x40
+  400098:	244211f0 	addiu	v0,v0,4592
+  40009c:	24030004 	li	v1,4
+  4000a0:	ac430020 	sw	v1,32(v0)
+  4000a4:	3c020040 	lui	v0,0x40
+  4000a8:	244211f0 	addiu	v0,v0,4592
+  4000ac:	24030003 	li	v1,3
+  4000b0:	ac430024 	sw	v1,36(v0)
+  4000b4:	3c020040 	lui	v0,0x40
+  4000b8:	244211f0 	addiu	v0,v0,4592
+  4000bc:	24030002 	li	v1,2
+  4000c0:	ac430028 	sw	v1,40(v0)
+  4000c4:	24020002 	li	v0,2
+  4000c8:	08100074 	j	4001d0 <main+0x1b8>
+  4000cc:	afa20000 	sw	v0,0(sp)
+  4000d0:	8fa20000 	lw	v0,0(sp)
+  4000d4:	00000000 	nop
+  4000d8:	0810005d 	j	400174 <main+0x15c>
+  4000dc:	afa20004 	sw	v0,4(sp)
+  4000e0:	3c020040 	lui	v0,0x40
+  4000e4:	8fa30004 	lw	v1,4(sp)
+  4000e8:	00000000 	nop
+  4000ec:	00031880 	sll	v1,v1,0x2
+  4000f0:	244211f0 	addiu	v0,v0,4592
+  4000f4:	00621021 	addu	v0,v1,v0
+  4000f8:	8c420000 	lw	v0,0(v0)
+  4000fc:	00000000 	nop
+  400100:	afa20008 	sw	v0,8(sp)
+  400104:	8fa20004 	lw	v0,4(sp)
+  400108:	00000000 	nop
+  40010c:	2443ffff 	addiu	v1,v0,-1
+  400110:	3c020040 	lui	v0,0x40
+  400114:	00031880 	sll	v1,v1,0x2
+  400118:	244211f0 	addiu	v0,v0,4592
+  40011c:	00621021 	addu	v0,v1,v0
+  400120:	8c430000 	lw	v1,0(v0)
+  400124:	3c020040 	lui	v0,0x40
+  400128:	8fa40004 	lw	a0,4(sp)
+  40012c:	00000000 	nop
+  400130:	00042080 	sll	a0,a0,0x2
+  400134:	244211f0 	addiu	v0,v0,4592
+  400138:	00821021 	addu	v0,a0,v0
+  40013c:	ac430000 	sw	v1,0(v0)
+  400140:	8fa20004 	lw	v0,4(sp)
+  400144:	00000000 	nop
+  400148:	2444ffff 	addiu	a0,v0,-1
+  40014c:	8fa30008 	lw	v1,8(sp)
+  400150:	3c020040 	lui	v0,0x40
+  400154:	00042080 	sll	a0,a0,0x2
+  400158:	244211f0 	addiu	v0,v0,4592
+  40015c:	00821021 	addu	v0,a0,v0
+  400160:	ac430000 	sw	v1,0(v0)
+  400164:	8fa20004 	lw	v0,4(sp)
+  400168:	00000000 	nop
+  40016c:	2442ffff 	addiu	v0,v0,-1
+  400170:	afa20004 	sw	v0,4(sp)
+  400174:	3c020040 	lui	v0,0x40
+  400178:	8fa30004 	lw	v1,4(sp)
+  40017c:	00000000 	nop
+  400180:	00031880 	sll	v1,v1,0x2
+  400184:	244211f0 	addiu	v0,v0,4592
+  400188:	00621021 	addu	v0,v1,v0
+  40018c:	8c430000 	lw	v1,0(v0)
+  400190:	8fa20004 	lw	v0,4(sp)
+  400194:	00000000 	nop
+  400198:	2444ffff 	addiu	a0,v0,-1
+  40019c:	3c020040 	lui	v0,0x40
+  4001a0:	00042080 	sll	a0,a0,0x2
+  4001a4:	244211f0 	addiu	v0,v0,4592
+  4001a8:	00821021 	addu	v0,a0,v0
+  4001ac:	8c420000 	lw	v0,0(v0)
+  4001b0:	00000000 	nop
+  4001b4:	0062102b 	sltu	v0,v1,v0
+  4001b8:	1440ffc9 	bnez	v0,4000e0 <main+0xc8>
+  4001bc:	00000000 	nop
+  4001c0:	8fa20000 	lw	v0,0(sp)
+  4001c4:	00000000 	nop
+  4001c8:	24420001 	addiu	v0,v0,1
+  4001cc:	afa20000 	sw	v0,0(sp)
+  4001d0:	8fa20000 	lw	v0,0(sp)
+  4001d4:	00000000 	nop
+  4001d8:	2842000b 	slti	v0,v0,11
+  4001dc:	1440ffbc 	bnez	v0,4000d0 <main+0xb8>
+  4001e0:	00000000 	nop
+  4001e4:	24020001 	li	v0,1
+  4001e8:	03e00008 	jr	ra
+  4001ec:	27bd0010 	addiu	sp,sp,16

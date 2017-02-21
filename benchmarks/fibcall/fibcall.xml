@@ -1,0 +1,547 @@
+<!DOCTYPE PROGRAM SYSTEM 'cfglib.dtd'>
+<PROGRAM   id ="1"   name="fibcall"   entry="0" >
+<CFG id="2"  name="fib"  startnode="3"  endnodes="4, " >
+  <NODE  id="3"  type="BasicBlock" >
+  <INSTRUCTION  id="5"  asm_type="Code"  code="addiu sp,sp,-24"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400018" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="6"  asm_type="Code"  code="sw a0,24(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40001c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="7"  asm_type="Code"  code="li v0,1"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400020" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="8"  asm_type="Code"  code="sw v0,4(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400024" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="9"  asm_type="Code"  code="sw zero,8(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400028" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="10"  asm_type="Code"  code="li v0,2"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40002c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="11"  asm_type="Code"  code="j 400074"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400030" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="12"  asm_type="Code"  code="sw v0,0(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400034" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+  <NODE  id="13"  type="BasicBlock" >
+  <INSTRUCTION  id="14"  asm_type="Code"  code="lw v0,4(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400038" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="15"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40003c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="16"  asm_type="Code"  code="sw v0,12(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400040" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="17"  asm_type="Code"  code="lw v1,4(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400044" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="18"  asm_type="Code"  code="lw v0,8(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400048" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="19"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40004c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="20"  asm_type="Code"  code="addu v0,v1,v0"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400050" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="21"  asm_type="Code"  code="sw v0,4(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400054" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="22"  asm_type="Code"  code="lw v0,12(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400058" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="23"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40005c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="24"  asm_type="Code"  code="sw v0,8(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400060" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="25"  asm_type="Code"  code="lw v0,0(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400064" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="26"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400068" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="27"  asm_type="Code"  code="addiu v0,v0,1"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40006c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="28"  asm_type="Code"  code="sw v0,0(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400070" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+  <NODE  id="29"  type="BasicBlock" >
+  <INSTRUCTION  id="30"  asm_type="Code"  code="lw v0,0(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400074" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="31"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400078" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="32"  asm_type="Code"  code="slti v0,v0,31"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40007c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="33"  asm_type="Code"  code="beqz v0,4000a0"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400080" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="34"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400084" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+  <NODE  id="35"  type="BasicBlock" >
+  <INSTRUCTION  id="36"  asm_type="Code"  code="lw v1,0(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400088" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="37"  asm_type="Code"  code="lw v0,24(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40008c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="38"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400090" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="39"  asm_type="Code"  code="slt v0,v0,v1"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400094" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="40"  asm_type="Code"  code="beqz v0,400038"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x400098" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="41"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x40009c" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+  <NODE  id="4"  type="BasicBlock" >
+  <INSTRUCTION  id="42"  asm_type="Code"  code="lw v0,4(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000a0" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="43"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000a4" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="44"  asm_type="Code"  code="sw v0,16(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000a8" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="45"  asm_type="Code"  code="lw v0,16(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000ac" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="46"  asm_type="Code"  code="jr ra"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000b0" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="47"  asm_type="Code"  code="addiu sp,sp,24"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000b4" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+    <EDGE  id="48"  origin="3"  destination="29" >
+    </EDGE>
+
+    <EDGE  id="49"  origin="13"  destination="29" >
+    </EDGE>
+
+    <EDGE  id="50"  origin="29"  destination="35" >
+    </EDGE>
+
+    <EDGE  id="51"  origin="29"  destination="4" >
+    </EDGE>
+
+    <EDGE  id="52"  origin="35"  destination="13" >
+    </EDGE>
+
+    <EDGE  id="53"  origin="35"  destination="4" >
+    </EDGE>
+
+<LOOP  id="54"  head="29"  nodes="29, 13, 35, "  backedges="49, " >
+<ATTRS_LIST>
+<ATTR type="integer" name="maxiter" value="29" />
+</ATTRS_LIST>
+</LOOP>
+
+</CFG>
+<CFG id="0"  name="main"  startnode="55"  endnodes="56, " >
+  <NODE  id="55"  type="FunctionCall"  called="fib" >
+  <INSTRUCTION  id="57"  asm_type="Code"  code="addiu sp,sp,-32"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000b8" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="58"  asm_type="Code"  code="sw ra,28(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000bc" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="59"  asm_type="Code"  code="li v0,30"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000c0" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="60"  asm_type="Code"  code="sw v0,16(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000c4" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="61"  asm_type="Code"  code="lw a0,16(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000c8" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="62"  asm_type="Code"  code="jal 400018"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000cc" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="63"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000d0" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+  <NODE  id="56"  type="BasicBlock" >
+  <INSTRUCTION  id="64"  asm_type="Code"  code="lw v0,16(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000d4" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="65"  asm_type="Code"  code="lw ra,28(sp)"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000d8" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="66"  asm_type="Code"  code="addiu sp,sp,32"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000dc" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="67"  asm_type="Code"  code="jr ra"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000e0" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+  <INSTRUCTION  id="68"  asm_type="Code"  code="nop"  >
+<ATTRS_LIST>
+<ATTR type="address" name="address">
+  <ACCES type="read" seg="code" varname="">
+      <ADDRSIZE  begin="0x4000e4" size="4"/>
+  </ACCES>
+</ATTR>
+</ATTRS_LIST>
+  </INSTRUCTION>
+<ATTRS_LIST>
+</ATTRS_LIST>
+  </NODE>
+
+    <EDGE  id="69"  origin="55"  destination="56" >
+    </EDGE>
+
+</CFG>
+<ATTRS_LIST>
+<ATTR type="symbolTable" name="symbolTable">
+<SECTIONS>
+<SECTION name=".text" addr="0x400018" size="208"/>
+</SECTIONS>
+<VARIABLES>
+</VARIABLES>
+<GP value="0x4090e0"/>
+</ATTR>
+</ATTRS_LIST>
+</PROGRAM>

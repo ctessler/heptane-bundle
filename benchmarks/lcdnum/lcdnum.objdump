@@ -1,0 +1,191 @@
+
+/tmp/lcdnum:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+00401278 l    d  .sbss	00000000 .sbss
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 lcdnum.c
+00401278 g       .text	00000000 _fdata
+00409270 g       *ABS*	00000000 _gp
+00400018 g       .text	00000000 _ftext
+00400018 g     F .text	000001d4 num_to_lcd
+00401278 g       *ABS*	00000000 __bss_start
+004001ec g     F .text	0000008c main
+00401278 g     O .sbss	00000001 OUT
+00401278 g       *ABS*	00000000 _edata
+0040127c g       *ABS*	00000000 _end
+00401279 g     O .sbss	00000001 IN
+00401278 g       *ABS*	00000000 _fbss
+
+
+
+Disassembly of section .text:
+
+00400018 <num_to_lcd>:
+  400018:	00801021 	move	v0,a0
+  40001c:	a3a20000 	sb	v0,0(sp)
+  400020:	93a20000 	lbu	v0,0(sp)
+  400024:	00000000 	nop
+  400028:	14400004 	bnez	v0,40003c <num_to_lcd+0x24>
+  40002c:	00000000 	nop
+  400030:	00001021 	move	v0,zero
+  400034:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400038:	00000000 	nop
+  40003c:	93a30000 	lbu	v1,0(sp)
+  400040:	24020001 	li	v0,1
+  400044:	14620004 	bne	v1,v0,400058 <num_to_lcd+0x40>
+  400048:	00000000 	nop
+  40004c:	24020024 	li	v0,36
+  400050:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400054:	00000000 	nop
+  400058:	93a30000 	lbu	v1,0(sp)
+  40005c:	24020002 	li	v0,2
+  400060:	14620004 	bne	v1,v0,400074 <num_to_lcd+0x5c>
+  400064:	00000000 	nop
+  400068:	2402005d 	li	v0,93
+  40006c:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400070:	00000000 	nop
+  400074:	93a30000 	lbu	v1,0(sp)
+  400078:	24020003 	li	v0,3
+  40007c:	14620004 	bne	v1,v0,400090 <num_to_lcd+0x78>
+  400080:	00000000 	nop
+  400084:	2402006d 	li	v0,109
+  400088:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  40008c:	00000000 	nop
+  400090:	93a30000 	lbu	v1,0(sp)
+  400094:	24020004 	li	v0,4
+  400098:	14620004 	bne	v1,v0,4000ac <num_to_lcd+0x94>
+  40009c:	00000000 	nop
+  4000a0:	2402002e 	li	v0,46
+  4000a4:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4000a8:	00000000 	nop
+  4000ac:	93a30000 	lbu	v1,0(sp)
+  4000b0:	24020005 	li	v0,5
+  4000b4:	14620004 	bne	v1,v0,4000c8 <num_to_lcd+0xb0>
+  4000b8:	00000000 	nop
+  4000bc:	2402005d 	li	v0,93
+  4000c0:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4000c4:	00000000 	nop
+  4000c8:	93a30000 	lbu	v1,0(sp)
+  4000cc:	24020006 	li	v0,6
+  4000d0:	14620004 	bne	v1,v0,4000e4 <num_to_lcd+0xcc>
+  4000d4:	00000000 	nop
+  4000d8:	2402007b 	li	v0,123
+  4000dc:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4000e0:	00000000 	nop
+  4000e4:	93a30000 	lbu	v1,0(sp)
+  4000e8:	24020007 	li	v0,7
+  4000ec:	14620004 	bne	v1,v0,400100 <num_to_lcd+0xe8>
+  4000f0:	00000000 	nop
+  4000f4:	24020025 	li	v0,37
+  4000f8:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4000fc:	00000000 	nop
+  400100:	93a30000 	lbu	v1,0(sp)
+  400104:	24020008 	li	v0,8
+  400108:	14620004 	bne	v1,v0,40011c <num_to_lcd+0x104>
+  40010c:	00000000 	nop
+  400110:	2402007f 	li	v0,127
+  400114:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400118:	00000000 	nop
+  40011c:	93a30000 	lbu	v1,0(sp)
+  400120:	24020009 	li	v0,9
+  400124:	14620004 	bne	v1,v0,400138 <num_to_lcd+0x120>
+  400128:	00000000 	nop
+  40012c:	2402006f 	li	v0,111
+  400130:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400134:	00000000 	nop
+  400138:	93a30000 	lbu	v1,0(sp)
+  40013c:	2402000a 	li	v0,10
+  400140:	14620004 	bne	v1,v0,400154 <num_to_lcd+0x13c>
+  400144:	00000000 	nop
+  400148:	2402003f 	li	v0,63
+  40014c:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400150:	00000000 	nop
+  400154:	93a30000 	lbu	v1,0(sp)
+  400158:	2402000b 	li	v0,11
+  40015c:	14620004 	bne	v1,v0,400170 <num_to_lcd+0x158>
+  400160:	00000000 	nop
+  400164:	2402007a 	li	v0,122
+  400168:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  40016c:	00000000 	nop
+  400170:	93a30000 	lbu	v1,0(sp)
+  400174:	2402000c 	li	v0,12
+  400178:	14620004 	bne	v1,v0,40018c <num_to_lcd+0x174>
+  40017c:	00000000 	nop
+  400180:	24020053 	li	v0,83
+  400184:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  400188:	00000000 	nop
+  40018c:	93a30000 	lbu	v1,0(sp)
+  400190:	2402000d 	li	v0,13
+  400194:	14620004 	bne	v1,v0,4001a8 <num_to_lcd+0x190>
+  400198:	00000000 	nop
+  40019c:	2402007c 	li	v0,124
+  4001a0:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4001a4:	00000000 	nop
+  4001a8:	93a30000 	lbu	v1,0(sp)
+  4001ac:	2402000e 	li	v0,14
+  4001b0:	14620004 	bne	v1,v0,4001c4 <num_to_lcd+0x1ac>
+  4001b4:	00000000 	nop
+  4001b8:	2402005b 	li	v0,91
+  4001bc:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4001c0:	00000000 	nop
+  4001c4:	93a30000 	lbu	v1,0(sp)
+  4001c8:	2402000f 	li	v0,15
+  4001cc:	14620004 	bne	v1,v0,4001e0 <num_to_lcd+0x1c8>
+  4001d0:	00000000 	nop
+  4001d4:	2402001b 	li	v0,27
+  4001d8:	08100079 	j	4001e4 <num_to_lcd+0x1cc>
+  4001dc:	00000000 	nop
+  4001e0:	00001021 	move	v0,zero
+  4001e4:	03e00008 	jr	ra
+  4001e8:	00000000 	nop
+
+004001ec <main>:
+  4001ec:	27bdffe0 	addiu	sp,sp,-32
+  4001f0:	afbf001c 	sw	ra,28(sp)
+  4001f4:	08100094 	j	400250 <main+0x64>
+  4001f8:	afa00010 	sw	zero,16(sp)
+  4001fc:	93828009 	lbu	v0,-32759(gp)
+  400200:	00000000 	nop
+  400204:	a3a20014 	sb	v0,20(sp)
+  400208:	8fa20010 	lw	v0,16(sp)
+  40020c:	00000000 	nop
+  400210:	28420005 	slti	v0,v0,5
+  400214:	1040000a 	beqz	v0,400240 <main+0x54>
+  400218:	00000000 	nop
+  40021c:	93a20014 	lbu	v0,20(sp)
+  400220:	00000000 	nop
+  400224:	3042000f 	andi	v0,v0,0xf
+  400228:	a3a20014 	sb	v0,20(sp)
+  40022c:	93a20014 	lbu	v0,20(sp)
+  400230:	00000000 	nop
+  400234:	0c100006 	jal	400018 <num_to_lcd>
+  400238:	00402021 	move	a0,v0
+  40023c:	a3828008 	sb	v0,-32760(gp)
+  400240:	8fa20010 	lw	v0,16(sp)
+  400244:	00000000 	nop
+  400248:	24420001 	addiu	v0,v0,1
+  40024c:	afa20010 	sw	v0,16(sp)
+  400250:	8fa20010 	lw	v0,16(sp)
+  400254:	00000000 	nop
+  400258:	2842000a 	slti	v0,v0,10
+  40025c:	1440ffe7 	bnez	v0,4001fc <main+0x10>
+  400260:	00000000 	nop
+  400264:	00001021 	move	v0,zero
+  400268:	8fbf001c 	lw	ra,28(sp)
+  40026c:	27bd0020 	addiu	sp,sp,32
+  400270:	03e00008 	jr	ra
+  400274:	00000000 	nop

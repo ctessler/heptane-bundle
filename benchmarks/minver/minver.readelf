@@ -1,0 +1,30 @@
+There are 22 section headers, starting at offset 0x2ecc:
+
+Section Headers:
+  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al
+  [ 0]                   NULL            00000000 000000 000000 00      0   0  0
+  [ 1] .reginfo          MIPS_REGINFO    00400000 002570 000018 01      0   0  4
+  [ 2] .text             PROGBITS        00400018 001018 0014c0 00  AX  0   0  4
+  [ 3] .data             PROGBITS        004024d8 0024d8 000048 00  WA  0   0  8
+  [ 4] .sdata            PROGBITS        00402520 002520 000050 00 WAp  0   0  8
+  [ 5] .sbss             NOBITS          00402570 002570 000010 00 WAp  0   0  8
+  [ 6] .bss              NOBITS          00402580 002570 0001f8 00  WA  0   0  8
+  [ 7] .pdr              PROGBITS        00000000 002588 000060 00      0   0  4
+  [ 8] .wcet_annot       PROGBITS        00000000 0025e8 000090 00      0   0  4
+  [ 9] .comment          PROGBITS        00000000 002678 000011 01  MS  0   0  1
+  [10] .debug_aranges    MIPS_DWARF      00000000 002689 000020 00      0   0  1
+  [11] .debug_info       MIPS_DWARF      00000000 0026a9 000369 00      0   0  1
+  [12] .debug_abbrev     MIPS_DWARF      00000000 002a12 0000bf 00      0   0  1
+  [13] .debug_line       MIPS_DWARF      00000000 002ad1 000199 00      0   0  1
+  [14] .debug_frame      MIPS_DWARF      00000000 002c6c 00005c 00   o  0   0  4
+  [15] .debug_str        MIPS_DWARF      00000000 002cc8 00009b 01  MS  0   0  1
+  [16] .debug_loc        MIPS_DWARF      00000000 002d63 000085 00      0   0  1
+  [17] .gnu.attributes   LOOS+ffffff5    00000000 002de8 000010 00      0   0  1
+  [18] .mdebug.abi32     PROGBITS        00000010 002df8 000000 00      0   0  1
+  [19] .shstrtab         STRTAB          00000000 002df8 0000d2 00      0   0  1
+  [20] .symtab           SYMTAB          00000000 00323c 000280 10     21  21  4
+  [21] .strtab           STRTAB          00000000 0034bc 000068 00      0   0  1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings)
+  I (info), L (link order), G (group), x (unknown)
+  O (extra OS processing required) o (OS specific), p (processor specific)

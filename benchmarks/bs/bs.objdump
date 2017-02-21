@@ -1,0 +1,122 @@
+
+/tmp/bs:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+00401160 l    d  .data	00000000 .data
+004011d8 l    d  .sbss	00000000 .sbss
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 bs.c
+00401160 g       .data	00000000 _fdata
+004091d0 g       *ABS*	00000000 _gp
+00400018 g       .text	00000000 _ftext
+004011d8 g       *ABS*	00000000 __bss_start
+00401160 g     O .data	00000078 data
+00400018 g     F .text	00000028 main
+004011d8 g       *ABS*	00000000 _edata
+004011dc g       *ABS*	00000000 _end
+004011d8 g     O .sbss	00000004 cnt1
+004011d8 g       *ABS*	00000000 _fbss
+00400040 g     F .text	00000120 binary_search
+
+
+
+Disassembly of section .text:
+
+00400018 <main>:
+  400018:	27bdffe8 	addiu	sp,sp,-24
+  40001c:	afbf0014 	sw	ra,20(sp)
+  400020:	24040008 	li	a0,8
+  400024:	0c100010 	jal	400040 <binary_search>
+  400028:	00000000 	nop
+  40002c:	00001021 	move	v0,zero
+  400030:	8fbf0014 	lw	ra,20(sp)
+  400034:	27bd0018 	addiu	sp,sp,24
+  400038:	03e00008 	jr	ra
+  40003c:	00000000 	nop
+
+00400040 <binary_search>:
+  400040:	27bdfff0 	addiu	sp,sp,-16
+  400044:	afa40010 	sw	a0,16(sp)
+  400048:	afa00008 	sw	zero,8(sp)
+  40004c:	2402000e 	li	v0,14
+  400050:	afa20004 	sw	v0,4(sp)
+  400054:	2402ffff 	li	v0,-1
+  400058:	0810004f 	j	40013c <binary_search+0xfc>
+  40005c:	afa20000 	sw	v0,0(sp)
+  400060:	8fa30008 	lw	v1,8(sp)
+  400064:	8fa20004 	lw	v0,4(sp)
+  400068:	00000000 	nop
+  40006c:	00621021 	addu	v0,v1,v0
+  400070:	00021043 	sra	v0,v0,0x1
+  400074:	afa2000c 	sw	v0,12(sp)
+  400078:	3c020040 	lui	v0,0x40
+  40007c:	8fa3000c 	lw	v1,12(sp)
+  400080:	00000000 	nop
+  400084:	000318c0 	sll	v1,v1,0x3
+  400088:	24421160 	addiu	v0,v0,4448
+  40008c:	00621021 	addu	v0,v1,v0
+  400090:	8c430000 	lw	v1,0(v0)
+  400094:	8fa20010 	lw	v0,16(sp)
+  400098:	00000000 	nop
+  40009c:	1462000e 	bne	v1,v0,4000d8 <binary_search+0x98>
+  4000a0:	00000000 	nop
+  4000a4:	8fa20008 	lw	v0,8(sp)
+  4000a8:	00000000 	nop
+  4000ac:	2442ffff 	addiu	v0,v0,-1
+  4000b0:	afa20004 	sw	v0,4(sp)
+  4000b4:	3c030040 	lui	v1,0x40
+  4000b8:	8fa2000c 	lw	v0,12(sp)
+  4000bc:	24631160 	addiu	v1,v1,4448
+  4000c0:	000210c0 	sll	v0,v0,0x3
+  4000c4:	00621021 	addu	v0,v1,v0
+  4000c8:	8c420004 	lw	v0,4(v0)
+  4000cc:	00000000 	nop
+  4000d0:	0810004b 	j	40012c <binary_search+0xec>
+  4000d4:	afa20000 	sw	v0,0(sp)
+  4000d8:	3c020040 	lui	v0,0x40
+  4000dc:	8fa3000c 	lw	v1,12(sp)
+  4000e0:	00000000 	nop
+  4000e4:	000318c0 	sll	v1,v1,0x3
+  4000e8:	24421160 	addiu	v0,v0,4448
+  4000ec:	00621021 	addu	v0,v1,v0
+  4000f0:	8c430000 	lw	v1,0(v0)
+  4000f4:	8fa20010 	lw	v0,16(sp)
+  4000f8:	00000000 	nop
+  4000fc:	0043102a 	slt	v0,v0,v1
+  400100:	10400006 	beqz	v0,40011c <binary_search+0xdc>
+  400104:	00000000 	nop
+  400108:	8fa2000c 	lw	v0,12(sp)
+  40010c:	00000000 	nop
+  400110:	2442ffff 	addiu	v0,v0,-1
+  400114:	0810004b 	j	40012c <binary_search+0xec>
+  400118:	afa20004 	sw	v0,4(sp)
+  40011c:	8fa2000c 	lw	v0,12(sp)
+  400120:	00000000 	nop
+  400124:	24420001 	addiu	v0,v0,1
+  400128:	afa20008 	sw	v0,8(sp)
+  40012c:	8f828008 	lw	v0,-32760(gp)
+  400130:	00000000 	nop
+  400134:	24420001 	addiu	v0,v0,1
+  400138:	af828008 	sw	v0,-32760(gp)
+  40013c:	8fa30008 	lw	v1,8(sp)
+  400140:	8fa20004 	lw	v0,4(sp)
+  400144:	00000000 	nop
+  400148:	0043102a 	slt	v0,v0,v1
+  40014c:	1040ffc4 	beqz	v0,400060 <binary_search+0x20>
+  400150:	00000000 	nop
+  400154:	8fa20000 	lw	v0,0(sp)
+  400158:	03e00008 	jr	ra
+  40015c:	27bd0010 	addiu	sp,sp,16

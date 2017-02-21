@@ -1,0 +1,261 @@
+
+/tmp/cnt:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+00401348 l    d  .sdata	00000000 .sdata
+00401350 l    d  .sbss	00000000 .sbss
+00401364 l    d  .bss	00000000 .bss
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 cnt.c
+00401348 g       .sdata	00000000 _fdata
+00401350 g     O .sbss	00000004 Seed
+00400304 g     F .text	00000044 RandomInteger
+00409340 g       *ABS*	00000000 _gp
+0040004c g     F .text	000000bc Test
+0040019c g     F .text	00000010 InitSeed
+00401354 g     O .sbss	00000004 Postotal
+00401364 g     O .bss	00000190 Array
+00401358 g     O .sbss	00000004 Negtotal
+00400018 g       .text	00000000 _ftext
+00401350 g       *ABS*	00000000 __bss_start
+00400018 g     F .text	00000034 main
+0040135c g     O .sbss	00000004 Negcnt
+004001ac g     F .text	00000158 Sum
+00401350 g       *ABS*	00000000 _edata
+004014f4 g       *ABS*	00000000 _end
+00401360 g     O .sbss	00000004 Poscnt
+00400108 g     F .text	00000094 Initialize
+00401350 g       *ABS*	00000000 _fbss
+
+
+
+Disassembly of section .text:
+
+00400018 <main>:
+  400018:	27bdffe8 	addiu	sp,sp,-24
+  40001c:	afbf0014 	sw	ra,20(sp)
+  400020:	0c100067 	jal	40019c <InitSeed>
+  400024:	00000000 	nop
+  400028:	3c020040 	lui	v0,0x40
+  40002c:	24441364 	addiu	a0,v0,4964
+  400030:	0c100013 	jal	40004c <Test>
+  400034:	00000000 	nop
+  400038:	24020001 	li	v0,1
+  40003c:	8fbf0014 	lw	ra,20(sp)
+  400040:	27bd0018 	addiu	sp,sp,24
+  400044:	03e00008 	jr	ra
+  400048:	00000000 	nop
+
+0040004c <Test>:
+  40004c:	27bdffd8 	addiu	sp,sp,-40
+  400050:	afbf0024 	sw	ra,36(sp)
+  400054:	afa40028 	sw	a0,40(sp)
+  400058:	8fa40028 	lw	a0,40(sp)
+  40005c:	0c100042 	jal	400108 <Initialize>
+  400060:	00000000 	nop
+  400064:	240203e8 	li	v0,1000
+  400068:	afa20010 	sw	v0,16(sp)
+  40006c:	8fa40028 	lw	a0,40(sp)
+  400070:	0c10006b 	jal	4001ac <Sum>
+  400074:	00000000 	nop
+  400078:	240205dc 	li	v0,1500
+  40007c:	afa20014 	sw	v0,20(sp)
+  400080:	8fa30014 	lw	v1,20(sp)
+  400084:	8fa20010 	lw	v0,16(sp)
+  400088:	00000000 	nop
+  40008c:	00621023 	subu	v0,v1,v0
+  400090:	44820000 	mtc1	v0,$f0
+  400094:	00000000 	nop
+  400098:	46800021 	cvt.d.w	$f0,$f0
+  40009c:	44050000 	mfc1	a1,$f0
+  4000a0:	44040800 	mfc1	a0,$f1
+  4000a4:	8f83800c 	lw	v1,-32756(gp)
+  4000a8:	8f828008 	lw	v0,-32760(gp)
+  4000ac:	44851000 	mtc1	a1,$f2
+  4000b0:	00000000 	nop
+  4000b4:	44841800 	mtc1	a0,$f3
+  4000b8:	44830000 	mtc1	v1,$f0
+  4000bc:	00000000 	nop
+  4000c0:	44820800 	mtc1	v0,$f1
+  4000c4:	00000000 	nop
+  4000c8:	46201083 	div.d	$f2,$f2,$f0
+  4000cc:	44031000 	mfc1	v1,$f2
+  4000d0:	44021800 	mfc1	v0,$f3
+  4000d4:	44831000 	mtc1	v1,$f2
+  4000d8:	00000000 	nop
+  4000dc:	44821800 	mtc1	v0,$f3
+  4000e0:	00000000 	nop
+  4000e4:	462010a0 	cvt.s.d	$f2,$f2
+  4000e8:	44021000 	mfc1	v0,$f2
+  4000ec:	00000000 	nop
+  4000f0:	afa20018 	sw	v0,24(sp)
+  4000f4:	00001021 	move	v0,zero
+  4000f8:	8fbf0024 	lw	ra,36(sp)
+  4000fc:	27bd0028 	addiu	sp,sp,40
+  400100:	03e00008 	jr	ra
+  400104:	00000000 	nop
+
+00400108 <Initialize>:
+  400108:	27bdffe0 	addiu	sp,sp,-32
+  40010c:	afbf001c 	sw	ra,28(sp)
+  400110:	afb20018 	sw	s2,24(sp)
+  400114:	afb10014 	sw	s1,20(sp)
+  400118:	afb00010 	sw	s0,16(sp)
+  40011c:	afa40020 	sw	a0,32(sp)
+  400120:	0810005d 	j	400174 <Initialize+0x6c>
+  400124:	00008021 	move	s0,zero
+  400128:	08100059 	j	400164 <Initialize+0x5c>
+  40012c:	00008821 	move	s1,zero
+  400130:	02001021 	move	v0,s0
+  400134:	000210c0 	sll	v0,v0,0x3
+  400138:	00021880 	sll	v1,v0,0x2
+  40013c:	00431021 	addu	v0,v0,v1
+  400140:	8fa30020 	lw	v1,32(sp)
+  400144:	00000000 	nop
+  400148:	0c1000c1 	jal	400304 <RandomInteger>
+  40014c:	00629021 	addu	s2,v1,v0
+  400150:	00401821 	move	v1,v0
+  400154:	00111080 	sll	v0,s1,0x2
+  400158:	02421021 	addu	v0,s2,v0
+  40015c:	ac430000 	sw	v1,0(v0)
+  400160:	26310001 	addiu	s1,s1,1
+  400164:	2a22000a 	slti	v0,s1,10
+  400168:	1440fff1 	bnez	v0,400130 <Initialize+0x28>
+  40016c:	00000000 	nop
+  400170:	26100001 	addiu	s0,s0,1
+  400174:	2a02000a 	slti	v0,s0,10
+  400178:	1440ffeb 	bnez	v0,400128 <Initialize+0x20>
+  40017c:	00000000 	nop
+  400180:	00001021 	move	v0,zero
+  400184:	8fbf001c 	lw	ra,28(sp)
+  400188:	8fb20018 	lw	s2,24(sp)
+  40018c:	8fb10014 	lw	s1,20(sp)
+  400190:	8fb00010 	lw	s0,16(sp)
+  400194:	03e00008 	jr	ra
+  400198:	27bd0020 	addiu	sp,sp,32
+
+0040019c <InitSeed>:
+  40019c:	af808010 	sw	zero,-32752(gp)
+  4001a0:	00001021 	move	v0,zero
+  4001a4:	03e00008 	jr	ra
+  4001a8:	00000000 	nop
+
+004001ac <Sum>:
+  4001ac:	27bdffe8 	addiu	sp,sp,-24
+  4001b0:	afb10014 	sw	s1,20(sp)
+  4001b4:	afb00010 	sw	s0,16(sp)
+  4001b8:	afa40018 	sw	a0,24(sp)
+  4001bc:	afa00000 	sw	zero,0(sp)
+  4001c0:	afa00004 	sw	zero,4(sp)
+  4001c4:	afa00008 	sw	zero,8(sp)
+  4001c8:	afa0000c 	sw	zero,12(sp)
+  4001cc:	081000ae 	j	4002b8 <Sum+0x10c>
+  4001d0:	00008021 	move	s0,zero
+  4001d4:	081000aa 	j	4002a8 <Sum+0xfc>
+  4001d8:	00008821 	move	s1,zero
+  4001dc:	02001021 	move	v0,s0
+  4001e0:	000210c0 	sll	v0,v0,0x3
+  4001e4:	00021880 	sll	v1,v0,0x2
+  4001e8:	00431021 	addu	v0,v0,v1
+  4001ec:	8fa30018 	lw	v1,24(sp)
+  4001f0:	00000000 	nop
+  4001f4:	00621821 	addu	v1,v1,v0
+  4001f8:	00111080 	sll	v0,s1,0x2
+  4001fc:	00621021 	addu	v0,v1,v0
+  400200:	8c420000 	lw	v0,0(v0)
+  400204:	00000000 	nop
+  400208:	04400014 	bltz	v0,40025c <Sum+0xb0>
+  40020c:	00000000 	nop
+  400210:	02001021 	move	v0,s0
+  400214:	000210c0 	sll	v0,v0,0x3
+  400218:	00021880 	sll	v1,v0,0x2
+  40021c:	00431021 	addu	v0,v0,v1
+  400220:	8fa30018 	lw	v1,24(sp)
+  400224:	00000000 	nop
+  400228:	00621821 	addu	v1,v1,v0
+  40022c:	00111080 	sll	v0,s1,0x2
+  400230:	00621021 	addu	v0,v1,v0
+  400234:	8c420000 	lw	v0,0(v0)
+  400238:	8fa30000 	lw	v1,0(sp)
+  40023c:	00000000 	nop
+  400240:	00621021 	addu	v0,v1,v0
+  400244:	afa20000 	sw	v0,0(sp)
+  400248:	8fa20008 	lw	v0,8(sp)
+  40024c:	00000000 	nop
+  400250:	24420001 	addiu	v0,v0,1
+  400254:	081000a9 	j	4002a4 <Sum+0xf8>
+  400258:	afa20008 	sw	v0,8(sp)
+  40025c:	02001021 	move	v0,s0
+  400260:	000210c0 	sll	v0,v0,0x3
+  400264:	00021880 	sll	v1,v0,0x2
+  400268:	00431021 	addu	v0,v0,v1
+  40026c:	8fa30018 	lw	v1,24(sp)
+  400270:	00000000 	nop
+  400274:	00621821 	addu	v1,v1,v0
+  400278:	00111080 	sll	v0,s1,0x2
+  40027c:	00621021 	addu	v0,v1,v0
+  400280:	8c420000 	lw	v0,0(v0)
+  400284:	8fa30004 	lw	v1,4(sp)
+  400288:	00000000 	nop
+  40028c:	00621021 	addu	v0,v1,v0
+  400290:	afa20004 	sw	v0,4(sp)
+  400294:	8fa2000c 	lw	v0,12(sp)
+  400298:	00000000 	nop
+  40029c:	24420001 	addiu	v0,v0,1
+  4002a0:	afa2000c 	sw	v0,12(sp)
+  4002a4:	26310001 	addiu	s1,s1,1
+  4002a8:	2a22000a 	slti	v0,s1,10
+  4002ac:	1440ffcb 	bnez	v0,4001dc <Sum+0x30>
+  4002b0:	00000000 	nop
+  4002b4:	26100001 	addiu	s0,s0,1
+  4002b8:	2a02000a 	slti	v0,s0,10
+  4002bc:	1440ffc5 	bnez	v0,4001d4 <Sum+0x28>
+  4002c0:	00000000 	nop
+  4002c4:	8fa20000 	lw	v0,0(sp)
+  4002c8:	00000000 	nop
+  4002cc:	af828014 	sw	v0,-32748(gp)
+  4002d0:	8fa20008 	lw	v0,8(sp)
+  4002d4:	00000000 	nop
+  4002d8:	af828020 	sw	v0,-32736(gp)
+  4002dc:	8fa20004 	lw	v0,4(sp)
+  4002e0:	00000000 	nop
+  4002e4:	af828018 	sw	v0,-32744(gp)
+  4002e8:	8fa2000c 	lw	v0,12(sp)
+  4002ec:	00000000 	nop
+  4002f0:	af82801c 	sw	v0,-32740(gp)
+  4002f4:	8fb10014 	lw	s1,20(sp)
+  4002f8:	8fb00010 	lw	s0,16(sp)
+  4002fc:	03e00008 	jr	ra
+  400300:	27bd0018 	addiu	sp,sp,24
+
+00400304 <RandomInteger>:
+  400304:	8f838010 	lw	v1,-32752(gp)
+  400308:	00000000 	nop
+  40030c:	00601021 	move	v0,v1
+  400310:	00021080 	sll	v0,v0,0x2
+  400314:	00022140 	sll	a0,v0,0x5
+  400318:	00441021 	addu	v0,v0,a0
+  40031c:	00431021 	addu	v0,v0,v1
+  400320:	24430051 	addiu	v1,v0,81
+  400324:	24021f9f 	li	v0,8095
+  400328:	14400002 	bnez	v0,400334 <RandomInteger+0x30>
+  40032c:	0062001a 	div	zero,v1,v0
+  400330:	0007000d 	break	0x7
+  400334:	00001010 	mfhi	v0
+  400338:	af828010 	sw	v0,-32752(gp)
+  40033c:	8f828010 	lw	v0,-32752(gp)
+  400340:	03e00008 	jr	ra
+  400344:	00000000 	nop

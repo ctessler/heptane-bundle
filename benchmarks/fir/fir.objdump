@@ -1,0 +1,208 @@
+
+/tmp/fir:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+004012b8 l    d  .data	00000000 .data
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 fir.c
+004012b8 g       .data	00000000 _fdata
+0040a970 g       *ABS*	00000000 _gp
+00400018 g       .text	00000000 _ftext
+0040297c g       *ABS*	00000000 __bss_start
+00400018 g     F .text	00000050 main
+00401348 g     O .data	00000af4 in_data
+0040297c g       *ABS*	00000000 _edata
+0040297c g       *ABS*	00000000 _end
+004012b8 g     O .data	00000090 fir_int
+00401e3c g     O .data	00000b40 out_data
+00400068 g     F .text	00000250 fir_filter_int
+0040297c g       *ABS*	00000000 _fbss
+
+
+
+Disassembly of section .text:
+
+00400018 <main>:
+  400018:	27bdf4a0 	addiu	sp,sp,-2912
+  40001c:	afbf0b5c 	sw	ra,2908(sp)
+  400020:	24020023 	li	v0,35
+  400024:	afa20010 	sw	v0,16(sp)
+  400028:	2402011d 	li	v0,285
+  40002c:	afa20014 	sw	v0,20(sp)
+  400030:	3c020040 	lui	v0,0x40
+  400034:	24441348 	addiu	a0,v0,4936
+  400038:	27a20018 	addiu	v0,sp,24
+  40003c:	00402821 	move	a1,v0
+  400040:	2406000a 	li	a2,10
+  400044:	3c020040 	lui	v0,0x40
+  400048:	244712b8 	addiu	a3,v0,4792
+  40004c:	0c10001a 	jal	400068 <fir_filter_int>
+  400050:	00000000 	nop
+  400054:	00001021 	move	v0,zero
+  400058:	8fbf0b5c 	lw	ra,2908(sp)
+  40005c:	27bd0b60 	addiu	sp,sp,2912
+  400060:	03e00008 	jr	ra
+  400064:	00000000 	nop
+
+00400068 <fir_filter_int>:
+  400068:	27bdffd8 	addiu	sp,sp,-40
+  40006c:	afa40028 	sw	a0,40(sp)
+  400070:	afa5002c 	sw	a1,44(sp)
+  400074:	afa60030 	sw	a2,48(sp)
+  400078:	afa70034 	sw	a3,52(sp)
+  40007c:	8fa20034 	lw	v0,52(sp)
+  400080:	00000000 	nop
+  400084:	afa20018 	sw	v0,24(sp)
+  400088:	8fa20038 	lw	v0,56(sp)
+  40008c:	00000000 	nop
+  400090:	24420001 	addiu	v0,v0,1
+  400094:	00021043 	sra	v0,v0,0x1
+  400098:	afa20020 	sw	v0,32(sp)
+  40009c:	8fa20030 	lw	v0,48(sp)
+  4000a0:	00000000 	nop
+  4000a4:	2442ffff 	addiu	v0,v0,-1
+  4000a8:	00021080 	sll	v0,v0,0x2
+  4000ac:	8fa30028 	lw	v1,40(sp)
+  4000b0:	00000000 	nop
+  4000b4:	00621021 	addu	v0,v1,v0
+  4000b8:	afa20024 	sw	v0,36(sp)
+  4000bc:	8fa20020 	lw	v0,32(sp)
+  4000c0:	00000000 	nop
+  4000c4:	2442ffff 	addiu	v0,v0,-1
+  4000c8:	00021080 	sll	v0,v0,0x2
+  4000cc:	8fa30028 	lw	v1,40(sp)
+  4000d0:	00000000 	nop
+  4000d4:	00621021 	addu	v0,v1,v0
+  4000d8:	afa20010 	sw	v0,16(sp)
+  4000dc:	8fa20020 	lw	v0,32(sp)
+  4000e0:	00000000 	nop
+  4000e4:	afa20008 	sw	v0,8(sp)
+  4000e8:	081000a6 	j	400298 <fir_filter_int+0x230>
+  4000ec:	afa00000 	sw	zero,0(sp)
+  4000f0:	8fa20010 	lw	v0,16(sp)
+  4000f4:	00000000 	nop
+  4000f8:	afa20014 	sw	v0,20(sp)
+  4000fc:	8fa20018 	lw	v0,24(sp)
+  400100:	00000000 	nop
+  400104:	afa2001c 	sw	v0,28(sp)
+  400108:	8fa2001c 	lw	v0,28(sp)
+  40010c:	00000000 	nop
+  400110:	8c430000 	lw	v1,0(v0)
+  400114:	8fa20014 	lw	v0,20(sp)
+  400118:	00000000 	nop
+  40011c:	8c420000 	lw	v0,0(v0)
+  400120:	00000000 	nop
+  400124:	00620018 	mult	v1,v0
+  400128:	00001012 	mflo	v0
+  40012c:	afa2000c 	sw	v0,12(sp)
+  400130:	8fa2001c 	lw	v0,28(sp)
+  400134:	00000000 	nop
+  400138:	24420004 	addiu	v0,v0,4
+  40013c:	afa2001c 	sw	v0,28(sp)
+  400140:	8fa20014 	lw	v0,20(sp)
+  400144:	00000000 	nop
+  400148:	2442fffc 	addiu	v0,v0,-4
+  40014c:	afa20014 	sw	v0,20(sp)
+  400150:	24020001 	li	v0,1
+  400154:	08100070 	j	4001c0 <fir_filter_int+0x158>
+  400158:	afa20004 	sw	v0,4(sp)
+  40015c:	8fa2001c 	lw	v0,28(sp)
+  400160:	00000000 	nop
+  400164:	8c430000 	lw	v1,0(v0)
+  400168:	8fa20014 	lw	v0,20(sp)
+  40016c:	00000000 	nop
+  400170:	8c420000 	lw	v0,0(v0)
+  400174:	00000000 	nop
+  400178:	00620018 	mult	v1,v0
+  40017c:	00001012 	mflo	v0
+  400180:	8fa3000c 	lw	v1,12(sp)
+  400184:	00000000 	nop
+  400188:	00621021 	addu	v0,v1,v0
+  40018c:	afa2000c 	sw	v0,12(sp)
+  400190:	8fa2001c 	lw	v0,28(sp)
+  400194:	00000000 	nop
+  400198:	24420004 	addiu	v0,v0,4
+  40019c:	afa2001c 	sw	v0,28(sp)
+  4001a0:	8fa20014 	lw	v0,20(sp)
+  4001a4:	00000000 	nop
+  4001a8:	2442fffc 	addiu	v0,v0,-4
+  4001ac:	afa20014 	sw	v0,20(sp)
+  4001b0:	8fa20004 	lw	v0,4(sp)
+  4001b4:	00000000 	nop
+  4001b8:	24420001 	addiu	v0,v0,1
+  4001bc:	afa20004 	sw	v0,4(sp)
+  4001c0:	8fa30004 	lw	v1,4(sp)
+  4001c4:	8fa20008 	lw	v0,8(sp)
+  4001c8:	00000000 	nop
+  4001cc:	0062102a 	slt	v0,v1,v0
+  4001d0:	1440ffe2 	bnez	v0,40015c <fir_filter_int+0xf4>
+  4001d4:	00000000 	nop
+  4001d8:	8fa3000c 	lw	v1,12(sp)
+  4001dc:	8fa2003c 	lw	v0,60(sp)
+  4001e0:	00000000 	nop
+  4001e4:	14400002 	bnez	v0,4001f0 <fir_filter_int+0x188>
+  4001e8:	0062001a 	div	zero,v1,v0
+  4001ec:	0007000d 	break	0x7
+  4001f0:	00001810 	mfhi	v1
+  4001f4:	00001012 	mflo	v0
+  4001f8:	00401821 	move	v1,v0
+  4001fc:	8fa2002c 	lw	v0,44(sp)
+  400200:	00000000 	nop
+  400204:	ac430000 	sw	v1,0(v0)
+  400208:	8fa2002c 	lw	v0,44(sp)
+  40020c:	00000000 	nop
+  400210:	24420004 	addiu	v0,v0,4
+  400214:	afa2002c 	sw	v0,44(sp)
+  400218:	8fa30010 	lw	v1,16(sp)
+  40021c:	8fa20024 	lw	v0,36(sp)
+  400220:	00000000 	nop
+  400224:	1462000a 	bne	v1,v0,400250 <fir_filter_int+0x1e8>
+  400228:	00000000 	nop
+  40022c:	8fa20008 	lw	v0,8(sp)
+  400230:	00000000 	nop
+  400234:	2442ffff 	addiu	v0,v0,-1
+  400238:	afa20008 	sw	v0,8(sp)
+  40023c:	8fa20018 	lw	v0,24(sp)
+  400240:	00000000 	nop
+  400244:	24420004 	addiu	v0,v0,4
+  400248:	081000a2 	j	400288 <fir_filter_int+0x220>
+  40024c:	afa20018 	sw	v0,24(sp)
+  400250:	8fa30008 	lw	v1,8(sp)
+  400254:	8fa20038 	lw	v0,56(sp)
+  400258:	00000000 	nop
+  40025c:	0062102a 	slt	v0,v1,v0
+  400260:	10400005 	beqz	v0,400278 <fir_filter_int+0x210>
+  400264:	00000000 	nop
+  400268:	8fa20008 	lw	v0,8(sp)
+  40026c:	00000000 	nop
+  400270:	24420001 	addiu	v0,v0,1
+  400274:	afa20008 	sw	v0,8(sp)
+  400278:	8fa20010 	lw	v0,16(sp)
+  40027c:	00000000 	nop
+  400280:	24420004 	addiu	v0,v0,4
+  400284:	afa20010 	sw	v0,16(sp)
+  400288:	8fa20000 	lw	v0,0(sp)
+  40028c:	00000000 	nop
+  400290:	24420001 	addiu	v0,v0,1
+  400294:	afa20000 	sw	v0,0(sp)
+  400298:	8fa30000 	lw	v1,0(sp)
+  40029c:	8fa20030 	lw	v0,48(sp)
+  4002a0:	00000000 	nop
+  4002a4:	0062102a 	slt	v0,v1,v0
+  4002a8:	1440ff91 	bnez	v0,4000f0 <fir_filter_int+0x88>
+  4002ac:	00000000 	nop
+  4002b0:	03e00008 	jr	ra
+  4002b4:	27bd0028 	addiu	sp,sp,40

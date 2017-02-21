@@ -1,0 +1,173 @@
+
+/tmp/prime:     file format elf32-bigmips
+
+SYMBOL TABLE:
+00400000 l    d  .reginfo	00000000 .reginfo
+00400018 l    d  .text	00000000 .text
+00000000 l    d  .pdr	00000000 .pdr
+00000000 l    d  .wcet_annot	00000000 .wcet_annot
+00000000 l    d  .comment	00000000 .comment
+00000000 l    d  .debug_aranges	00000000 .debug_aranges
+00000000 l    d  .debug_info	00000000 .debug_info
+00000000 l    d  .debug_abbrev	00000000 .debug_abbrev
+00000000 l    d  .debug_line	00000000 .debug_line
+00000000 l    d  .debug_frame	00000000 .debug_frame
+00000000 l    d  .debug_str	00000000 .debug_str
+00000000 l    d  .debug_loc	00000000 .debug_loc
+00000000 l    d  .gnu.attributes	00000000 .gnu.attributes
+00000010 l    d  .mdebug.abi32	00000000 .mdebug.abi32
+00000000 l    df *ABS*	00000000 prime.c
+00401218 g       .text	00000000 _fdata
+00409210 g       *ABS*	00000000 _gp
+00400138 g     F .text	00000054 swap
+00400078 g     F .text	000000c0 prime
+00400018 g     F .text	00000034 divides
+00400018 g       .text	00000000 _ftext
+00401218 g       *ABS*	00000000 __bss_start
+0040018c g     F .text	0000008c main
+0040004c g     F .text	0000002c even
+00401218 g       *ABS*	00000000 _edata
+00401218 g       *ABS*	00000000 _end
+00401218 g       *ABS*	00000000 _fbss
+
+
+
+Disassembly of section .text:
+
+00400018 <divides>:
+  400018:	afa40000 	sw	a0,0(sp)
+  40001c:	afa50004 	sw	a1,4(sp)
+  400020:	8fa30004 	lw	v1,4(sp)
+  400024:	8fa20000 	lw	v0,0(sp)
+  400028:	00000000 	nop
+  40002c:	14400002 	bnez	v0,400038 <divides+0x20>
+  400030:	0062001b 	divu	zero,v1,v0
+  400034:	0007000d 	break	0x7
+  400038:	00001010 	mfhi	v0
+  40003c:	2c420001 	sltiu	v0,v0,1
+  400040:	304200ff 	andi	v0,v0,0xff
+  400044:	03e00008 	jr	ra
+  400048:	00000000 	nop
+
+0040004c <even>:
+  40004c:	27bdffe8 	addiu	sp,sp,-24
+  400050:	afbf0014 	sw	ra,20(sp)
+  400054:	afa40018 	sw	a0,24(sp)
+  400058:	24040002 	li	a0,2
+  40005c:	8fa50018 	lw	a1,24(sp)
+  400060:	0c100006 	jal	400018 <divides>
+  400064:	00000000 	nop
+  400068:	8fbf0014 	lw	ra,20(sp)
+  40006c:	27bd0018 	addiu	sp,sp,24
+  400070:	03e00008 	jr	ra
+  400074:	00000000 	nop
+
+00400078 <prime>:
+  400078:	27bdffe0 	addiu	sp,sp,-32
+  40007c:	afbf001c 	sw	ra,28(sp)
+  400080:	afa40020 	sw	a0,32(sp)
+  400084:	8fa40020 	lw	a0,32(sp)
+  400088:	0c100013 	jal	40004c <even>
+  40008c:	00000000 	nop
+  400090:	10400007 	beqz	v0,4000b0 <prime+0x38>
+  400094:	00000000 	nop
+  400098:	8fa20020 	lw	v0,32(sp)
+  40009c:	00000000 	nop
+  4000a0:	38420002 	xori	v0,v0,0x2
+  4000a4:	2c420001 	sltiu	v0,v0,1
+  4000a8:	0810004a 	j	400128 <prime+0xb0>
+  4000ac:	304200ff 	andi	v0,v0,0xff
+  4000b0:	24020003 	li	v0,3
+  4000b4:	0810003b 	j	4000ec <prime+0x74>
+  4000b8:	afa20010 	sw	v0,16(sp)
+  4000bc:	8fa40010 	lw	a0,16(sp)
+  4000c0:	8fa50020 	lw	a1,32(sp)
+  4000c4:	0c100006 	jal	400018 <divides>
+  4000c8:	00000000 	nop
+  4000cc:	10400003 	beqz	v0,4000dc <prime+0x64>
+  4000d0:	00000000 	nop
+  4000d4:	0810004a 	j	400128 <prime+0xb0>
+  4000d8:	00001021 	move	v0,zero
+  4000dc:	8fa20010 	lw	v0,16(sp)
+  4000e0:	00000000 	nop
+  4000e4:	24420002 	addiu	v0,v0,2
+  4000e8:	afa20010 	sw	v0,16(sp)
+  4000ec:	8fa30010 	lw	v1,16(sp)
+  4000f0:	8fa20010 	lw	v0,16(sp)
+  4000f4:	00000000 	nop
+  4000f8:	00620018 	mult	v1,v0
+  4000fc:	00001812 	mflo	v1
+  400100:	8fa20020 	lw	v0,32(sp)
+  400104:	00000000 	nop
+  400108:	0043102b 	sltu	v0,v0,v1
+  40010c:	1040ffeb 	beqz	v0,4000bc <prime+0x44>
+  400110:	00000000 	nop
+  400114:	8fa20020 	lw	v0,32(sp)
+  400118:	00000000 	nop
+  40011c:	2c420002 	sltiu	v0,v0,2
+  400120:	38420001 	xori	v0,v0,0x1
+  400124:	304200ff 	andi	v0,v0,0xff
+  400128:	8fbf001c 	lw	ra,28(sp)
+  40012c:	27bd0020 	addiu	sp,sp,32
+  400130:	03e00008 	jr	ra
+  400134:	00000000 	nop
+
+00400138 <swap>:
+  400138:	27bdfff8 	addiu	sp,sp,-8
+  40013c:	afa40008 	sw	a0,8(sp)
+  400140:	afa5000c 	sw	a1,12(sp)
+  400144:	8fa20008 	lw	v0,8(sp)
+  400148:	00000000 	nop
+  40014c:	8c420000 	lw	v0,0(v0)
+  400150:	00000000 	nop
+  400154:	afa20000 	sw	v0,0(sp)
+  400158:	8fa2000c 	lw	v0,12(sp)
+  40015c:	00000000 	nop
+  400160:	8c430000 	lw	v1,0(v0)
+  400164:	8fa20008 	lw	v0,8(sp)
+  400168:	00000000 	nop
+  40016c:	ac430000 	sw	v1,0(v0)
+  400170:	8fa2000c 	lw	v0,12(sp)
+  400174:	8fa30000 	lw	v1,0(sp)
+  400178:	00000000 	nop
+  40017c:	ac430000 	sw	v1,0(v0)
+  400180:	27bd0008 	addiu	sp,sp,8
+  400184:	03e00008 	jr	ra
+  400188:	00000000 	nop
+
+0040018c <main>:
+  40018c:	27bdffe0 	addiu	sp,sp,-32
+  400190:	afbf001c 	sw	ra,28(sp)
+  400194:	24025491 	li	v0,21649
+  400198:	afa20010 	sw	v0,16(sp)
+  40019c:	3c020007 	lui	v0,0x7
+  4001a0:	3442d4d7 	ori	v0,v0,0xd4d7
+  4001a4:	afa20014 	sw	v0,20(sp)
+  4001a8:	27a20014 	addiu	v0,sp,20
+  4001ac:	27a30010 	addiu	v1,sp,16
+  4001b0:	00602021 	move	a0,v1
+  4001b4:	00402821 	move	a1,v0
+  4001b8:	0c10004e 	jal	400138 <swap>
+  4001bc:	00000000 	nop
+  4001c0:	8fa20010 	lw	v0,16(sp)
+  4001c4:	00000000 	nop
+  4001c8:	00402021 	move	a0,v0
+  4001cc:	0c10001e 	jal	400078 <prime>
+  4001d0:	00000000 	nop
+  4001d4:	10400008 	beqz	v0,4001f8 <main+0x6c>
+  4001d8:	00000000 	nop
+  4001dc:	8fa20014 	lw	v0,20(sp)
+  4001e0:	00000000 	nop
+  4001e4:	00402021 	move	a0,v0
+  4001e8:	0c10001e 	jal	400078 <prime>
+  4001ec:	00000000 	nop
+  4001f0:	14400004 	bnez	v0,400204 <main+0x78>
+  4001f4:	00000000 	nop
+  4001f8:	24020001 	li	v0,1
+  4001fc:	08100082 	j	400208 <main+0x7c>
+  400200:	00000000 	nop
+  400204:	00001021 	move	v0,zero
+  400208:	8fbf001c 	lw	ra,28(sp)
+  40020c:	27bd0020 	addiu	sp,sp,32
+  400210:	03e00008 	jr	ra
+  400214:	00000000 	nop
