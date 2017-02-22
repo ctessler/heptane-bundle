@@ -32,6 +32,7 @@ ENDIANNESS_ARM=LITTLE
 XML2=/usr/include/libxml2
 #XML2= /usr/local/Cellar/libxml2/2.9.1/include/libxml2
 
+HEPTANE_ROOT=`dirname "$(readlink -f "$0")"`
 
 ####################################
 # INSTALLATION PARAMETERS
@@ -39,27 +40,31 @@ XML2=/usr/include/libxml2
 # Put 0 if you do not want to
 # install the corresponding part
 
-CROSS_COMPILER_MIPS_INSTALL=0
-CROSS_COMPILER_ARM_INSTALL=0
+CROSS_COMPILER_MIPS_INSTALL=${CROSS_COMPILER_MIPS_INSTALL:=0}
+CROSS_COMPILER_ARM_INSTALL=${CROSS_COMPILER_ARM_INSTALL:=0}
 
-HEPTANE_CFGLIB_INSTALL=1
-HEPTANE_CORE_INSTALL=1
-SCRIPT_CONFIG_INSTALL=1
+HEPTANE_CFGLIB_INSTALL=${HEPTANE_CFGLIB_INSTALL:=1}
+HEPTANE_CORE_INSTALL=${HEPTANE_CORE_INSTALL:=1}
+SCRIPT_CONFIG_INSTALL=${SCRIPT_CONFIG_INSTALL:=1}
+
+CROSS_COMPILERS_DIR=${CROSS_COMPILERS_DIR:=${HEPTANE_ROOT}/CROSS_COMPILERS}
 
 ########################################################################
 #
 # INSTALLATION      --- YOU DO NOT HAVE TO CHANGE LINES BELOW ---
 #
 ########################################################################
+ROOT_DIR=${HEPTANE_ROOT}
+
+echo "Installation Parameters:"
+for var in CROSS_COMPILER_MIPS_INSTALL CROSS_COMPILER_ARM_INSTALL \
+    HEPTANE_CFGLIB_INSTALL HEPTANE_CORE_INSTALL SCRIPT_CONFIG_INSTALL \
+    CROSS_COMPILERS_DIR HEPTANE_ROOT ROOT_DIR
+do
+	echo "    $var: ${!var}"
+done
 
 MODE_DEBUG=1
-
-#----------------------------------
-# CROSS COMPILER
-#----------------------------------
-HERE=`pwd`
-HEPTANE_ROOT=`pwd`
-CROSS_COMPILERS_DIR=${HEPTANE_ROOT}/CROSS_COMPILERS
 
 # Stop if any command fails
 #set -e
@@ -90,8 +95,6 @@ case "$(uname)" in
     ;;
 esac
 
-ROOT_DIR=$PWD
-
 cd ./src
 fileConfigMakefile=makefile.config
 echo "CONFIG = ${HOST_OS}" > $fileConfigMakefile
@@ -110,6 +113,7 @@ cd "${ROOT_DIR}"
 ####################################
 # CROSS COMPILER INSTALLATION
 ####################################
+echo "Installing the CROSS COMPILER"
 if [ "$*" != "clean" ]; then
     CROSS_COMPILERS_DIR=${ROOT_DIR}/CROSS_COMPILERS
 
@@ -129,22 +133,21 @@ fi
 ####################################
 # CFGLIB INSTALLATION
 ####################################
-
+echo "Installing Heptane CFGLIB"
 if [ $HEPTANE_CFGLIB_INSTALL -eq 1 ];
     then
 
-    cd ./src/Common/cfglib
+    pushd ./src/Common/cfglib
 
     hash doxygen 2> /dev/null
     [ $? -eq 0 ] || echo "Warning: CFGLIB requires doxygen to generate the doc but it's not installed."
 
     make ${MAKE_OPTIONS} ${PARALLEL} $*
-
     if [ "$*" != "clean" ]; then
 	make ${MAKE_OPTIONS} install
     fi
 
-    cd "${ROOT_DIR}"
+    popd
 
 fi
 
@@ -152,7 +155,7 @@ fi
 ####################################
 # Heptane (core) INSTALLATION
 ####################################
-
+echo "Installing Heptane CORE"
 if [ $HEPTANE_CORE_INSTALL -eq 1 ];
     then
     argMake=$*
@@ -179,13 +182,7 @@ if [ $HEPTANE_CORE_INSTALL -eq 1 ];
 
     [ $LP_SOLVER_PRESENT -eq 1 ] || echo "Warning: lpsolve and/or cplex are required for WCETanalysis but they are not installed."
 
-
-#build makefile.common
-#echo "CONFIG = ${HOST_OS}" > makefile.common
-#echo "ADDR2LINE = ${CROSS_COMPILERS_DIR}/bin/mips-addr2line" >> makefile.common
-#echo "" >> makefile.common
-    HERE=`pwd`
-    echo "include ${HERE}/$fileConfigMakefile" >  makefile.common
+    echo "include ${HEPTANE_ROOT}/src/$fileConfigMakefile" >  makefile.common
     cat ./templates/makefile.common.template >> makefile.common
 
     # I don't know why make doc is not accepted here!!!
@@ -198,7 +195,7 @@ fi
 ####################################
 # template files generation
 ####################################
-
+echo "Generating templates"
 if [ $SCRIPT_CONFIG_INSTALL -eq 1 ];
     then
     CROSS_COMPILER_DIR=${ROOT_DIR}/CROSS_COMPILERS
