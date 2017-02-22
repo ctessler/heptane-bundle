@@ -47,6 +47,7 @@ makefile.depends:
 	   filename=`basename $$i .cc` ; \
 	   yyy=obj/$${filename}.o ; \
 	   $(COMPILING) -M -MM -MT$${yyy} $$i >>makefile.depends ; \
+	   echo "	mkdir obj 2>/dev/null || true " >> makefile.depends ; \
 	   echo "	$(COMPILING) -c $$i -o $$yyy " >>makefile.depends ;\
 	   echo "	$(COMPILING) -c $$i -o $$yyy "  ;\
         done 2>/dev/null

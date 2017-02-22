@@ -5,10 +5,15 @@ COMPILING=$(CXX) $(CXXFLAGS) $(INCLS)
 
 
 all: $(OBJS)
+dirs=$(sort $(dir $(OBJS)))
 
 # generated-doc is the dir defined in the Doxyfile file.
 INDEXDOC=doc/generated-doc/html/index.html
 doc: $(INDEXDOC)
+
+$(OBJS): $(dirs)
+$(dirs):
+	mkdir -p $@
 
 $(INDEXDOC): $(OBJS)
 	doxygen Doxyfile
