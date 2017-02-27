@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Cross Compiler for Heptane</title>
+<!-- 2017-02-27 Mon 13:24 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Cross Compiler for Heptane</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Cross Compiler</a>
+<ul>
+<li><a href="#sec-1-1">1.1. binutils</a></li>
+<li><a href="#sec-1-2">1.2. texinfo</a></li>
+<li><a href="#sec-1-3">1.3. newlib</a></li>
+<li><a href="#sec-1-4">1.4. GCC 4.7.1</a></li>
+<li><a href="#sec-1-5">1.5. gdb</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Cross Compiler</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+The following instructions are used to create a MIPS cross
+compiler. Heptane relies on the output of GCC, since GCC does not
+guarantee it's output format will remain consistent a specific
+version is required to maintain interoperability with Heptane.
+</p>
+
+<p>
+The version of GCC Heptane uses is 4.7.1.
+<a href="http://mirrors.concertpass.com/gcc/releases/gcc-4.7.1/gcc-4.7.1.tar.bz2">http://mirrors.concertpass.com/gcc/releases/gcc-4.7.1/gcc-4.7.1.tar.bz2</a>
+</p>
+
+<p>
+A few environment variables will need to be set. The TARGET
+identifies the architecture in this case mips. PREFIX is the
+destination for binutils and the compiler. TEX_PREFIX is the
+destination for a previous (compatible) version of the texinfo
+package. 
+</p>
+
+<p>
+After following these instructions the binaries and tools are
+installed in ${PREFIX}/mips ${PREFIX}/bin and ${TEX_PREFIX}/bin
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-bash">export TARGET=mips
+export PREFIX=/opt/cross/mips
+export TARGET_PREFIX=$PREFIX/$TARGET
+export TEX_PREFIX=/opt/art/tex
+export PATH=${TEX_PREFIX}/bin:$PATH:$PREFIX/bin
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> binutils</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+However, GCC cannot be built without binutils being installed.
+<a href="http://ftp.gnu.org/gnu/binutils/binutils-2.22.tar.bz2">http://ftp.gnu.org/gnu/binutils/binutils-2.22.tar.bz2</a>
+</p>
+
+<p>
+Unpack 
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">&gt; tar -jxvf binutils-2.22.tar.bz2
+&gt; mkdir build-binutils
+&gt; cd build-binutils
+</pre>
+</div>
+
+<p>
+Configure and Make
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">build-binutils &gt; ../binutils-2.22/configure \
+    --target=$TARGET --prefix=$PREFIX --disable-nls \
+    CFLAGS=-Wno-error=unused-value -v
+</pre>
+</div>
+
+<p>
+Some flags of interest
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash"># Remove Natural Language Support
+--disable-nls
+
+# Compilers have advanced since binutils 2.22 was released, disabling
+# this warning allows the build to proceed.
+CFLAGS=-Wno-error=unused-value
+</pre>
+</div>
+
+<p>
+Now make and install binutils, products will be installed in ${PREFIX}/bin
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">build-binutils &gt; make -j2
+build-binutils &gt; make install
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> texinfo</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+Similarly, an older version of texinfo is required to build GCC.
+<a href="http://ftp.gnu.org/gnu/texinfo/texinfo-4.13a.tar.gz">http://ftp.gnu.org/gnu/texinfo/texinfo-4.13a.tar.gz</a>
+</p>
+
+<p>
+Unpack
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">&gt; tar -zxvf dist/texinfo-4.13a.tar.gz
+&gt; mkdir build-texinfo
+&gt; cd build-texinfo
+</pre>
+</div>
+
+<p>
+Configure and Make
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">build-texinfo &gt; 
+build-texinfo &gt; ../texinfo-4.13/configure --prefix=${TEX_PREFIX}
+build-texinfo &gt; make
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> newlib</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+newlib is mentioned in several documents for buliding a "bare
+bones" compiler. However, newlib is not required (neither is
+libc). At the time GCC 4.7.1 was released the current version of
+newlib was 1.19. A link is provided in case the reader has need of
+it.
+</p>
+
+<p>
+<a href="ftp://sources.redhat.com/pub/newlib/newlib-1.19.0.tar.gz">ftp://sources.redhat.com/pub/newlib/newlib-1.19.0.tar.gz</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-1-4" class="outline-3">
+<h3 id="sec-1-4"><span class="section-number-3">1.4</span> GCC 4.7.1</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+<a href="http://mirrors.concertpass.com/gcc/releases/gcc-4.7.1/gcc-4.7.1.tar.bz2">http://mirrors.concertpass.com/gcc/releases/gcc-4.7.1/gcc-4.7.1.tar.bz2</a>
+</p>
+
+<p>
+Unpack
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">&gt; tar -jxvf gcc-4.7.1.tar.bz2
+&gt; mkdir build-gcc
+&gt; cd build-gcc
+</pre>
+</div>
+
+<p>
+Configure and Make
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">build-gcc &gt; ../gcc-4.7.1/configure --target=$TARGET \
+    --prefix=$PREFIX --without-headers --with-newlib \
+    --disable-shared --disable-nls --with-gnu-as --with-gnu-ld  \
+    --enable-languages=c,c++
+
+build-gcc &gt; make -j2 all-gcc
+build-gcc &gt; make install-gcc
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-1-5" class="outline-3">
+<h3 id="sec-1-5"><span class="section-number-3">1.5</span> gdb</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+A debugger will be helpful, GDB version 7.4 is compatible with GCC
+4.7.1. 
+<a href="http://ftp.gnu.org/gnu/gdb/gdb-7.4.tar.bz2">http://ftp.gnu.org/gnu/gdb/gdb-7.4.tar.bz2</a>
+</p>
+
+<p>
+Unpack
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">&gt; tar -jxvf gdb-7.4.tar.bz2
+&gt; mkdir build-gdb
+&gt; cd build-gdb
+</pre>
+</div>
+
+<p>
+Configure and Make
+</p>
+<div class="org-src-container">
+
+<pre class="src src-bash">build-gdb &gt; ../gdb-7.4/configure --prefix=${PREFIX} \
+    --target=${TARGET} CFLAGS=-Wno-error=unused-value
+&gt; make all
+&gt; make install
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2017-02-27 Mon 13:24</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>
