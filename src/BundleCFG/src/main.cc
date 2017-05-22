@@ -2,7 +2,26 @@
 #include<getopt.h>
 #include"BXMLCfg.h"
 #include<libxml/xpath.h>
+
+#include "arch.h"
+#include "Program.h"
+#include "GlobalAttributes.h"
+#include "Logger.h"
 using namespace std;
+using namespace cfglib;
+
+void initcfglib() {
+	AttributesFactory *af = AttributesFactory::GetInstance();
+	af->SetAttributeType(AddressAttributeName, new AddressAttribute());
+	af->SetAttributeType(SymbolTableAttributeName, new SymbolTableAttribute());
+#if 0
+	af->SetAttributeType(ARMWordsAttributeName, new ARMWordsAttribute());
+	af->SetAttributeType(StackInfoAttributeName, new StackInfoAttribute());
+	af->SetAttributeType(CodeLineAttributeName, new CodeLineAttribute());
+	af->SetAttributeType(ContextListAttributeName, new ContextList());
+	af->SetAttributeType(ContextTreeAttributeName, new ContextTree());
+#endif
+}	
 
 void usage(void) {
 	cout << "Usage: BundleCFG <OPTIONS> <XML Configuration File>" << endl
@@ -21,7 +40,7 @@ void usage(void) {
  * validity and instigate the analysis.
  */
 int main(int argc, char** argv) {
-	int vflag, tflag, hflag;
+	int vflag = 0, tflag = 0, hflag = 0;
 
 	/* Long form command line options */
 	static struct option long_options[] = {
@@ -69,7 +88,6 @@ int main(int argc, char** argv) {
 		cfgfile = argv[i];
 	}
 	if (cfgfile.length() == 0) {
-		cout << "No configuration file supplied" << endl;
 		usage();
 		return -1;
 	} else {
@@ -84,8 +102,28 @@ int main(int argc, char** argv) {
 	xmlInitParser();
 	xmlKeepBlanksDefault(1);
 	xmlXPathInit();
-	
+
+	/* Read the configuration file */
 	BXMLCfg cfg(cfgfile);
+
+	if (BXMLCfg::MIPS == cfg.getArch()) {
+		Arch::init("MIPS", cfg.getEndian() == BXMLCfg::BIG);
+	}
+	if (BXMLCfg::ARM == cfg.getArch()) {
+		Arch::init("ARM", cfg.getEndian() == BXMLCfg::BIG);		
+	}
+
+	/* Initialize Heptane's cfglib */
+	initcfglib();
+	
+	/* Read the CFG of the program */
+	cout << "Using CFG file: " << cfg.getCfgFile() << endl; 
+	Program *prog = Program::unserialise_program_file(cfg.getCfgFile());
+
+
+	map<int, Cache *> iCache, dCache;
+	cfg.copyCaches(iCache, dCache);
+	
 
 	xmlCleanupParser();
 	return 0;
