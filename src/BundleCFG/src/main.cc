@@ -7,6 +7,7 @@
 #include "Program.h"
 #include "GlobalAttributes.h"
 #include "Logger.h"
+#include "DotPrint.h"
 using namespace std;
 using namespace cfglib;
 
@@ -120,6 +121,8 @@ int main(int argc, char** argv) {
 	cout << "Using CFG file: " << cfg.getCfgFile() << endl; 
 	Program *prog = Program::unserialise_program_file(cfg.getCfgFile());
 
+	DotPrint dotprint(prog, cfg.getWorkDir());
+	dotprint.PerformAnalysis();
 
 	map<int, Cache *> iCache, dCache;
 	cfg.copyCaches(iCache, dCache);

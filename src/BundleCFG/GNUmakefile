@@ -5,7 +5,7 @@ INCLS+=-Isrc/DotPrint -Isrc/DummyAnalysis -Isrc/HtmlPrint -Isrc/IPETAnalysis
 INCLS+=-I../../src/HeptaneAnalysis/src -I../../src/HeptaneAnalysis/src
 INCLS+=-I../../src/HeptaneAnalysis/src/Generic
 
-OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o
+OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o
 
 vbin=../../bin/BundleCFG
 all: $(vbin)
@@ -27,7 +27,9 @@ $(vbin): $(CFGLIBDIR)/lib/libcfg.a $(OBJS) \
         $(ARCHDEP_DIR_OBJ)/DAAInstruction_ARM.o \
 	$(UTILITY_DIR_OBJ)/Logger.o \
 	$(UTILITY_DIR_OBJ)/Utl.o \
-	$(UTILITY_DIR_OBJ)/InstructionARM.o 
+	$(UTILITY_DIR_OBJ)/InstructionARM.o \
+	../HeptaneAnalysis/obj/Analysis.o \
+	../HeptaneAnalysis/obj/CallGraph.o
 	$(CXX) $^ $(LINKSFLAGS) -o $@
 
 
