@@ -57,17 +57,19 @@ template < typename T > class AbstractCache
   vector < cow_ptr < T > >contents;
   unsigned int nb_sets;
   unsigned int nb_ways;
-  unsigned int cacheline_size;
+  unsigned int cacheline_size; /** Cache line size, in bytes */
 
   /** Computes the address corresponding to the beginning of the cache line where addr is */
   t_address computeStartLine (t_address addr) const
   {
-    return addr - (addr % cacheline_size);
+    t_address value = addr - (addr % (cacheline_size));
+    return value;
   }
   /** Computes the set where addr is mapped */
   unsigned int computeSet (t_address addr) const
   {
-    return (computeStartLine (addr) / cacheline_size) % nb_sets;
+    unsigned int value = (computeStartLine(addr) / (cacheline_size)) % nb_sets;
+    return value;
   }
 
  public:
