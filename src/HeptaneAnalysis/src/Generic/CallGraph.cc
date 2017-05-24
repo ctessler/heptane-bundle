@@ -116,7 +116,7 @@ CallGraph::BuildFromCallGraphElem (CallGraphElem * e)
 CallGraph::CallGraph (Program * p)
 {
   // Build call graph
-  Cfg *c = config->getEntryPoint ();
+  Cfg *c = p->GetEntryPoint();
   this->root = c;
   CallGraphElem *el = new CallGraphElem (c);
   elems.insert (elems.end (), el);
