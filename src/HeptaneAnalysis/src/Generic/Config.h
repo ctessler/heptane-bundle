@@ -117,9 +117,16 @@ class WCETAnalysis;
 class ConfigICache;
 class Config
 {
-
-  /// Caches, with a vector for every cache level in the hierarchy
-  map < int, vector < CacheParam * > >cache_params;
+    /*
+     * Cache parameters by level
+     *
+     * level 1 -> (icache, dcache)
+     *
+     * The ordering of icache and dcache at each level is not
+     * enforced, it will be in the order defined in the configuration
+     * XML file.
+     */
+    map <int, vector<CacheParam *> >cache_params;
 
 private:
   int nb_icache_levels;
