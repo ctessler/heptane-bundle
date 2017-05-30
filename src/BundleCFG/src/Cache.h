@@ -172,6 +172,12 @@ public:
 	 * Returns the index of the set the address *would* be cached in
 	 */
 	uint32_t setIndex(t_address addr) const;
+	/**
+	 * Returns true if the address is currently cached.
+	 */
+	bool present(t_address addr) {
+		return setOf(addr)->present(addr);
+	}
 private:
 	map <int, CacheSet *> _sets;
 	ReplacementPolicy *_policy;

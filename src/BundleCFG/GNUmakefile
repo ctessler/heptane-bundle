@@ -5,7 +5,7 @@ INCLS+=-Isrc/DotPrint -Isrc/DummyAnalysis -Isrc/HtmlPrint -Isrc/IPETAnalysis
 INCLS+=-I../../src/HeptaneAnalysis/src -I../../src/HeptaneAnalysis/src
 INCLS+=-I../../src/HeptaneAnalysis/src/Generic
 
-OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o
+OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o obj/CFRFactory.o
 
 vbin=../../bin/BundleCFG
 all: $(vbin)

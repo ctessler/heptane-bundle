@@ -8,6 +8,7 @@
 #include "GlobalAttributes.h"
 #include "Logger.h"
 #include "DotPrint.h"
+#include "CFRFactory.h"
 using namespace std;
 using namespace cfglib;
 
@@ -104,6 +105,9 @@ int main(int argc, char** argv) {
 	xmlKeepBlanksDefault(1);
 	xmlXPathInit();
 
+	/* Initialize Heptane's cfglib */
+	initcfglib();
+	
 	/* Read the configuration file */
 	BXMLCfg cfg(cfgfile);
 
@@ -117,18 +121,17 @@ int main(int argc, char** argv) {
 		Arch::init("ARM", cfg.getEndian() == BXMLCfg::BIG);
 	}
 
-	/* Initialize Heptane's cfglib */
-	initcfglib();
 	
 	/* Read the CFG of the program */
 	cout << "Using CFG file: " << cfg.getCfgFile() << endl; 
 	Program *prog = Program::unserialise_program_file(cfg.getCfgFile());
 
+	/* Intermediate Result */
 	DotPrint dotprint(prog, cfg.getWorkDir(), iCache, dCache);
 	dotprint.PerformAnalysis();
 
+	CFRFactory::makeCFRG(prog, cfg.getWorkDir(), iCache, dCache);
 	
-
 	xmlCleanupParser();
 	return 0;
 }

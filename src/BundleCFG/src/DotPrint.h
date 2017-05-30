@@ -43,21 +43,21 @@ private:
 	bool displayNode(Cfg* c, Node* node, ofstream & os);
 	void displayNodeAsSubgraph(Node* node, ofstream& os);
 	bool displayLoop(Cfg* c, Loop* l, ofstream& os, vector<Loop *>& vl);
-	
 public:
 	DotPrint(Program * p, string dir, map<int, Cache*> &iCache, map<int, Cache*> &dCache);
-
-	/** Checks if all required attributes are in the CFG.
-	    @return always true (nothing specific to do) 
-	*/
+	/**
+	 *  Checks if all required attributes are in the CFG.
+	 * @return always true (nothing specific to do) 
+	 */
 	bool CheckInputAttributes() { return true; }
-
-	/** Performs the analysis
-	    @return true if successful, false otherwise
-	*/
+	/**
+	 * Performs the analysis
+	 * @return true if successful, false otherwise
+	 */
 	bool PerformAnalysis();
-
-	/** Remove all private attributes*/
+	/**
+	 * Remove all private attributes
+	 */
 	void RemovePrivateAttributes();
 };
 

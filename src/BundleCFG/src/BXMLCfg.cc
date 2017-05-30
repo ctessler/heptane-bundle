@@ -201,10 +201,6 @@ xmlNodePtr BXMLCfg::getCacheNodes() {
 	for (int i=0; i < cache_count; i++) {
 		addCacheLevel(xpathObj->nodesetval->nodeTab[i]);
 	}
-
-	cout << "Maximum instruction cache level: " << maxICacheLevel() << endl;
-	cout << "Maximum data cache level: " << maxDCacheLevel() << endl;
-
 	/* Frees everything */
 	xmlXPathFreeObject(xpathObj);
 	return NULL;
@@ -292,9 +288,6 @@ void BXMLCfg::addCacheLevel(xmlNodePtr node) {
 		throw runtime_error("CACHE has no supported replacement policy");
 	}
 
-	cout << "Adding an " << iord << " cache level" << endl
-	     << "  level: "<< level << " associativity: " << nways << " sets: " << nsets
-	     << " latency: " << latency << " policy: " << new_cache->getPolicy()->typeName() << endl;
 }
 
 /**
@@ -325,10 +318,6 @@ xmlNodePtr BXMLCfg::getMemoryNode() {
 	sscanf(buff, "%i", &_load_latency);
 	free(buff);
 
-
-	cout << "Memory store/load latency: " << _store_latency << "/"
-	     << _load_latency << endl;
-	
 	return node;
 }
 
@@ -352,7 +341,6 @@ xmlNodePtr BXMLCfg::getDirNode() {
 	_dir = buff;
 	free(buff);
 
-	cout << "Found directory: " << _dir << endl;
 	return node;
 }
 
@@ -383,8 +371,6 @@ xmlNodePtr BXMLCfg::getEntryNode() {
 	_entry = buff;
 	free(buff);
 
-	cout << "Found CFG input file: " << _cfg << " with entry point: "
-	     << _entry << endl;
 	return node;
 
 }
