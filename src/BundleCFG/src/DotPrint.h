@@ -23,6 +23,7 @@
 #ifndef DOT_PRINT_H
 #define DOT_PRINT_H
 
+#include "Cache.h"
 #include "Analysis.h"
 #include "Generic/CallGraph.h"
 
@@ -35,8 +36,16 @@
 class DotPrint:public Analysis {
 private:
 	string directory;
+	map<int, Cache*> &_icache;
+	map<int, Cache*> &_dcache;
+
+	void displayCfg(Cfg * c, ofstream & os);
+	bool displayNode(Cfg* c, Node* node, ofstream & os);
+	void displayNodeAsSubgraph(Node* node, ofstream& os);
+	bool displayLoop(Cfg* c, Loop* l, ofstream& os, vector<Loop *>& vl);
+	
 public:
-	DotPrint(Program * p, string dir);
+	DotPrint(Program * p, string dir, map<int, Cache*> &iCache, map<int, Cache*> &dCache);
 
 	/** Checks if all required attributes are in the CFG.
 	    @return always true (nothing specific to do) 

@@ -168,6 +168,10 @@ public:
 	 * the cache contents.
 	 */
 	CacheSet *setOf(t_address addr);
+	/**
+	 * Returns the index of the set the address *would* be cached in
+	 */
+	uint32_t setIndex(t_address addr) const;
 private:
 	map <int, CacheSet *> _sets;
 	ReplacementPolicy *_policy;

@@ -396,6 +396,7 @@ void BXMLCfg::copyCaches(map<int, Cache *>& iCache, map<int, Cache *>& dCache) {
 	for (it = _ins_cache.begin(); it != _ins_cache.end(); it++) {
 		iCache[it->first] = new Cache(*(it->second));
 	}
+	dCache.clear();
  	for (it = _dat_cache.begin(); it != _dat_cache.end(); it++) {
 		dCache[it->first] = new Cache(*(it->second));
 	}

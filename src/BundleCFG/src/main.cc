@@ -107,11 +107,14 @@ int main(int argc, char** argv) {
 	/* Read the configuration file */
 	BXMLCfg cfg(cfgfile);
 
+	map<int, Cache *> iCache, dCache;
+	cfg.copyCaches(iCache, dCache);
+	
 	if (BXMLCfg::MIPS == cfg.getArch()) {
 		Arch::init("MIPS", cfg.getEndian() == BXMLCfg::BIG);
 	}
 	if (BXMLCfg::ARM == cfg.getArch()) {
-		Arch::init("ARM", cfg.getEndian() == BXMLCfg::BIG);		
+		Arch::init("ARM", cfg.getEndian() == BXMLCfg::BIG);
 	}
 
 	/* Initialize Heptane's cfglib */
@@ -121,11 +124,9 @@ int main(int argc, char** argv) {
 	cout << "Using CFG file: " << cfg.getCfgFile() << endl; 
 	Program *prog = Program::unserialise_program_file(cfg.getCfgFile());
 
-	DotPrint dotprint(prog, cfg.getWorkDir());
+	DotPrint dotprint(prog, cfg.getWorkDir(), iCache, dCache);
 	dotprint.PerformAnalysis();
 
-	map<int, Cache *> iCache, dCache;
-	cfg.copyCaches(iCache, dCache);
 	
 
 	xmlCleanupParser();
