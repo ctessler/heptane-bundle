@@ -51,6 +51,17 @@ public:
 	 */
 	bool present(t_address addr) const;
 	/**
+	 * Returns true if placing the address in the set would cause
+	 * an eviction
+	 */
+	bool evicts(t_address addr) const;
+	/**
+	 * Could cause an eviction if the policy is ignored.
+	 *
+	 * The NP stands for No Policy Consideration
+	 */
+	bool NPcouldEvict(t_address addr) const;
+	/**
 	 * Returns the index of the starting byte the address would be cached in
 	 */
 	uint32_t offsetOf(t_address addr) const;
@@ -73,6 +84,11 @@ private:
 	 * The cached values
 	 */
 	vector <CacheLine> _contents;
+	/**
+	 * Using 0 as NO_VALUE means no instruction with address 0 may
+	 * be placed in the cache set.
+	 */
+	static const uint32_t NO_VALUE = 0;
 };
 
 /**

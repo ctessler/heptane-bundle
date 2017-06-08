@@ -66,14 +66,23 @@ DotPrint::displayNodeAsSubgraph(Node* node, ofstream& os)
 	os << "node" << node << " [shape=plaintext];" << endl;
 	os << "node" << node
 	   << " [label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">" << endl;
+
+	if (node->IsCall()) {
+		Cfg *callTo = node->GetCallee();
+		string callToName = callTo->getStringName();
+		if (callTo->IsExternal()) {
+			callToName = callToName + " external";
+		}
+		os << "\t<TR><TD colspan=\"3\">Call " << callToName << "</TD></TR>" << endl;
+	}
 	os << "\t<TR><TD>Address</TD>";
 
 	map<int, Cache*>::iterator cit;
 	for (cit = _icache.begin(); cit != _icache.end(); cit++) {
 		os << "<TD> L" << cit->first << " Set</TD>" << endl;
 	}
-
 	os << "</TR>" << endl;
+	
 	for (it = vi.begin(); it != vi.end(); it++) {
 		addr = getInstructionAddress(*it);
 		os << "\t<TR><TD>0x" << hex << addr << "</TD>";
@@ -104,20 +113,8 @@ DotPrint::displayNode(Cfg* c, Node* node, ofstream & os)
 		return true;
 	}
 
-	if (node->IsBB()) {
-		displayNodeAsSubgraph(node, os);
-	} else if (node->IsCall()) {
-		os << "node" << node << " [label = \"";
-		os << "(Call ";
-		Cfg *callee = node->GetCallee ();
-		assert (callee != NULL);
-		os << callee->getStringName/*GetName*/ ();
-		if (callee->IsExternal ())
-			os << ": external)";
-		else
-			os << ")";
-		os << "\"];";
-	}
+	displayNodeAsSubgraph(node, os);
+
 	NonSerialisableIntegerAttribute OK (0);
 	node->SetAttribute (InternalAttributeNameOK, OK);
 
@@ -242,10 +239,12 @@ displayAllSucs (ofstream & os, Program * p)
 // ----------------------
 // DotPrint class
 // ----------------------
-DotPrint::DotPrint (Program * p, string dir, map<int, Cache*> &iCache, map<int, Cache*> &dCache)
+DotPrint::DotPrint (Program * p, string wdir, string fbase,
+		    map<int, Cache*> &iCache, map<int, Cache*> &dCache)
 	: Analysis (p), _icache(iCache), _dcache(dCache)
 {
-	directory = dir;
+	working_directory = wdir;
+	filename_base = wdir + "/" + fbase;
 };
 
 // ----------------------------------------------
@@ -258,11 +257,11 @@ DotPrint::PerformAnalysis ()
 	CallGraph * call_graph = new CallGraph(p);
 	Cfg * currentCfg;
 
-	string filename = this->directory + "/" + p->GetName () + ".dot";
-	ofstream os (filename.c_str ());
-	os << "digraph G {" << endl;
-	vector < Cfg * > lc = p->GetAllCfgs ();
+	string dot_file = filename_base + ".dot";
+	ofstream os (dot_file.c_str());
 
+	os << "digraph G {" << endl;
+	vector<Cfg*> lc = p->GetAllCfgs();
 	for (unsigned int c = 0; c < lc.size (); c++) {
 		currentCfg = lc[c];
 		if (! call_graph->isDeadCode(currentCfg))
@@ -270,13 +269,19 @@ DotPrint::PerformAnalysis ()
 	}
 	displayAllSucs (os, p);
 	os << "}" << endl;
-	os.close ();
-	// Isabelle: changed format to a pdf output, was not managing colors
-	// properly with jpg export on version 2.32 (default color seemed to
-	// be white, ...)
-	string command = "dot -Tpdf " + filename + " > " + this->directory + "/" + p->GetName () + ".pdf";
+	os.close();
+
+	string pdf_file = filename_base + ".pdf";
+	string jpg_file = filename_base + ".jpg";
+	
+	string command = "dot -Tpdf " + dot_file + " > " + pdf_file;
 	cout << "Running dot command: " << command << endl;
-	system (command.c_str ());
+	system(command.c_str());
+
+	command = "dot -Tjpg " + dot_file + " > " + jpg_file;
+	cout << "Running dot command: " << command << endl;
+	system(command.c_str());
+	
 	return true;
 }
 

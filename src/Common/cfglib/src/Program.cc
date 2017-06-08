@@ -176,36 +176,65 @@ namespace cfglib
   }
   
   /* Deserialisation function. */
+  /**
+   * Converts an XML Control Flow Graph into a Program
+   *
+   * XML Structure
+   * <PROGRAM>
+   *  <CFG>
+   *   <NODE>
+   *    <INSTRUCTION>
+   *     <ATTRS_LIST>
+   *      <ATTR>
+   *       <ACCESS>
+   *        <ADDRSIZE /> ... <ADDRSIZE />
+   *       </ACCESS>
+   *       <ACCESS> ... </ACCESS>
+   *      </ATTR>
+   *     </ATTRS_LIST>
+   *    </INSTRUCTION>
+   *    <INSTRUCTION> ... </INSTRUCTION>
+   *   </NODE>
+   *   <NODE> ... </NODE>
+   *  </CFG>
+   * </PROGRAM>
+   *
+   * <CFG> : Begins a function
+   * <NODE> : Begins a 
+   *
+   */
   void Program::ReadXml(XmlTag const* tag, Handle& h)
   {
-    assert(tag->getName()==string("PROGRAM"));
-    this->name = tag->getAttributeString("name");
-    assert(this->name!="");
-    string entry_point_number = tag->getAttributeString("entry");
-    this->entry_point = NULL;
-    hand.addID_handle(entry_point_number,(Serialisable **)&(this->entry_point));
-    ListXmlTag children = tag->getAllChildren();
+	  assert(tag->getName()==string("PROGRAM"));
+	  this->name = tag->getAttributeString("name");
+	  assert(this->name!="");
+	  string entry_point_number = tag->getAttributeString("entry");
+	  this->entry_point = NULL;
+	  hand.addID_handle(entry_point_number,(Serialisable **)&(this->entry_point));
+	  ListXmlTag children = tag->getAllChildren();
     
-    for (unsigned int c=0;c<children.size();c++) {
-      XmlTag child = children[c];
-      if (child.getName()==string("ATTRS_LIST")) continue;
-      assert(child.getName()==string("CFG"));
-      string name = child.getAttributeString("name");
-      assert(name!="");
-      istringstream lnames(name);
-      string aname;
-     ListOfString names;
-     while (!lnames.eof())
-	{
-	  getline(lnames, aname,' ');
-	  names.push_front(aname);
-	}
+	  for (unsigned int c=0;c<children.size();c++) {
+		  XmlTag child = children[c];
+		  if (child.getName()==string("ATTRS_LIST")) continue;
+		  assert(child.getName()==string("CFG"));
+
+		  string name = child.getAttributeString("name");
+		  assert(name!="");
+
+		  istringstream lnames(name);
+		  string aname;
+		  ListOfString names;
+		  while (!lnames.eof()) {
+			  getline(lnames, aname,' ');
+			  names.push_front(aname);
+		  }
       
-     Cfg* cfg = this->CreateNewCfg(names);
-     cfg->ReadXml(&child,h);
-    }
-    this->ReadXmlAttributes(tag, h) ;
-    h.resolveHandles();
+		  Cfg* cfg = this->CreateNewCfg(names);
+		  cfg->ReadXml(&child,h);
+	  }
+
+	  this->ReadXmlAttributes(tag, h) ;
+	  h.resolveHandles();
   }
 
   Program *Program::unserialise_program_file(std::string const& file_name) {

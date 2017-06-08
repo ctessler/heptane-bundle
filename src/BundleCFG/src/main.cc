@@ -109,28 +109,29 @@ int main(int argc, char** argv) {
 	initcfglib();
 	
 	/* Read the configuration file */
-	BXMLCfg cfg(cfgfile);
+	BXMLCfg config(cfgfile);
 
 	map<int, Cache *> iCache, dCache;
-	cfg.copyCaches(iCache, dCache);
+	config.copyCaches(iCache, dCache);
 	
-	if (BXMLCfg::MIPS == cfg.getArch()) {
-		Arch::init("MIPS", cfg.getEndian() == BXMLCfg::BIG);
+	if (BXMLCfg::MIPS == config.getArch()) {
+		Arch::init("MIPS", config.getEndian() == BXMLCfg::BIG);
 	}
-	if (BXMLCfg::ARM == cfg.getArch()) {
-		Arch::init("ARM", cfg.getEndian() == BXMLCfg::BIG);
+	if (BXMLCfg::ARM == config.getArch()) {
+		Arch::init("ARM", config.getEndian() == BXMLCfg::BIG);
 	}
 
 	
 	/* Read the CFG of the program */
-	cout << "Using CFG file: " << cfg.getCfgFile() << endl; 
-	Program *prog = Program::unserialise_program_file(cfg.getCfgFile());
+	cout << "Using CFG file: " << config.getCfgFile() << endl; 
+	Program *prog = Program::unserialise_program_file(config.getCfgFile());
 
 	/* Intermediate Result */
-	DotPrint dotprint(prog, cfg.getWorkDir(), iCache, dCache);
+	string base = prog->GetName();
+	DotPrint dotprint(prog, config.getWorkDir(), base, iCache, dCache);
 	dotprint.PerformAnalysis();
 
-	CFRFactory::makeCFRG(prog, cfg.getWorkDir(), iCache, dCache);
+	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
 	
 	xmlCleanupParser();
 	return 0;

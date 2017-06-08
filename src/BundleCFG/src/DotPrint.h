@@ -35,7 +35,7 @@
  */
 class DotPrint:public Analysis {
 private:
-	string directory;
+	string working_directory, filename_base;
 	map<int, Cache*> &_icache;
 	map<int, Cache*> &_dcache;
 
@@ -44,7 +44,27 @@ private:
 	void displayNodeAsSubgraph(Node* node, ofstream& os);
 	bool displayLoop(Cfg* c, Loop* l, ofstream& os, vector<Loop *>& vl);
 public:
-	DotPrint(Program * p, string dir, map<int, Cache*> &iCache, map<int, Cache*> &dCache);
+	/**
+	 * Constructor
+	 *
+	 * @param[in] p the program being turned into a DOT and rendered files
+	 * @param[in] wdir working directory where the intermediate
+	 *            DOT file and rendered files will be placed 
+	 * @param[in] fbase filename base for the DOT and rendered
+	 *            files
+	 * @param[in] iCache reference to a multi-level instruction cache
+	 * @param[in] dCache reference to a multi-level data cache
+	 *
+	 *
+	 * wdir and fbase work together in the following manner.
+	 * If wdir is "/home/happy/working" and
+	 * fbase is "whistle" then the following files will be created
+	 *
+	 *    /home/happy/working/whistle.dot
+	 *    /home/happy/working/whistle.jpg
+	 *    /home/happy/working/whistle.pdf
+	 */
+	DotPrint(Program *p, string wdir, string fbase, map<int, Cache*> &iCache, map<int, Cache*> &dCache);
 	/**
 	 *  Checks if all required attributes are in the CFG.
 	 * @return always true (nothing specific to do) 
