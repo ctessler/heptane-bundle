@@ -6,6 +6,7 @@ INCLS+=-I../../src/HeptaneAnalysis/src -I../../src/HeptaneAnalysis/src
 INCLS+=-I../../src/HeptaneAnalysis/src/Generic
 
 OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o obj/CFRFactory.o
+OBJS+=obj/CacheLine.o obj/CacheSet.o obj/PolicyLRU.o 
 
 vbin=../../bin/BundleCFG
 all: $(vbin)

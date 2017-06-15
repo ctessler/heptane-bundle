@@ -10,6 +10,7 @@
 #include <libxml/xpathInternals.h>
 
 #include "Cache.h"
+#include "PolicyLRU.h"
 
 using namespace std;
 

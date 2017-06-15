@@ -60,19 +60,20 @@ CFRFactory::extractNode(Node* node, Cache *cache) {
 	for (it = vi.begin(); it != vi.end(); it++) {
 		t_address addr = getInstructionAddress(*it);
 		CacheSet *cache_set = cache->setOf(addr);
-		uint32_t offset = cache_set->offsetOf(addr);
+		CacheLine cline(cache->getLineSize());
+		cline.store(addr);
+		uint32_t offset = cline.offset(addr);
 
 		cout << "Inspecting address: 0x" << hex << addr << dec 
 		     << "\tCache Set: " << cache->setIndex(addr) 
 		     << "\tCache Line Offset: " << offset
 		     << "\tXFlict: ";
-		
 
 		if (cache_set->present(addr)) {
 			cout << "Hit (Loop!)" << endl;
 			return false;
 		}
-		if (cache_set->NPcouldEvict(addr)) {
+		if (cache_set->evicts(addr)) {
 			/* Would be a conflict */
 			cout << "Yes" << endl;
 			return false;

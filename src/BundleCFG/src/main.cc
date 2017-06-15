@@ -12,6 +12,9 @@
 using namespace std;
 using namespace cfglib;
 
+/** Should probably make this CUNit */
+int run_tests();
+
 void initcfglib() {
 	AttributesFactory *af = AttributesFactory::GetInstance();
 	af->SetAttributeType(AddressAttributeName, new AddressAttribute());
@@ -30,6 +33,7 @@ void usage(void) {
 	     << "OPTIONS" << endl
 	     << "	-h/--help	this message" << endl
 	     << "	-t/--trace	enable tracing" << endl
+	     << "	--test		perform tests and exit " << endl
 	     << "	-v/--verbose	enable verbose output" << endl
 	     << endl;
 }
@@ -42,11 +46,12 @@ void usage(void) {
  * validity and instigate the analysis.
  */
 int main(int argc, char** argv) {
-	int vflag = 0, tflag = 0, hflag = 0;
+	int vflag = 0, teflag = 0, tflag = 0, hflag = 0;
 
 	/* Long form command line options */
 	static struct option long_options[] = {
 		{"help", no_argument, &hflag, 1},
+		{"test", no_argument, &teflag, 1},
 		{"trace", no_argument, &tflag, 1},
 		{"verbose", no_argument, &vflag, 1},
 		{0, 0, 0, 0}
@@ -83,6 +88,9 @@ int main(int argc, char** argv) {
 	if (hflag) {
 		usage();
 		return -1;
+	}
+	if (teflag) {
+		return run_tests();
 	}
 
 	string cfgfile;
@@ -134,5 +142,10 @@ int main(int argc, char** argv) {
 	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
 	
 	xmlCleanupParser();
+	return 0;
+}
+
+
+int run_tests() {
 	return 0;
 }
