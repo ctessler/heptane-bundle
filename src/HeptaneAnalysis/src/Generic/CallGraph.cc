@@ -84,6 +84,9 @@ void
 CallGraph::BuildFromCallGraphElem (CallGraphElem * e)
 {
   Cfg *c = e->cfg;
+  if (!c) {
+    return;
+  }
   vector < Node * >vn = c->GetAllNodes ();
   for (unsigned int i = 0; i < vn.size (); i++)
     {

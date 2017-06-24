@@ -1,5 +1,7 @@
 #include "CFRFactory.h"
 
+SerialisableIntegerAttribute CFRVisited = 1;
+
 /**
  * Attributes are not statically defined interfaces.
  *
@@ -47,13 +49,31 @@ CFRFactory::BundleExtraction(Program* prog, Cache* cache) {
 		throw runtime_error("No start node for CFG");
 	}
 
-	extractNode(node, cache);
+	Program *p = new Program();
+	ListOfString names;
+	names.push_front("foo");
+	cfg = p->CreateNewCfg(names);
+
+	extractNode(cfg, node, cache);
 	
-	return prog;
+	return p;
 }
 
 bool
-CFRFactory::extractNode(Node* node, Cache *cache) {
+CFRFactory::extractNode(Cfg *cfg, Node* node, Cache *cache) {
+	/*
+	 *  Nodes cannot be cloned or copied, otherwise they will
+	 *  belong to the previous CFG
+	 */
+	node_type ntype;
+	if (node->IsBB()) {
+		ntype = BB;
+	}
+	if (node->IsCall()) {
+		ntype = Call;
+	}
+	Node *newNode = cfg->CreateNewNode(ntype);
+
 	vector<Instruction*> vi = node->GetAsm();
 	vector<Instruction*>::iterator it;
 
@@ -64,36 +84,48 @@ CFRFactory::extractNode(Node* node, Cache *cache) {
 		cline.store(addr);
 		uint32_t offset = cline.offset(addr);
 
-		cout << "Inspecting address: 0x" << hex << addr << dec 
-		     << "\tCache Set: " << cache->setIndex(addr) 
-		     << "\tCache Line Offset: " << offset
+		cout << "Addr: 0x" << hex << addr << dec 
+		     << "\tC.Set: " << cache->setIndex(addr) 
+		     << "\tC.Offset: " << offset
+		     << "\tPres: " << cache_set->present(addr)
 		     << "\tXFlict: ";
 
 		if (cache_set->present(addr)) {
-			cout << "Hit (Loop!)" << endl;
-			return false;
-		}
-		if (cache_set->evicts(addr)) {
-			/* Would be a conflict */
-			cout << "Yes" << endl;
-			return false;
+			/* This value is cached */
+			if (cache_set->visited(addr)) {
+				/* Already executed, loop! */
+				cout << "Loop!" << endl;
+				return false;
+			}
 		} else {
-			/* No conflict, insert the address */
-			cache_set->insert(addr);
-			cout << "No" << endl;
+			if (cache_set->evicts(addr)) {
+				/* Certainly would cause an eviction */
+				cout << "Yes(w)" << endl;
+				return false;
+			}
+			if (!cache_set->empty()) {
+				/* Could cause an eviction */
+				cout << "Yes(c)" << endl;
+				return false;
+			}
 		}
+
+		cout << "No" << endl;
+		/* Record the access to the instruction */
+		cache_set->insert(addr);
+		/* Add the instruction to the node in the new CFG */
+		Instruction *i = (*it)->Clone();
+		newNode->addInstruction(i);
 	}
 
 	/*
 	 * DO NOT assume a node can only branch or call.
 	 */
-	bool go_on = true;
-	
 	if (node->IsCall()) {
 		Cfg* callto = node->GetCallee();
 		Node *next = callto->GetStartNode();
 		/* Recurse */
-		extractNode(next, cache);
+		extractNode(cfg, next, cache);
 	}
 
 	vector<Edge*> outbound = node->GetCfg()->GetOutgoingEdges(node);
@@ -101,7 +133,7 @@ CFRFactory::extractNode(Node* node, Cache *cache) {
 	for (eit = outbound.begin(); eit != outbound.end(); eit++) {
 		Node *next = (*eit)->GetTarget();
 		/* Recurse */
-		extractNode(next, cache);
+		extractNode(cfg, next, cache);
 	}
 	
 	return true;

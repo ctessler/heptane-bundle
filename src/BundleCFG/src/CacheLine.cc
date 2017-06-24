@@ -14,6 +14,7 @@ CacheLine::resize(uint32_t nbytes) {
 	_size = nbytes;
 	_start = _end = 0;
 	_empty = true;
+	_visited.clear();
 }
 
 void
@@ -31,6 +32,12 @@ CacheLine::present(t_address addr) const {
 	return (addr >= _start) && (addr <= _end);
 }
 
+bool
+CacheLine::visited(t_address addr) const {
+	set<t_address>::iterator it = _visited.find(addr);
+	return (it != _visited.end());
+}
+
 void
 CacheLine::store(t_address addr) {
 	if (_size <= 0) {
@@ -39,6 +46,12 @@ CacheLine::store(t_address addr) {
 	_start = startAddress(addr);
 	_end = endAddress(addr);
 	_empty = false;
+
+	/*
+	 * There is certainly a more efficient way to handle flags on
+	 * addresses, if run time is a concern this is a place to start.
+	 */
+	_visited.insert(addr);
 }
 
 t_address
@@ -67,6 +80,7 @@ CacheLine& CacheLine::operator=(const CacheLine& rhs) {
 	_start = rhs._start;
 	_end = rhs._end;
 	_empty = rhs._end;
+	_visited = rhs._visited;
 
 	return (*this);
 }

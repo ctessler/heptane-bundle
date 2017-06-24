@@ -2,6 +2,7 @@
 #define CFR_FACTORY
 
 #include "Program.h"
+#include "Node.h"
 #include "Cache.h"
 #include "Analysis.h"
 #include "DotPrint.h"
@@ -14,7 +15,7 @@ public:
 	    map<int, Cache*> &iCache, map<int, Cache*> &dCache);
 private:
 	static Program* BundleExtraction(Program* prog, Cache* cache);
-	static bool extractNode(Node* node, Cache *cache);
+	static bool extractNode(Cfg *cfg, Node* node, Cache *cache);
 	
 };
 

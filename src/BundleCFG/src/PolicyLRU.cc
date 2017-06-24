@@ -34,16 +34,17 @@ PolicyLRU::store(CacheSet& set, t_address addr) {
 
 bool
 PolicyLRU::evicts(CacheSet& set, t_address addr) {
-	for (uint32_t line=0; line < set._ways; line++) {
-		if (set._storage[line].isEmpty()) {
-			/* Empty line, won't evict */  
-			return false;
-		}
-		if (set._storage[line].present(addr)) {
+	uint32_t count=0;
+	map<uint32_t, CacheLine>::iterator it;	
+	for (it = set._storage.begin(); it != set._storage.end(); it++) {
+		if (it->second.present(addr)) {
 			/* Present, won't evict */
 			return false;
 		}
 	}
-	/* No empty line */
-	return true;
+	if ((count + 1) == set._ways) {
+		/* No empty line */
+		return true;
+	}
+	return false;
 }

@@ -61,28 +61,23 @@ namespace cfglib
     return I;
   }
 
-  //TP
-  Instruction *Instruction::Clone (void)
-  {
-    Instruction *I = new Instruction (this->code, this->type);
+	/**
+	 * Clones an instruction
+	 *
+	 * @return a newly allocated instruction
+	 */
+	Instruction *Instruction::Clone(void) {
+		Instruction *I = new Instruction (this->code, this->type);
 
-    //handle attributes
-    std::vector < string > attrList = getAttributeList ();
-    for (std::vector < string >::iterator it = attrList.begin (); it != attrList.end (); it++)
-      {
-	Attribute & attr = GetAttribute (*it);
-	I->SetAttribute ((*it), attr);
-      }
-    /*std::vector<int> int_attrList = getIntAttributeList();
-       for(std::vector<int>::iterator it = int_attrList.begin();
-       it != int_attrList.end();
-       it++){
-       Attribute& attr = GetAttribute(*it);
-       I->SetAttribute((*it), attr);
-       } */
-
-    return I;
-  }
+		//handle attributes
+		std::vector<string> attrList = getAttributeList();
+		for (std::vector<string>::iterator it = attrList.begin();
+		     it != attrList.end (); it++) {
+			Attribute& attr = GetAttribute(*it);
+			I->SetAttribute((*it), attr);
+		}
+		return I;
+	}
 
   std::string asm_string_from_type (asm_type type)
   {

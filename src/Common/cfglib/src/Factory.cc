@@ -56,16 +56,18 @@ namespace cfglib
 		}
 	}
 
-  SerialisableAttribute *AttributesFactory::CreateNewAttribute(std::string const& type) {
-    std::map<std::string, SerialisableAttribute* >::const_iterator it(this->map.find(type));
-    if (it !=this->map.end()) {	
-      return (it->second)->create();
-    }
-    else {	
-      std::cerr << "AttributesFactory::CreateNewAttribute failed because " << "type \"" << type << "\" " << "is not recognised" << std::endl ;
-      return 0;
-    }
-  }
+	SerialisableAttribute *AttributesFactory::CreateNewAttribute(
+	    std::string const& type) {
+		std::map<std::string, SerialisableAttribute*>::const_iterator
+		    it(this->map.find(type));
+		if (it != this->map.end()) {	
+			return (it->second)->create();
+		} 	
+		std::cerr << "AttributesFactory::CreateNewAttribute "
+			  << "failed because " << "type \"" << type
+			  << "\" " << "is not recognised" << std::endl;
+		return NULL;
+	}
   
   void AttributesFactory::SetAttributeType(
 					   std::string const& type, 

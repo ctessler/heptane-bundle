@@ -123,6 +123,11 @@ namespace cfglib
     /*! Returns true if the node is a basic block */
     bool IsBB();
 
+    /**
+     * Adds an instruction at the end of the node
+     */
+    void addInstruction(Instruction *instr); 
+    
     /*! Get instructions vector */
     std::vector<Instruction*> GetInstructions();
 

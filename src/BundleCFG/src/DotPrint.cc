@@ -79,7 +79,7 @@ DotPrint::displayNodeAsSubgraph(Node* node, ofstream& os)
 
 	map<int, Cache*>::iterator cit;
 	for (cit = _icache.begin(); cit != _icache.end(); cit++) {
-		os << "<TD> L" << cit->first << " Set</TD>" << endl;
+		os << "<TD> L" << cit->first << " Set</TD>";
 	}
 	os << "</TR>" << endl;
 	

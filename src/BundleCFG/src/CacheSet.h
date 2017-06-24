@@ -25,6 +25,10 @@ public:
 	 */
 	bool present(t_address addr);
 	/**
+	 * Returns true if the address has been visited, see CacheLine::visited.
+	 */
+	bool visited(t_address addr);
+	/**
 	 * Returns true if placing the address in the set would cause
 	 * an eviction
 	 */
@@ -38,6 +42,10 @@ public:
 	 * Clears the cache set
 	 */
 	void clear();
+	/**
+	 * Returns true if the cache set is empty
+	 */
+	bool empty();
 private:
 	/**
 	 * Storage for the Cache Set, each of the ways is given a CacheLine

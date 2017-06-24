@@ -34,12 +34,6 @@
 
 /*! this namespace is the global namespace */
 namespace cfglib {
-  /*! Basic constructor implementation.
-    Cfg::Cfg(Program* program, std::string name) :
-    program(program), name(ListOfString(name)), external(true), startNode(0) {
-    }
-  */
-
   Cfg::Cfg(Program* program, ListOfString name) :
     program(program), name(name), external(true), startNode(0) {
   }

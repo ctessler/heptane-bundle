@@ -181,6 +181,10 @@ namespace cfglib
     /* Attributes parsing */
     this->ReadXmlAttributes(tag, hand) ;
   }
+
+	void Node::addInstruction(Instruction *instr) {
+		instructions.push_back(instr);
+	}
   
   /*! Get instructions vector */
   std::vector<Instruction*> Node::GetInstructions()
@@ -200,17 +204,30 @@ namespace cfglib
     return res;
   }
 
-  /*! Create new instruction. Instruction must be added in the
-   * same order than for execution. */
-  Instruction* Node::CreateNewInstruction( std::string const& code, asm_type type, bool ret)
-  {
-    dbg_instr(std::cerr << "CreateNewInstruction called" << std::endl ;);
-    Instruction* inst = new Instruction(code, type) ;
-    this->instructions.push_back(inst) ;
-    this->is_return = (this->is_return || ret) ;
-    if (ret) this->cfg->SetEndNode(this) ;
-    return inst ;
-  }
+	/**
+	 * Creates a new instruction and appends it to the list of
+	 * instructions for this node 
+	 *
+	 * @note asm_type is documented in Instruction.h
+	 * @note do not release the Instruction returned by this function.
+	 * @note code is an arbitrary string
+	 *
+	 * @param[in] code the instruction code
+	 * @param[in] asm_type the type of instruction
+	 * @param[in] ret, true if the instruction returns ending the node.
+	 *
+	 * @return the newly created and inserted instruction -- do not free
+	 * this value.
+	 */
+	Instruction* Node::CreateNewInstruction(std::string const& code,
+	    asm_type type, bool ret) {
+		dbg_instr(std::cerr << "CreateNewInstruction called" << std::endl ;);
+		Instruction* inst = new Instruction(code, type) ;
+		this->instructions.push_back(inst) ;
+		this->is_return = (this->is_return || ret) ;
+		if (ret) this->cfg->SetEndNode(this) ;
+		return inst ;
+	}
   
   /*! Return true if the BB ends with a return instruction. */
   bool Node::IsReturn() 
