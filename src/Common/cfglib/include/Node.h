@@ -30,6 +30,7 @@ See CREDITS.txt for credits of authorship
 #include "Attributed.h"
 #include "CloneHandle.h"
 #include "Instruction.h"
+#include "HeptaneStdTypes.h"
 
 /* Debug of node management methods */
 // Uncomment one of these two lines to enter/leave debug mode
@@ -173,6 +174,20 @@ namespace cfglib
 
     bool isIsolatedNopNodeLB();
 
+	/**
+	 * Determines if this Node has an instruction with the given
+	 * address. 
+	 *
+	 * @param[in] addr the address being tested.
+	 *
+	 * @note this member breaks the Attribute abstraction.
+	 * 
+	 * @return true if the node contains an instruction with the
+	 * given address, false otherwise. 
+	 */
+  	bool hasInstruction(t_address addr);
+
+	
   } ;
 
 } // cfglib::
