@@ -145,6 +145,16 @@ namespace cfglib
      * NULL if there is no such Edge */
     Edge* FindEdge(Node const* origin, Node const* destination) const ;
 
+	/**
+	 * Finds a node that contains the instruction with the given
+	 * address
+	 *
+	 * @param[in] addr the address being searched for
+	 *
+	 * @return a pointer to the node if one exists, NULL otherwise
+	 */
+    	Node* findNode(t_address addr);
+    
     /*! Return the start Node of this CFG. There
      * is only one start node for each CFG. Return
      * 0 if there is no node on this CFG */

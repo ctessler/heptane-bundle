@@ -260,6 +260,16 @@ namespace cfglib {
     return 0;
   }
 
+	Node* Cfg::findNode(t_address addr) {
+		vector<Node*>::iterator it;
+		for (it = nodes.begin(); it != nodes.end(); it++) {
+			if ((*it)->hasInstruction(addr)) {
+				return *it;
+			}
+		}
+		return NULL;
+	}
+
   /*! Return the start Node of this CFG. There
    * is only one start node for each CFG. Return
    * 0 if there is no node on this CFG */
