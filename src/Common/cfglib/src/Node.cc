@@ -29,6 +29,7 @@
 #include "Handle.h"
 #include "Instruction.h"
 #include "Cfg.h"
+#include "../../../Common/GlobalAttributes/src/GlobalAttributes.h"
 
 /*! this namespace is the global namespace */
 namespace cfglib 
@@ -240,19 +241,26 @@ namespace cfglib
     return (this->is_return && (this->type == BB)) ; 
   }
   
-  /*! apply to node of type Call to know which function it calls.
-   * return 0 on error or if the Node is not a Call. */
-  Cfg* Node::GetCallee()
-  {
-    if (this->type != Call){ return 0 ; }
-    if (callee_cfg == NULL) 
-      {
-	Program *p = this->cfg->GetProgram();
-	this->callee_cfg = p->GetCfgByName(this->callee_name);
-	return this->callee_cfg;
-      }
-    return this->callee_cfg;
-  }
+	/**
+	 * Returns the CFG of the function being called by this Node.
+	 *
+	 * @note as a side effect, if the Cfg has not been set
+	 * (ie. callee_cfg is NULL) then the Program the Node belong
+	 * to is queried for the Cfg, and *this* node is modified to
+	 * keep a pointer to the Cfg being called.
+	 *
+	 * @return the Cfg upon success, NULL otherwise
+	 */
+	Cfg* Node::GetCallee() {
+		if (this->type != Call) {
+			return NULL;
+		}
+		if (callee_cfg == NULL) {
+			Program *p = this->cfg->GetProgram();
+			this->callee_cfg = p->GetCfgByName(this->callee_name);
+		}
+		return this->callee_cfg;
+	}
   
   /*! Returns the name of the callee of the node is a Call node.
     returns the empty string if the node is not a Call node */
@@ -322,4 +330,31 @@ namespace cfglib
     // return (GetCfg()->GetSuccessors(this).size() ==0);
   }// cfglib::
 
+
+	/**
+	 * Attributes are not statically defined interfaces.
+	 *
+	 * Their use is "private" in a sense, take care when they change.
+	 */
+	static t_address
+	getInstructionAddress(Instruction* instr) {
+		AddressAttribute attr = (AddressAttribute &)
+			instr->GetAttribute(AddressAttributeName);
+		return (attr.getCodeAddress());
+	}	
+	
+
+	bool Node::hasInstruction(t_address addr) {
+		unsigned int i;
+		for (i=0; i < instructions.size(); i++) {
+			if (!instructions[i]->IsCode()) {
+				continue;
+			}
+			t_address i_addr = getInstructionAddress(instructions[i]);
+			if (i_addr == addr) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
