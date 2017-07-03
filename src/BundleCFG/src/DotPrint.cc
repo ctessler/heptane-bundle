@@ -54,6 +54,14 @@ getInstructionAddress(Instruction* instr) {
 	return (attr.getCodeAddress());
 }	
 
+string getNodeName(Node *node) {
+	stringstream rval;
+	t_address addr = getInstructionAddress(node->GetAsm()[0]);
+	rval << "node_" << hex << addr;
+
+	return rval.str();
+}
+
 void
 DotPrint::displayNodeAsSubgraph(Node* node, ofstream& os)
 {
@@ -63,8 +71,8 @@ DotPrint::displayNodeAsSubgraph(Node* node, ofstream& os)
 	/* The first instruction is special. */
 	t_address addr = getInstructionAddress(vi[0]);
 
-	os << "node" << node << " [shape=plaintext];" << endl;
-	os << "node" << node
+	os << getNodeName(node) << " [shape=plaintext];" << endl;
+	os << getNodeName(node)
 	   << " [label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">" << endl;
 
 	if (node->IsCall()) {
@@ -109,7 +117,7 @@ DotPrint::displayNode(Cfg* c, Node* node, ofstream & os)
 		 * However, it may have only been linked to by name
 		 * but does not yet exist as a node itself.
 		 */
-		os << "node" << node << ";" << endl;
+		os << getNodeName(node) << ";" << endl;
 		return true;
 	}
 
@@ -125,17 +133,16 @@ DotPrint::displayNode(Cfg* c, Node* node, ofstream & os)
 static bool
 displaySucs (Cfg * c, Node * n, ofstream & os)
 {
-
-  // Print its successors in the CFG
-  vector < Node * >sucs = c->GetSuccessors (n);
-  for (unsigned int i = 0; i < sucs.size (); i++)
-    {
-      os << "node" << n << " -> " << "node" << sucs[i];
-      if (BackEdge (c, n, sucs[i]))
-	os << "[color=\"red\"]";
-      os << ";" << endl;
-    }
-  return true;
+	// Print its successors in the CFG
+	vector<Node*> sucs = c->GetSuccessors(n);
+	for (unsigned int i = 0; i < sucs.size(); i++) {
+		os << getNodeName(n) << " -> " << getNodeName(sucs[i]);
+		if (BackEdge (c, n, sucs[i])) {
+			os << "[color=\"red\"]";
+		}
+		os << ";" << endl;
+	}
+	return true;
 }
 
 bool
