@@ -9,6 +9,8 @@
 #include "Logger.h"
 #include "DotPrint.h"
 #include "CFRFactory.h"
+#include "LemonCFG.h"
+#include "LemonFactory.h"
 using namespace std;
 using namespace cfglib;
 
@@ -139,9 +141,36 @@ int main(int argc, char** argv) {
 	DotPrint dotprint(prog, config.getWorkDir(), base, iCache, dCache);
 	dotprint.PerformAnalysis();
 
+	/* Convert to Control Flow Graph that can be analyzed */
+	LemonCFG *cvtd = LemonFactory::convert(prog);
+
+	#if 0
+	LemonCFG cfg;
+	ListDigraph::Node u = cfg.addNode();
+	ListDigraph::Node v = cfg.addNode();
+	ListDigraph::Node s = cfg.addNode();
+	ListDigraph::Node z = cfg.addNode();
+	cfg.addArc(u,v);
+	cfg.addArc(v,u);
+	cfg.addArc(u,u);
+	cfg.addArc(v,u);		
+	cfg.start(u, 0x4000);
+	cfg.start(v, 0x4004);
+	cfg.addArc(u,s);
+	cfg.start(s, 0x4008);
+	cfg.start(z, 0x4012);
+	cfg.addArc(u, z);
+	cfg.toEPS("test.eps");
+	#endif
+
 	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
 	
 	xmlCleanupParser();
+
+	cvtd->toDOT("test.dot");
+	delete cvtd;
+
+	
 	return 0;
 }
 
