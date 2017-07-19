@@ -163,7 +163,8 @@ private:
 	string nodeDOTend(ListDigraph::Node node);	
 	ListDigraph::Node nodeDOT(ofstream &os, ListDigraph::Node node);
 	string nodeDOTrow(ListDigraph::Node node);
-	string edgeDOT(ListDigraph::Node u, ListDigraph::Node v);
+	string edgeDOT(ListDigraph::Node u, ListDigraph::Node port_u,
+		       ListDigraph::Node v, ListDigraph::Node port_v);
 	bool sameFunc(ListDigraph::Node u, ListDigraph::Node v);
 
 	void findFollowers(ListDigraph::Node entry, stack<ListDigraph::Node> &followers);

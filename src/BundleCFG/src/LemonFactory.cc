@@ -103,50 +103,6 @@ addBBIns(LemonCFG *cfg, ListDigraph::Node cursor, Node *node) {
  *
  * @return the last node added
  */
-#if 0
-static ListDigraph::Node 
-doCall(LemonCFG *cfg, stack<ListDigraph::Node> callstack, Node *node) {
-	ListDigraph::Node last = INVALID;
-	if (!callstack.empty()) {
-		last = callstack.top();
-	}
-	
-	stack<Node*> hepStack;
-	hepStack.push(node);
-	while (!hepStack.empty()) {
-		node = hepStack.top(); hepStack.pop();
-		/* Has this node already been added? */
-		t_address addr = getFirstAddress(node);
-		ListDigraph::Node check = cfg->getNode(addr);
-		if (check != INVALID) {
-			continue;
-		}
-		
-		/* Add *this* node to the CFG */
-		last = addBBIns(cfg, last, node);
-		
-		vector<Node*> outbound = node->GetCfg()->GetSuccessors(node);
-		vector<Node*>::iterator nit;
-		cout << "doCall Finding successors of 0x" << hex << getFirstAddress(node) << endl;
-		for (nit = outbound.begin(); nit != outbound.end(); nit++) {
-			Node *next = (*nit);
-			cout << "  0x" << hex << getFirstAddress(next) << endl;
-			hepStack.push(next);
-		}
-		if (node->IsCall()) {
-			Cfg* callto = node->GetCallee();
-			Node *next = callto->GetStartNode();
-
-			/* Recursive call */
-			callstack.push(last);
-			ListDigraph::Node retcall = doCall(cfg, callstack, next);
-			cfg->addArc(retcall, last);
-		}
-		
-	}
-	return last;
-}
-#endif 
 ListDigraph::Node
 doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 	stack<unsigned long> pcs;
@@ -233,12 +189,6 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 		/* This will seem odd, but Heptane connects the basic blocks of
 		   functions even if there is no linkage. Here, those linkages
 		   are broken. */
-		#if 0
-		ListDigraph::Arc a = findArc(*cfg, final, ret_to);
-		if (a != INVALID) {
-			cfg->erase(a);
-		}
-		#endif
 		succ_count++;
 	}
 	if (succ_count == 0) {

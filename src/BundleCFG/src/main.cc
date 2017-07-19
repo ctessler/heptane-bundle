@@ -1,12 +1,18 @@
+/* Standard includes */
 #include<iostream>
 #include<getopt.h>
-#include"BXMLCfg.h"
 #include<libxml/xpath.h>
+#include<sstream>
+
+/* Heptane includes */
+#include"BXMLCfg.h"
 
 #include "arch.h"
 #include "Program.h"
 #include "GlobalAttributes.h"
 #include "Logger.h"
+
+/* Bundle includes */
 #include "DotPrint.h"
 #include "CFRFactory.h"
 #include "LemonCFG.h"
@@ -21,13 +27,6 @@ void initcfglib() {
 	AttributesFactory *af = AttributesFactory::GetInstance();
 	af->SetAttributeType(AddressAttributeName, new AddressAttribute());
 	af->SetAttributeType(SymbolTableAttributeName, new SymbolTableAttribute());
-#if 0
-	af->SetAttributeType(ARMWordsAttributeName, new ARMWordsAttribute());
-	af->SetAttributeType(StackInfoAttributeName, new StackInfoAttribute());
-	af->SetAttributeType(CodeLineAttributeName, new CodeLineAttribute());
-	af->SetAttributeType(ContextListAttributeName, new ContextList());
-	af->SetAttributeType(ContextTreeAttributeName, new ContextTree());
-#endif
 }	
 
 void usage(void) {
@@ -39,7 +38,6 @@ void usage(void) {
 	     << "	-v/--verbose	enable verbose output" << endl
 	     << endl;
 }
-
 
 /**
  * Entrypoint
@@ -94,7 +92,6 @@ int main(int argc, char** argv) {
 	if (teflag) {
 		return run_tests();
 	}
-
 	string cfgfile;
 	for (int i=optind; i < argc; i++) {
 		cfgfile = argv[i];
@@ -102,9 +99,7 @@ int main(int argc, char** argv) {
 	if (cfgfile.length() == 0) {
 		usage();
 		return -1;
-	} else {
-		cout << "Using configuration file: " << cfgfile << endl;
-	}
+	} 
 
 	/*
 	 * Command line arguments have been parsed.
@@ -117,6 +112,20 @@ int main(int argc, char** argv) {
 
 	/* Initialize Heptane's cfglib */
 	initcfglib();
+
+	/*
+	 * Present small status to the user
+	 */
+	cout << "Using CFG file: " << cfgfile << endl;
+	
+	streambuf *old_cout = cout.rdbuf();
+	stringstream output;
+	if (!vflag) {
+		/* Redirect all cout calls to this string stream */
+		cout.rdbuf(output.rdbuf());
+	}
+
+	/* Begin work */
 	
 	/* Read the configuration file */
 	BXMLCfg config(cfgfile);
@@ -131,9 +140,7 @@ int main(int argc, char** argv) {
 		Arch::init("ARM", config.getEndian() == BXMLCfg::BIG);
 	}
 
-	
 	/* Read the CFG of the program */
-	cout << "Using CFG file: " << config.getCfgFile() << endl; 
 	Program *prog = Program::unserialise_program_file(config.getCfgFile());
 
 	/* Intermediate Result */
@@ -144,25 +151,6 @@ int main(int argc, char** argv) {
 	/* Convert to Control Flow Graph that can be analyzed */
 	LemonCFG *cvtd = LemonFactory::convert(prog);
 
-	#if 0
-	LemonCFG cfg;
-	ListDigraph::Node u = cfg.addNode();
-	ListDigraph::Node v = cfg.addNode();
-	ListDigraph::Node s = cfg.addNode();
-	ListDigraph::Node z = cfg.addNode();
-	cfg.addArc(u,v);
-	cfg.addArc(v,u);
-	cfg.addArc(u,u);
-	cfg.addArc(v,u);		
-	cfg.start(u, 0x4000);
-	cfg.start(v, 0x4004);
-	cfg.addArc(u,s);
-	cfg.start(s, 0x4008);
-	cfg.start(z, 0x4012);
-	cfg.addArc(u, z);
-	cfg.toEPS("test.eps");
-	#endif
-
 	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
 	
 	xmlCleanupParser();
@@ -170,6 +158,10 @@ int main(int argc, char** argv) {
 	cvtd->toDOT("test.dot");
 	delete cvtd;
 
+	if (!vflag) {
+		/* Restore cout, now you can output status */
+		cout.rdbuf(old_cout);
+	}
 	
 	return 0;
 }

@@ -146,7 +146,7 @@ LemonCFG::toDOT(string path) {
 			visited[bb_start] = true;
 			
 			/* Print this node, and all entries that are in the same BB */
-			cout << "Calling nodeDOT with " << getStartString(bb_start) << endl;
+			cout << "toDOT Calling nodeDOT with " << getStartString(bb_start) << endl;
 			ListDigraph::Node bb_last = nodeDOT(os, bb_start);
 
 			/* Find the instructions immediately following the last one */
@@ -155,8 +155,8 @@ LemonCFG::toDOT(string path) {
 
 			while (!followers.empty()) {
 				ListDigraph::Node bb_next = followers.top(); followers.pop();
-				cout << "Pushing edge " << edgeDOT(bb_start, bb_next) << endl;
-				edges.push(edgeDOT(bb_start, bb_next));
+				cout << "Pushing edge " << edgeDOT(bb_start, bb_last, bb_next, bb_next) << endl;
+				edges.push(edgeDOT(bb_start, bb_last, bb_next, bb_next));
 				if (!sameFunc(bb_start, bb_next)) {
 					/* next is a function entry point */
 					calls.push(bb_next);
@@ -194,7 +194,7 @@ LemonCFG::nodeDOT(ofstream &os, ListDigraph::Node node) {
 	while (countOutArcs(*this, last) == 1) {
 		ListDigraph::OutArcIt a(*this, last);
 		ListDigraph::Node next = runningNode(a);
-		cout << getStartString(last) << " -> " << getStartString(next) << " ";
+		cout << "node DOT " << getStartString(last) << " -> " << getStartString(next) << " ";
 		if (!sameFunc(last, next)) {
 			/* Function call */
 			cout << "preserved function call" << endl;
@@ -203,6 +203,11 @@ LemonCFG::nodeDOT(ofstream &os, ListDigraph::Node node) {
 		if ( _saddr[next] - _saddr[last] != 4) {
 			/* Not consecutive */
 			cout << "preserved non-consecutive" << endl;			
+			break;
+		}
+		if (countInArcs(*this, next) > 1) {
+			/* Multiple ingressing egdes */
+			cout << "preserved next node has an incoming edge" << endl;
 			break;
 		}
 		cout << "contracted" << endl;			
@@ -240,13 +245,28 @@ LemonCFG::nodeDOTrow(ListDigraph::Node node) {
 	return text;
 }
 
+/**
+ * Produces the DOT of an edge between nodes
+ *
+ * Since nodes can be contracted, the addresses are identified by their ports.
+ *
+ * @param[in] u the starting vertex of the edge
+ * @param[in] port_u the port within the vertex to start the edge from
+ * @param[in] v the ending vertex of the edge
+ * @param[in] port_v the port within the vertex to end the edge
+ *
+ */
 string
-LemonCFG::edgeDOT(ListDigraph::Node u, ListDigraph::Node v) {
-	string ulabel, vlabel;
+LemonCFG::edgeDOT(ListDigraph::Node u, ListDigraph::Node port_u,
+		  ListDigraph::Node v, ListDigraph::Node port_v ) {
+	string ulabel, vlabel, uplabel, vplabel;
 	ulabel = nodeLabel(u);
+	uplabel = nodeLabel(port_u);
 	vlabel = nodeLabel(v);
+	vplabel = nodeLabel(port_v);
 
-	return ulabel + " -> " + vlabel + ";";
+	return ulabel + ":" + uplabel + " -> " +
+		vlabel + ":" + vplabel + ";";
 }
 
 void
@@ -371,20 +391,6 @@ LemonCFG::toEPS(string path) {
 		title("Sample .eps figure (Palette demo)").
 		copyright("(C) 2003-2009 LEMON Project").
 		run();
-	#if 0
-	graphToEps(copy, path.c_str()).
-		coords(copy._coords).
-		nodeTexts(_haddr).
-		nodeTextSize(L_TEXT_SIZE).
-		nodeSizes(copy._nsizes).
-		absoluteNodeSizes(true).
-		drawArrows().
-		absoluteArcWidths(true).
-		preScale(false).
-		title("Sample .eps figure (Palette demo)").
-		copyright("(C) 2003-2009 LEMON Project").
-		run();
-	#endif
 } 
 
 void
@@ -494,56 +500,7 @@ LemonCFG::reduceGraph() {
 			}
 		} while (changes);
 	}
-	
 	return;
-	#if 0
-	/*
-	 * After contraction, node iterators are invalid. The process
-	 * must be started fresh after every change. 
-	 */
-	ListDigraph::Node root = getRoot();
-	bool change;
-	do {
-		change = false;
-		for (ListDigraph::NodeIt n(*this); n != INVALID; ++n) {
-			if (countOutArcs(*this, n) != 1) {
-				/* 
-				 * If this node has zero or >1 edges, it
-				 * cannot be reduced with it's subsequent
-				 * nodes
-				 */
-				continue;
-			}
-			/* There can be only one */
-			ListDigraph::OutArcIt a(*this, n);
-			Node src = baseNode(a);
-			Node tgt = runningNode(a);
-			if (_saddr[tgt] - _saddr[src] != 4) {
-				cout << "Not contracting (distance) : "
-				     << _haddr[src] << ", " << _haddr[tgt]
-				     << endl;			      
-				continue;
-			}
-			/* Instructions are 4 bytes apart */
-			if (countInArcs(*this, tgt) != 1) {
-				cout << "Not contracting (in arc) : "
-				     <<	_haddr[src] << ", " << _haddr[tgt]
-				     << endl;
-				continue;
-			}
-			bool isroot = (n == root);
-			/* Nodes can be joined */
-			cout << "Contracting : " << _haddr[src] << ", " << _haddr[tgt] << endl;
-			contract(src, tgt);
-			if (isroot) {
-				cout << "Changing root to " << _haddr[src] << endl;
-				setRoot(src);
-			}
-			change = true;
-			break;
-		}
-	} while (change);
-	#endif 
 }
 
 void
