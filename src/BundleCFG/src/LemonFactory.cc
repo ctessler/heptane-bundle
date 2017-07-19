@@ -89,6 +89,7 @@ addBBIns(LemonCFG *cfg, ListDigraph::Node cursor, Node *node) {
 		last = newNode;
 	}
 	cout << "addBBIns last node: " << cfg->getStartString(last) << endl;
+
 	return last;
 }
 
@@ -197,6 +198,41 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 		 * function it's contained in
 		 */
 		last = final;
+	}
+
+
+	/*
+	 * Loops are marked in the Heptane graph, and stored in the CFG multiple
+	 * times. The loop bounds are also stored, those we want to save.
+	 *
+	 * The next task is to extract the starting instructions of the loops
+	 * and store them in the LEMON graph
+	 *
+	 * Yes, this loop will be processed multiple times.
+	 */
+	vector<Loop*> loops = node->GetCfg()->GetAllLoops();
+	for (unsigned int i = 0; i < loops.size(); i++) {
+		Node *head = loops[i]->GetHead();
+		t_address head_instr = getFirstAddress(head);
+
+		int bound;
+		SerialisableIntegerAttribute int_attribute =
+			(SerialisableIntegerAttribute &)
+			loops[i]->GetAttribute(MaxiterAttributeName);
+		bound = int_attribute.GetValue();
+		
+		ListDigraph::Node start = cfg->getNode(head_instr);
+		if (start == INVALID) {
+			throw runtime_error("Could not find node to start loop");
+		}
+		if (cfg->isLoopStart(start)) {
+			/* Already processed */
+			continue;
+		}
+
+		cout << "doCall " << cfg->getStartString(start)
+		     << " starts a loop up to " << bound << " iterations" << endl;
+		cfg->markLoop(start, bound);
 	}
 	
 	return last;

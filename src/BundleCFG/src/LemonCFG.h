@@ -44,6 +44,10 @@ public:
 	 */
 	LemonCFG(LemonCFG &src);
 	/**
+	 * Override the addNode() method to allow initialization
+	 */
+	ListDigraph::Node addNode(void);
+	/**
 	 * Sets the root of the CFG
 	 * 
 	 * @param[in] node the node to be the root, must be in this CFG
@@ -115,6 +119,29 @@ public:
 	 * Reduces a graph to consolidate the number of nodes
 	 */
 	void reduceGraph();
+	/**
+	 * Marks the node as an entry point to a loop, and sets the bound. 
+	 *
+	 * @param[in] node the node being marked as the start of a loop.
+	 * @param[in] yes true if the node is the start of a loop.
+	 * @param[in] bound >0 number of iterations of the loop.
+	 */
+	void markLoop(ListDigraph::Node node, bool yes=false, unsigned int bound=0);
+	/**
+	 * Returns true if the node is the start of a loop
+	 *
+	 * @param[in] node the node being tested
+	 */
+	bool isLoopStart(ListDigraph::Node node);
+	/**
+	 * Returns the bound on the number of iterations of the loop
+	 *
+	 * @param[in] node the node being tested for iterations
+	 *
+	 * @return >0 if the node has a bound, 0 otherwise.
+	 */
+	unsigned int loopBound(ListDigraph::Node node);
+	
 private:
 	/*
 	 * Private Members
@@ -134,6 +161,11 @@ private:
 	ListDigraph::NodeMap<string> _asm;
 	/* Map from Node to containing function */
 	ListDigraph::NodeMap<string> _function;
+	/* Map from Node to boolean indicating if the node is the head of a loop */
+	ListDigraph::NodeMap<bool> _loop_start;
+	/* Map from Node to loop bound (only for loop_start); */
+	ListDigraph::NodeMap<unsigned int> _loop_bound;
+	
 	
 	/* Map from instruction address to Lemon node */
 	map<unsigned long, ListDigraph::Node> _addr2node;
