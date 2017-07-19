@@ -92,7 +92,7 @@ LemonCFG::makeSpanningTree(LemonCFG &src, LemonCFG &dst,
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
-		       _loop_start(*this), _loop_bound(*this),
+		       _loop_start(*this),  _loop_exit(*this), _loop_bound(*this),
 		       _coords(*this), _awidths(*this), _nsizes(*this),
 		       _nshapes(*this) {
 	_root = INVALID;
@@ -100,7 +100,7 @@ LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 
 LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
-				    _loop_start(*this), _loop_bound(*this),				    
+				    _loop_start(*this), _loop_exit(*this), _loop_bound(*this),
 				    _coords(*this), _awidths(*this),
 				    _nsizes(*this), _nshapes(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
@@ -121,6 +121,7 @@ LemonCFG::addNode(void) {
 	ListDigraph::Node rv = ListDigraph::addNode();
 	_loop_start[rv] = false;
 	_loop_bound[rv] = 0;
+	_loop_exit[rv] = INVALID;
 	return rv;
 }
 
@@ -525,9 +526,11 @@ LemonCFG::getRoot() {
 }
 
 void
-LemonCFG::markLoop(ListDigraph::Node node, bool yes, unsigned int bound) {
-	_loop_start[node] = yes;
-	_loop_bound[node] = bound;
+LemonCFG::markLoop(ListDigraph::Node n, ListDigraph::Node exit,
+		   bool yes, unsigned int bound) {
+	_loop_start[n] = yes;
+	_loop_bound[n] = bound;
+	_loop_exit[n] = exit;
 }
 bool
 LemonCFG::isLoopStart(ListDigraph::Node node) {

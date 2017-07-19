@@ -37,6 +37,112 @@ getFirstAddress(Node *node) {
 	return getInstructionAddress(i);
 }
 
+/**
+ * Returns true if this node is the start of a loop
+ */
+static bool
+isLoopStart(Node *node) {
+	vector<Loop*> loops = node->GetCfg()->GetAllLoops();
+
+	t_address addr = getFirstAddress(node);
+	cout << "isLoopStart 0x" << hex << addr << dec;
+	for (unsigned int i = 0; i < loops.size(); i++) {
+		Node *head = loops[i]->GetHead();
+		if (node == head) {
+			cout << " starts a loop" << endl;
+			return true;
+		}
+	}
+	cout << " does not start a loop" << endl;
+	return false;
+}
+
+/**
+ * Depth first search for path finding
+ */
+static bool
+heptane_dfs(Node *s, Node *t) {
+	stack<Node*> pile;
+	map<Node*,bool> visited;
+
+	t_address saddr, taddr;
+	saddr = getFirstAddress(s);
+	cout << "heptane_dfs 0x " << hex << saddr << dec;
+	
+	pile.push(s);
+	while(!pile.empty()) {
+		Node *u = pile.top(); pile.pop();
+		if (visited[u] == true) {
+			continue;
+		}
+		visited[u] = true;
+		
+		if (u == t) {
+			/* Found a path */
+			taddr = getFirstAddress(s);
+			cout << " has exit 0x" << hex << taddr << dec << endl;
+			return true;
+		}
+		vector<Node*> outbound = u->GetCfg()->GetSuccessors(u);
+		vector<Node*>::iterator nit;
+		for (nit = outbound.begin(); nit != outbound.end(); nit++) {
+			pile.push(*nit);
+		}
+	}
+	cout << " has no exit" << endl;
+	return false;
+}
+
+/**
+ * Returns the exit instruction of the loop.
+ *
+ * @param[in] loop_start the node that starts the loop
+ *
+ * @return a pointer to the exit instruction if one exists, NULL otherwise.
+ */
+Node*
+exitNode(Node *loop_start) {
+	t_address ls_addr = getFirstAddress(loop_start);
+	cout << "exitNode Looking for exit to 0x" << hex << ls_addr << dec;
+	if (!isLoopStart(loop_start)) {
+		cout << " does not start a loop" << endl;
+		return NULL;
+	}
+
+	/* Exit nodes may not be at the start of the loop */
+	stack<Node*> pile;
+	map<Node*, bool> visited;
+
+	pile.push(loop_start);
+	while (!pile.empty()) {
+		Node *cursor = pile.top(); pile.pop();
+		/* Process the outgoing edges from this Heptane node */
+		vector<Node*> outbound = cursor->GetCfg()->GetSuccessors(cursor);
+		vector<Node*>::iterator nit;
+		for (nit = outbound.begin(); nit != outbound.end(); nit++) {
+			Node *next = (*nit);
+			t_address next_addr = getFirstAddress(next);
+			cout << "exitNode 0x " << hex << ls_addr << " -> 0x"
+			     << next_addr << dec << endl;
+			if (heptane_dfs(next, loop_start)) {
+				/* In the loop */
+				cout << "exitNode 0x " << hex << ls_addr << " -> 0x"
+				     << next_addr << dec << " in loop" << endl;
+				pile.push(next);
+				continue;
+			
+			}
+			/* Exit node */
+			cout << "exitNode 0x " << hex << ls_addr << " exits through 0x"
+			     << next_addr << dec << endl;
+			return next;
+		}
+	}
+	
+	cout << "exitNode 0x" << hex << ls_addr << dec << " has no exit node" << endl;
+	return NULL;
+}
+
 /*
  * Adds the instructions of a basic block to the CFG from the given
  * node.
@@ -133,7 +239,7 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 			cfg->addArc(last, entry);
 		}
 		return INVALID;
-	} 
+	}
 
 	/* Create the LemonCFG nodes from this Heptane node's instructions */
 	ListDigraph::Node final = addBBIns(cfg, last, node);
@@ -213,6 +319,7 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 	vector<Loop*> loops = node->GetCfg()->GetAllLoops();
 	for (unsigned int i = 0; i < loops.size(); i++) {
 		Node *head = loops[i]->GetHead();
+
 		t_address head_instr = getFirstAddress(head);
 
 		int bound;
@@ -230,9 +337,20 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 			continue;
 		}
 
+		/* Find the exit node */
+		Node *exit = exitNode(head);
+		t_address exit_instr = getFirstAddress(head);		
+		if (exit == NULL) {
+			throw runtime_error("No exit node");
+		}
+		ListDigraph::Node end = cfg->getNode(exit_instr);
+		if (end == INVALID) {
+			throw runtime_error("Could not find node to end loop");
+		}
+
 		cout << "doCall " << cfg->getStartString(start)
 		     << " starts a loop up to " << bound << " iterations" << endl;
-		cfg->markLoop(start, bound);
+		cfg->markLoop(start, end, true, bound);
 	}
 	
 	return last;

@@ -122,11 +122,13 @@ public:
 	/**
 	 * Marks the node as an entry point to a loop, and sets the bound. 
 	 *
-	 * @param[in] node the node being marked as the start of a loop.
+	 * @param[in] n the node being marked as the start of a loop.
+	 * @param[in] exit the node immediately following n that is outside the loop.
 	 * @param[in] yes true if the node is the start of a loop.
 	 * @param[in] bound >0 number of iterations of the loop.
 	 */
-	void markLoop(ListDigraph::Node node, bool yes=false, unsigned int bound=0);
+	void markLoop(ListDigraph::Node n, ListDigraph::Node exit=INVALID,
+		      bool yes=false, unsigned int bound=0);
 	/**
 	 * Returns true if the node is the start of a loop
 	 *
@@ -163,6 +165,11 @@ private:
 	ListDigraph::NodeMap<string> _function;
 	/* Map from Node to boolean indicating if the node is the head of a loop */
 	ListDigraph::NodeMap<bool> _loop_start;
+	/* 
+	 * Map from the entry point of a loop to first node on the path exiting
+	 * the loop.
+	 */
+	ListDigraph::NodeMap<ListDigraph::Node> _loop_exit;
 	/* Map from Node to loop bound (only for loop_start); */
 	ListDigraph::NodeMap<unsigned int> _loop_bound;
 	
