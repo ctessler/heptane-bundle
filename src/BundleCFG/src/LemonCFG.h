@@ -120,30 +120,50 @@ public:
 	 */
 	void reduceGraph();
 	/**
-	 * Marks the node as an entry point to a loop, and sets the bound. 
+	 * Sets the loop head of node n to the node head, if n ==
+	 * head, then bound must be > 0 
 	 *
 	 * @param[in] n the node being marked as the start of a loop.
 	 * @param[in] exit the node immediately following n that is outside the loop.
-	 * @param[in] yes true if the node is the start of a loop.
-	 * @param[in] bound >0 number of iterations of the loop.
 	 */
-	void markLoop(ListDigraph::Node n, ListDigraph::Node exit=INVALID,
-		      bool yes=false, unsigned int bound=0);
+	void setLoopHead(ListDigraph::Node n, ListDigraph::Node head);
+
+	/**
+	 * Marks a node as a loop header
+	 *
+	 * @param[in] n the node
+	 * @param[in] yes true if it is a header, false if it is not
+	 */
+	void markLoopHead(ListDigraph::Node n, bool yes=true);
 	/**
 	 * Returns true if the node is the start of a loop
 	 *
 	 * @param[in] node the node being tested
 	 */
-	bool isLoopStart(ListDigraph::Node node);
+	bool isLoopHead(ListDigraph::Node node);
+	/**
+	 * Gets the innermost loop head of the node n
+	 *
+	 * @param[in] n the node
+	 *
+	 * @return the loop head node if one exists, INVALID otherwise
+	 */
+	ListDigraph::Node getLoopHead(ListDigraph::Node n);
 	/**
 	 * Returns the bound on the number of iterations of the loop
 	 *
-	 * @param[in] node the node being tested for iterations
+	 * @param[in] node the loop head being tested for iterations
 	 *
-	 * @return >0 if the node has a bound, 0 otherwise.
+	 * @return >0 if the node is a loop head
 	 */
-	unsigned int loopBound(ListDigraph::Node node);
-	
+	unsigned int getLoopBound(ListDigraph::Node node);
+	/**
+	 * Sets the loop bound on a loop head
+	 *
+	 * @param[in] node that is a loop head
+	 * @param[in] bound the maximum iterations
+	 */
+	void setLoopBound(ListDigraph::Node node, unsigned int bound);
 private:
 	/*
 	 * Private Members
@@ -163,16 +183,12 @@ private:
 	ListDigraph::NodeMap<string> _asm;
 	/* Map from Node to containing function */
 	ListDigraph::NodeMap<string> _function;
-	/* Map from Node to boolean indicating if the node is the head of a loop */
-	ListDigraph::NodeMap<bool> _loop_start;
-	/* 
-	 * Map from the entry point of a loop to first node on the path exiting
-	 * the loop.
-	 */
-	ListDigraph::NodeMap<ListDigraph::Node> _loop_exit;
-	/* Map from Node to loop bound (only for loop_start); */
+	/* Map from Node to Node of innermost loop head */
+	ListDigraph::NodeMap<ListDigraph::Node> _loop_head;
+	/* Map from Node to loop bound (only for loop_head); */
 	ListDigraph::NodeMap<unsigned int> _loop_bound;
-	
+	/* True for nodes that are loop heads */
+	ListDigraph::NodeMap<bool> _is_loop_head;
 	
 	/* Map from instruction address to Lemon node */
 	map<unsigned long, ListDigraph::Node> _addr2node;
@@ -201,9 +217,14 @@ private:
 	string nodeDOTstart(ListDigraph::Node node);
 	string nodeDOTend(ListDigraph::Node node);	
 	ListDigraph::Node nodeDOT(ofstream &os, ListDigraph::Node node);
+	
 	string nodeDOTrow(ListDigraph::Node node);
 	string edgeDOT(ListDigraph::Node u, ListDigraph::Node port_u,
 		       ListDigraph::Node v, ListDigraph::Node port_v);
+	void loopDOT(ListDigraph::Node head, ofstream &os,
+		     stack<ListDigraph::Node> &calls,
+		     stack<ListDigraph::Node> &subsq,
+		     ListDigraph::NodeMap<bool> &visited);
 	bool sameFunc(ListDigraph::Node u, ListDigraph::Node v);
 
 	void findFollowers(ListDigraph::Node entry, stack<ListDigraph::Node> &followers);

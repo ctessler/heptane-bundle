@@ -92,7 +92,7 @@ LemonCFG::makeSpanningTree(LemonCFG &src, LemonCFG &dst,
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
-		       _loop_start(*this),  _loop_exit(*this), _loop_bound(*this),
+		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
 		       _coords(*this), _awidths(*this), _nsizes(*this),
 		       _nshapes(*this) {
 	_root = INVALID;
@@ -100,7 +100,7 @@ LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 
 LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
-				    _loop_start(*this), _loop_exit(*this), _loop_bound(*this),
+				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
 				    _coords(*this), _awidths(*this),
 				    _nsizes(*this), _nshapes(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
@@ -119,9 +119,9 @@ LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 ListDigraph::Node
 LemonCFG::addNode(void) {
 	ListDigraph::Node rv = ListDigraph::addNode();
-	_loop_start[rv] = false;
+	_loop_head[rv] = INVALID;
 	_loop_bound[rv] = 0;
-	_loop_exit[rv] = INVALID;
+	_is_loop_head[rv] = false;
 	return rv;
 }
 
@@ -136,7 +136,7 @@ LemonCFG::toDOT(string path) {
 	stack<string> edges;
 
 	cout << "toDOT begins with: " << getStartString(root) << endl;
-	
+
 	calls.push(root);
 	while (!calls.empty()) {
 		/* New function call */
@@ -155,8 +155,13 @@ LemonCFG::toDOT(string path) {
 			if (visited[bb_start]) {
 				continue;
 			}
+			if (isLoopHead(bb_start)) {
+				cout << "toDOT " << getStartString(bb_start) << " is a loop head" << endl;
+				loopDOT(bb_start, os, calls, subsq, visited);
+				continue;
+			}
 			visited[bb_start] = true;
-			
+
 			/* Print this node, and all entries that are in the same BB */
 			cout << "toDOT Calling nodeDOT with " << getStartString(bb_start) << endl;
 			ListDigraph::Node bb_last = nodeDOT(os, bb_start);
@@ -279,6 +284,85 @@ LemonCFG::edgeDOT(ListDigraph::Node u, ListDigraph::Node port_u,
 
 	return ulabel + ":" + uplabel + " -> " +
 		vlabel + ":" + vplabel + ";";
+}
+
+void
+LemonCFG::loopDOT(ListDigraph::Node head, ofstream &os,
+    stack<ListDigraph::Node> &calls, stack<ListDigraph::Node> &subsq,
+    ListDigraph::NodeMap<bool> &visited) {
+	stack<ListDigraph::Node> kids;
+	stack<string> edges;
+
+	if (visited[head]) {
+		return;
+	}
+	
+	os << "subgraph cluster_loop_" << getStartString(head) << "{" << endl
+	   << "graph [label =\"loop [" << getLoopBound(head) << "]\"];" << endl;
+
+	kids.push(head);
+	while (!kids.empty()) {
+		ListDigraph::Node u = kids.top(); kids.pop();
+		if (visited[u]) {
+			continue;
+		}
+		cout << "loopDOT working loop " << getStartString(head)
+		     <<	" node: " << getStartString(u) << endl;
+
+		if (u != head && isLoopHead(u)) {
+			/*
+			 * Case: An embedded loop starting with u
+			 * If u is a loop header embedded in this
+			 * loop, it's innermost loop header will be
+			 * head
+			 */
+			loopDOT(u, os, calls, subsq, visited);
+			continue;
+		}
+		ListDigraph::Node inner_head = getLoopHead(u);
+		if (u != head && inner_head != head) {
+			if (inner_head != INVALID && !visited[inner_head]) {
+				/*
+				 * Case: A node with an innermost header that
+				 * is not head. Call recursively with its head.
+				 */
+				loopDOT(inner_head, os, calls, subsq, visited);
+			}
+			if (!visited[u]) {
+				/*
+				 * Case: A node reachable but outside
+				 * of this loop starting with head
+				 */
+				subsq.push(u);
+			}
+			continue;
+		}
+		visited[u] = true;
+
+		/* Display this node */
+		ListDigraph::Node bb_last = nodeDOT(os, u);
+
+		/* Find the instructions immediately following the last one */
+		stack<ListDigraph::Node> followers;
+		findFollowers(bb_last, followers);
+
+		while (!followers.empty()) {
+			ListDigraph::Node bb_next = followers.top(); followers.pop();
+			cout << "loopDOT Pushing edge " << edgeDOT(u, bb_last, bb_next, bb_next) << endl;
+			edges.push(edgeDOT(u, bb_last, bb_next, bb_next));
+			if (!sameFunc(u, bb_next)) {
+				/* next is a function entry point */
+				calls.push(bb_next);
+				continue;
+			}
+			kids.push(bb_next);
+		}
+	}
+	os << "}" << endl;
+	while (!edges.empty()) {
+		string edge = edges.top(); edges.pop();
+		os << edge << endl;
+	}
 }
 
 void
@@ -526,19 +610,33 @@ LemonCFG::getRoot() {
 }
 
 void
-LemonCFG::markLoop(ListDigraph::Node n, ListDigraph::Node exit,
-		   bool yes, unsigned int bound) {
-	_loop_start[n] = yes;
-	_loop_bound[n] = bound;
-	_loop_exit[n] = exit;
-}
-bool
-LemonCFG::isLoopStart(ListDigraph::Node node) {
-	return _loop_start[node];
+LemonCFG::setLoopHead(ListDigraph::Node n, ListDigraph::Node head) {
+	_loop_head[n] = head;
 }
 
+ListDigraph::Node
+LemonCFG::getLoopHead(ListDigraph::Node n) {
+	return _loop_head[n];
+}
+
+
 unsigned int
-LemonCFG::loopBound(ListDigraph::Node node) {
+LemonCFG::getLoopBound(ListDigraph::Node node) {
 	return _loop_bound[node];
+}
+
+void
+LemonCFG::setLoopBound(ListDigraph::Node node, unsigned int bound) {
+	_loop_bound[node] = bound;
+}
+
+void
+LemonCFG::markLoopHead(ListDigraph::Node node, bool yes) {
+	_is_loop_head[node] = yes;
+}
+
+bool
+LemonCFG::isLoopHead(ListDigraph::Node node) {
+	return _is_loop_head[node];
 }
 

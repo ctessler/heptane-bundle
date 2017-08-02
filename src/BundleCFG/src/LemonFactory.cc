@@ -37,111 +37,6 @@ getFirstAddress(Node *node) {
 	return getInstructionAddress(i);
 }
 
-/**
- * Returns true if this node is the start of a loop
- */
-static bool
-isLoopStart(Node *node) {
-	vector<Loop*> loops = node->GetCfg()->GetAllLoops();
-
-	t_address addr = getFirstAddress(node);
-	cout << "isLoopStart 0x" << hex << addr << dec;
-	for (unsigned int i = 0; i < loops.size(); i++) {
-		Node *head = loops[i]->GetHead();
-		if (node == head) {
-			cout << " starts a loop" << endl;
-			return true;
-		}
-	}
-	cout << " does not start a loop" << endl;
-	return false;
-}
-
-/**
- * Depth first search for path finding
- */
-static bool
-heptane_dfs(Node *s, Node *t) {
-	stack<Node*> pile;
-	map<Node*,bool> visited;
-
-	t_address saddr, taddr;
-	saddr = getFirstAddress(s);
-	cout << "heptane_dfs 0x " << hex << saddr << dec;
-	
-	pile.push(s);
-	while(!pile.empty()) {
-		Node *u = pile.top(); pile.pop();
-		if (visited[u] == true) {
-			continue;
-		}
-		visited[u] = true;
-		
-		if (u == t) {
-			/* Found a path */
-			taddr = getFirstAddress(s);
-			cout << " has exit 0x" << hex << taddr << dec << endl;
-			return true;
-		}
-		vector<Node*> outbound = u->GetCfg()->GetSuccessors(u);
-		vector<Node*>::iterator nit;
-		for (nit = outbound.begin(); nit != outbound.end(); nit++) {
-			pile.push(*nit);
-		}
-	}
-	cout << " has no exit" << endl;
-	return false;
-}
-
-/**
- * Returns the exit instruction of the loop.
- *
- * @param[in] loop_start the node that starts the loop
- *
- * @return a pointer to the exit instruction if one exists, NULL otherwise.
- */
-Node*
-exitNode(Node *loop_start) {
-	t_address ls_addr = getFirstAddress(loop_start);
-	cout << "exitNode Looking for exit to 0x" << hex << ls_addr << dec;
-	if (!isLoopStart(loop_start)) {
-		cout << " does not start a loop" << endl;
-		return NULL;
-	}
-
-	/* Exit nodes may not be at the start of the loop */
-	stack<Node*> pile;
-	map<Node*, bool> visited;
-
-	pile.push(loop_start);
-	while (!pile.empty()) {
-		Node *cursor = pile.top(); pile.pop();
-		/* Process the outgoing edges from this Heptane node */
-		vector<Node*> outbound = cursor->GetCfg()->GetSuccessors(cursor);
-		vector<Node*>::iterator nit;
-		for (nit = outbound.begin(); nit != outbound.end(); nit++) {
-			Node *next = (*nit);
-			t_address next_addr = getFirstAddress(next);
-			cout << "exitNode 0x " << hex << ls_addr << " -> 0x"
-			     << next_addr << dec << endl;
-			if (heptane_dfs(next, loop_start)) {
-				/* In the loop */
-				cout << "exitNode 0x " << hex << ls_addr << " -> 0x"
-				     << next_addr << dec << " in loop" << endl;
-				pile.push(next);
-				continue;
-			
-			}
-			/* Exit node */
-			cout << "exitNode 0x " << hex << ls_addr << " exits through 0x"
-			     << next_addr << dec << endl;
-			return next;
-		}
-	}
-	
-	cout << "exitNode 0x" << hex << ls_addr << dec << " has no exit node" << endl;
-	return NULL;
-}
 
 /*
  * Adds the instructions of a basic block to the CFG from the given
@@ -306,56 +201,171 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 		last = final;
 	}
 
-
-	/*
-	 * Loops are marked in the Heptane graph, and stored in the CFG multiple
-	 * times. The loop bounds are also stored, those we want to save.
-	 *
-	 * The next task is to extract the starting instructions of the loops
-	 * and store them in the LEMON graph
-	 *
-	 * Yes, this loop will be processed multiple times.
-	 */
-	vector<Loop*> loops = node->GetCfg()->GetAllLoops();
-	for (unsigned int i = 0; i < loops.size(); i++) {
-		Node *head = loops[i]->GetHead();
-
-		t_address head_instr = getFirstAddress(head);
-
-		int bound;
-		SerialisableIntegerAttribute int_attribute =
-			(SerialisableIntegerAttribute &)
-			loops[i]->GetAttribute(MaxiterAttributeName);
-		bound = int_attribute.GetValue();
-		
-		ListDigraph::Node start = cfg->getNode(head_instr);
-		if (start == INVALID) {
-			throw runtime_error("Could not find node to start loop");
-		}
-		if (cfg->isLoopStart(start)) {
-			/* Already processed */
-			continue;
-		}
-
-		/* Find the exit node */
-		Node *exit = exitNode(head);
-		t_address exit_instr = getFirstAddress(head);		
-		if (exit == NULL) {
-			throw runtime_error("No exit node");
-		}
-		ListDigraph::Node end = cfg->getNode(exit_instr);
-		if (end == INVALID) {
-			throw runtime_error("Could not find node to end loop");
-		}
-
-		cout << "doCall " << cfg->getStartString(start)
-		     << " starts a loop up to " << bound << " iterations" << endl;
-		cfg->markLoop(start, end, true, bound);
-	}
-	
 	return last;
 }
 
+/**
+ * Adds head to the "list" of loop heads of node
+ *
+ * There is no list, but the loop head being added to this node may
+ * also have a loop head. It may be the case that node already has
+ * been assigned a loop head. This creates a chain of loop heads,
+ * which should be ordered by their place in the DFS path to node.
+ *
+ * @param[in] cfg LemonCFG of the node and head
+ * @param[in] node the node being given a new head
+ * @param[in] head the head being added to the list
+ * @param[in] pathp the path position
+ *
+ */
+static void
+tagHead(LemonCFG &cfg, ListDigraph::Node node, ListDigraph::Node head,
+	ListDigraph::NodeMap<int> &pathp) {
+	if (node == head) {
+		return;
+	}
+	if (head == INVALID) {
+		return;
+	}
+
+	while (cfg.getLoopHead(node) != INVALID) {
+		ListDigraph::Node in_head = cfg.getLoopHead(node);
+		if (in_head == head) {
+			/* 
+			 * Stopping condition found *this* head at the
+			 * right position
+			 */
+			return;
+		}
+		if (pathp[in_head] < pathp[head]) {
+			/* in_head is earlier in the path than head,
+			 * swap positions */
+			cfg.setLoopHead(node, head);
+			node = head;
+			head = in_head;
+			continue;
+		}
+		node = in_head;
+	}
+	cfg.setLoopHead(node, head);
+}
+
+/**
+ * Depth First Search and ordering of nodes to identify loops
+ * 
+ * @param[in] node the current node being added
+ * @param[in] pathp a mapping from nodes to their position in the path
+ * @param[in] visited a mapping from nodes to boolean indicating if
+ *     they've been visited 
+ * @param[in] pos position in the depth first search
+ *
+ * @return the (current) innermost loop header of node
+ */
+static ListDigraph::Node
+loopDFS(LemonCFG &cfg, ListDigraph::Node node, ListDigraph::NodeMap<int> &pathp,
+	ListDigraph::NodeMap<bool> &visited, unsigned int pos) {
+
+	if (visited[node]) {
+		return cfg.getLoopHead(node);
+	}
+	visited[node] = true;
+	pathp[node] = pos;
+	/*
+	 * Examine all successors
+	 */
+	for (ListDigraph::OutArcIt a(cfg, node); a != INVALID; ++a) {
+		ListDigraph::Node tgt = cfg.runningNode(a);
+		if (!visited[tgt]) {
+			/* Recursive call */
+			ListDigraph::Node header =
+				loopDFS(cfg, tgt, pathp, visited, pos + 1);
+			tagHead(cfg, node, header, pathp);
+			continue;
+		}
+		if (pathp[tgt] > 0) {
+			/*
+			 * tgt is on the DFSP to node, node -> tgt
+			 * exists, therefor tgt is a loop header of
+			 * node
+			 */
+			cfg.setLoopHead(node, tgt);
+			cfg.markLoopHead(tgt);
+			tagHead(cfg, node, tgt, pathp);
+			continue;
+		}
+		if (cfg.getLoopHead(tgt) == INVALID) {
+			/* tgt has no inner loop header, done */
+			continue;
+		}
+		ListDigraph::Node header = cfg.getLoopHead(tgt);
+		if (pathp[header] > 0) {
+			/* Header of tgt is on the path to node */
+			tagHead(cfg, node, header, pathp);
+			continue;
+		}
+		/* Reentry case, find the proper header */
+		while (cfg.getLoopHead(header) != INVALID) {
+			header = cfg.getLoopHead(header);
+			if (pathp[header] > 0) {
+				/* Found the header for node */
+				tagHead(cfg, node, header, pathp);
+				break; /* the while */
+			}
+		}
+	}
+	pathp[node] = 0;
+	return cfg.getLoopHead(node);
+}
+
+/**
+ * Identifies the loops in the control flow graph
+ *
+ * @param[in] cfg the LemonCFG
+ */
+static void
+identifyLoops(LemonCFG &cfg) {
+	ListDigraph::Node root = cfg.getRoot();
+
+	ListDigraph::NodeMap<int> pathp(cfg);
+	ListDigraph::NodeMap<bool> visited(cfg);
+	loopDFS(cfg, root, pathp, visited, 1);
+}
+
+
+/**
+ *
+ * Applies loop bounds from the Heptane graph to the LemonCFG
+ *
+ * @param[in] cfg the LemonCFG
+ * @param[in] hep_cfg the Heptane CFG
+ */
+static void
+boundLoops(LemonCFG &cfg, Cfg* hep_cfg) {
+	vector<Loop*> hep_loops = hep_cfg->GetAllLoops();
+	cout << "boundLoops found " << hep_loops.size() << " loops in this CFG" << endl;
+	for (unsigned int i = 0; i < hep_loops.size(); i++) {
+		/* Get the maximum number of iterations */
+		SerialisableIntegerAttribute ai = (SerialisableIntegerAttribute &)
+			hep_loops[i]->GetAttribute(MaxiterAttributeName);
+		int maxiter = ai.GetValue ();
+
+		/* Get the first node */
+		vector<Node*> hep_nodes = hep_loops[i]->GetAllNodes();
+		Node *first = hep_nodes[0];
+		
+		t_address addr = getFirstAddress(first);
+		ListDigraph::Node lemon_node = cfg.getNode(addr);
+		if (lemon_node == INVALID) {
+			throw runtime_error("Unable to find node");
+		}
+		cout << "boundLoops " << cfg.getStartString(lemon_node) << " has "
+		     << dec << maxiter << " iterations" << endl;
+		if (!cfg.isLoopHead(lemon_node)) {
+			throw runtime_error("Node not marked as a loop header");
+		}
+		cfg.setLoopBound(lemon_node, maxiter);
+	}
+}
 
 /*
  * Entry point for conversion
@@ -378,6 +388,13 @@ LemonFactory::convert(Program *prog) {
 
 	ListDigraph::Node root = cfg->getNode(getFirstAddress(node));
 	cfg->setRoot(root);
+
+	identifyLoops(*cfg);
+
+	vector<Cfg*> hep_cfgs = prog->GetAllCfgs();
+	for (unsigned int c = 0; c < hep_cfgs.size(); c++) {
+		boundLoops(*cfg, hep_cfgs[c]);
+	}
 	
 	return cfg;
 }
