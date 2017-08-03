@@ -11,109 +11,42 @@
  * Copies the maps from the src to the destination.
  *
  * When making a copy of a LemonCFG, the node and arc maps need to be
- * copied to the new object. 
+ * copied to the new object.
  */
 void
 LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 		       LemonCFG &src, LemonCFG &dst) {
-	dst._addr2node = src._addr2node;
 	dc.nodeMap(src._saddr, dst._saddr);
 	dc.nodeMap(src._haddr, dst._haddr);
 	dc.nodeMap(src._iwidth, dst._iwidth);
 	dc.nodeMap(src._asm, dst._asm);
-	dc.nodeMap(src._coords, dst._coords);
-	dc.nodeMap(src._nsizes, dst._nsizes);
-	dc.nodeMap(src._nshapes, dst._nshapes);		
-	dc.arcMap(src._awidths, dst._awidths);
-}
-
-/**
- * Creates a spanning tree from src in dst
- *
- * @param[in] src the graph a spanning tree is being made from
- * @param[in|out] dst the graph that is the result of the spanning
- * tree
- * @param[out] map maps the nodes from src to those in dst 
- */
-void
-LemonCFG::makeSpanningTree(LemonCFG &src, LemonCFG &dst,
-	ListDigraph::NodeMap<ListDigraph::Node> &map) {
-	/*
-	 * Copy the graph first, this creatse the node map for reference
-	 * later. An arcmap won't be made because the arcs will be changed. 
-	 */
-	DigraphCopy<ListDigraph, ListDigraph> dc(src, dst);
-	copyMaps(dc, src, dst);
-	dc.nodeRef(map);
-	dc.run();
-
-	ListDigraph::Node o_root = src.getRoot();
-	dst.setRoot(map[o_root]);
-
-	/*
-	 * Remove all arcs from the dst, new ones will be added as part of the 
-	 * depth first search from the original.
-	 */
-	for (ListDigraph::ArcIt a(dst); a != INVALID; ++a) {
-		dst.erase(a);
-	}
-
-	/*
-	 * Perform a DFS on the src graph to create a spanning in dst
-	 */
-	ListDigraph::NodeMap<bool> visited(src, false);
-	stack<Node> nodeStack;
-	Node s = src.getRoot();
-	nodeStack.push(s);
-	while (!nodeStack.empty()) {
-		Node p = nodeStack.top();
-		cout << "mst: Visiting node " << _haddr[p] << endl;
-		nodeStack.pop();
-		if (visited[p]) {
-			continue;
-		}
-		visited[p] = true;
-		for (ListDigraph::OutArcIt a(src, p); a != INVALID; ++a) {
-			Node o_tgt = src.runningNode(a);
-			Node o_src = src.baseNode(a);
-			cout << "mst: Considering arc: " << src._haddr[o_src] << " -> " << src._haddr[o_tgt] << endl;
-			if (!visited[o_tgt]) {
-				nodeStack.push(o_tgt);
-			}
-			
-			/* Add the edges */
-			Node c_src = map[o_src];
-			Node c_tgt = map[o_tgt];
-			cout << "mst: Adding arc: " << dst._haddr[c_src] << " -> " << dst._haddr[c_tgt] << endl;
-			dst.addArc(c_src, c_tgt);
-		}
-	}
+	dc.nodeMap(src._function, dst._function);
+	dc.nodeMap(src._loop_head, dst._loop_head);
+	dc.nodeMap(src._loop_bound, dst._loop_bound);
+	dc.nodeMap(src._is_loop_head, dst._is_loop_head);
+	dc.nodeMap(src._cache_set, dst._cache_set);
+	dst._addr2node = src._addr2node;
 }
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
 		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-		       _coords(*this), _awidths(*this), _nsizes(*this),
-		       _nshapes(*this) {
+		       _cache_set(*this) {
 	_root = INVALID;
 }
 
 LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
 				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-				    _coords(*this), _awidths(*this),
-				    _nsizes(*this), _nshapes(*this) {
+				    _cache_set(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
 	ListDigraph::NodeMap<ListDigraph::Node> map(src);
 	copyMaps(dc, src, *this);
 	dc.nodeRef(map);
 	dc.run();
 
-	for (ListDigraph::NodeIt n(*this); n != INVALID; ++n) {
-		if (map[n] == src._root) {
-			_root = n;
-		}
-	}
+	ListDigraph::Node o_root = src.getRoot();
+	setRoot(map[o_root]);
 }
 
 ListDigraph::Node
@@ -122,9 +55,19 @@ LemonCFG::addNode(void) {
 	_loop_head[rv] = INVALID;
 	_loop_bound[rv] = 0;
 	_is_loop_head[rv] = false;
+	_cache_set[rv] = 0;
 	return rv;
 }
 
+void LemonCFG::toJPG(string path) {
+	string temp_path = path + ".dot";
+
+	LemonCFG::toDOT(temp_path);
+	string command = "dot -Tjpg " + temp_path + " > " + path;
+	system(command.c_str());
+	command = "rm " + temp_path;
+	system(command.c_str());
+}
 
 void
 LemonCFG::toDOT(string path) {
@@ -207,7 +150,7 @@ LemonCFG::nodeDOT(ofstream &os, ListDigraph::Node node) {
 
 	int count = countOutArcs(*this, last);
 	cout << "nodeDOT " << getStartString(node) << " out arcs: " << count << endl;
-	
+
 	while (countOutArcs(*this, last) == 1) {
 		ListDigraph::OutArcIt a(*this, last);
 		ListDigraph::Node next = runningNode(a);
@@ -219,7 +162,7 @@ LemonCFG::nodeDOT(ofstream &os, ListDigraph::Node node) {
 		}
 		if ( _saddr[next] - _saddr[last] != 4) {
 			/* Not consecutive */
-			cout << "preserved non-consecutive" << endl;			
+			cout << "preserved non-consecutive" << endl;
 			break;
 		}
 		if (countInArcs(*this, next) > 1) {
@@ -227,11 +170,11 @@ LemonCFG::nodeDOT(ofstream &os, ListDigraph::Node node) {
 			cout << "preserved next node has an incoming edge" << endl;
 			break;
 		}
-		cout << "contracted" << endl;			
+		cout << "contracted" << endl;
 		os << nodeDOTrow(next) << endl;
 		last = next;
-	} 
-	
+	}
+
 	os << nodeDOTend(node) << endl;
 	return last;
 }
@@ -243,7 +186,8 @@ LemonCFG::nodeDOTstart(ListDigraph::Node node) {
 	string rv;
 	rv = "\t" + nlbl + "[shape=plaintext]\n"
 		+ "\t" + nlbl
-		+ "[label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">";
+		+ "[label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n"
+		+ "<TR><TD>Address</TD><TD>Cache Set</TD></TR>";
 
 	return rv;
 }
@@ -256,8 +200,13 @@ string LemonCFG::nodeDOTend(ListDigraph::Node node) {
 string
 LemonCFG::nodeDOTrow(ListDigraph::Node node) {
 	string label = nodeLabel(node);
+	uint32_t set = cacheSet(node);
+	stringstream ss ;
+	ss << set;
 	string text = "\t\t<TR><TD PORT=\"" + label + "\">"
-		+ _haddr[node] + "</TD></TR>";
+		+ _haddr[node] + "</TD>"
+		+ "<TD>" + ss.str() + "</TD>"
+		+ "</TR>";
 
 	return text;
 }
@@ -391,105 +340,6 @@ LemonCFG::sameFunc(ListDigraph::Node u, ListDigraph::Node v) {
 }
 
 void
-LemonCFG::toEPS(string path) {
-	unsigned int ncount = countNodes(*this);
-	if (ncount <= 0) {
-		return;
-	}
-
-	/* Make a copy of this graph for a reduced presentation */
-	LemonCFG copy(*this);
-	cout << "Number of nodes before reduction: " << countNodes(copy) << endl;
-	copy.reduceGraph();
-	cout << "Number of nodes after reduction: " << countNodes(copy) << endl;
-
-	/* Get a spanning tree of the current graph */
-	LemonCFG spanTree;
-	ListDigraph::NodeMap<ListDigraph::Node> nodeMap(copy);
-	makeSpanningTree(copy, spanTree, nodeMap);
-	cout << "Spanning Tree Root: " << spanTree._haddr[spanTree.getRoot()] << endl;
-	ListDigraph::Node spanRoot = spanTree.getRoot();
-
-	ListDigraph::NodeMap<bool> lvisit(spanTree, false);
-	ListDigraph::NodeMap<int> colVal(spanTree, 0);
-	
-	stack<Node> nodeStack;
-	nodeStack.push(spanRoot);
-	int col = 0;
-	while (!nodeStack.empty()) {
-		Node p = nodeStack.top();
-		nodeStack.pop();
-		if (lvisit[p]) {
-			continue;
-		}
-		lvisit[p] = true;
-		colVal[p] = col;
-		cout << "Span tree: " << hex << spanTree._haddr[p] << dec << " col: " << col << endl;
-		col += L_SPACING;
-		for (ListDigraph::OutArcIt a(spanTree, p); a != INVALID; ++a) {
-			Node o_tgt = spanTree.runningNode(a);
-			if (!lvisit[o_tgt]) {
-				nodeStack.push(o_tgt);
-			}
-		}
-	}
-
-	ListDigraph::NodeMap<bool> rvisit(spanTree, false);
-	ListDigraph::NodeMap<int> rowVal(spanTree, 0);
-	nodeStack.push(spanRoot);
-	int row = 0;
-	while (!nodeStack.empty()) {
-		Node p = nodeStack.top();
-		nodeStack.pop();
-		if (rvisit[p]) {
-			continue;
-		}
-		rvisit[p] = true;
-		rowVal[p] = row;
-		cout << "Span tree: " << hex << spanTree._haddr[p] << " row: " << dec << row << endl;		
-		row += L_SPACING;
-		
-		stack<Node> reverser;
-		for (ListDigraph::OutArcIt a(spanTree, p); a != INVALID; ++a) {
-			cout << "Adding to reverser" << endl;
-			reverser.push(spanTree.runningNode(a));
-		}
-		while (!reverser.empty()) {
-			Node t = reverser.top();
-			reverser.pop();
-			cout << "Reversed with: " << spanTree._haddr[p] << endl;
-			if (!rvisit[t]) {
-				nodeStack.push(t);
-			}
-		}
-	}
-
-	for (ListDigraph::NodeIt n(copy); n != INVALID; ++n) {
-		Node sNode = nodeMap[n];
-		int c = colVal[sNode];
-		int r = rowVal[sNode];
-		cout << "Node: " << _haddr[n] << " c: " << c << " r: " << r << endl;
-		copy._coords[n] = Point(c, r);
-		copy._nsizes[n] = L_NODE_SIZE;
-		copy._nshapes[n] = L_NODE_SHAPE;
-	}
-
-	graphToEps(copy, path.c_str()).
-		coords(copy._coords).
-		nodeTexts(copy._haddr).
-		nodeShapes(copy._nshapes).
-		scale(.6).
-		nodeScale(1).
-		nodeTextSize(.6).
-		drawArrows().
-		absoluteNodeSizes().
-		absoluteArcWidths().
-		title("Sample .eps figure (Palette demo)").
-		copyright("(C) 2003-2009 LEMON Project").
-		run();
-} 
-
-void
 LemonCFG::start(Node n, unsigned long addr) {
 	_saddr[n] = addr;
 	stringstream ss;
@@ -539,7 +389,7 @@ static bool
 contractOne(LemonCFG &cfg, ListDigraph::NodeMap<unsigned long> &coverage,
 	    ListDigraph::Node node) {
 	if (countOutArcs(cfg, node) != 1) {
-		/* 
+		/*
 		 * If this node has zero or >1 edges, it cannot be
 		 * reduced with it's subsequent nodes
 		 */
@@ -555,14 +405,14 @@ contractOne(LemonCFG &cfg, ListDigraph::NodeMap<unsigned long> &coverage,
 	string edge = src_s + " -> " + tgt_s;
 	unsigned long tgt_i;
 	tgt_i = cfg.getStartLong(tgt);
-	
+
 	cout << "Considering Contracting: " << edge << endl;
 
 	if (tgt_i - coverage[src] != 4) {
 		cout << "Not contracting (distance) : " << edge << endl;
 		return false;
 	}
-	
+
 	if (countInArcs(cfg, tgt) != 1) {
 		cout << "Not contracting (in arc) : " << edge << endl;
 		return false;
@@ -582,7 +432,7 @@ LemonCFG::reduceGraph() {
 
 	/* Node coverage */
 	ListDigraph::NodeMap<unsigned long> coverage(*this, 0);
-	
+
 	for (ListDigraph::NodeIt n(*this); n != INVALID; ++n) {
 		bool changes;
 		do {
@@ -608,6 +458,23 @@ ListDigraph::Node
 LemonCFG::getRoot() {
 	return _root;
 }
+
+void
+LemonCFG::cacheAssign(Cache *cache) {
+	for (ListDigraph::NodeIt n(*this); n != INVALID; ++n) {
+		ListDigraph::Node node = nodeFromId(id(n));
+		uint32_t setIndex = cache->setIndex(getStartLong(node));
+		_cache_set[node] = setIndex;
+		cout << "cacheAssign " << getStartString(node)
+		     << " maps to cache set " << setIndex << endl;
+	}
+}
+
+unsigned int
+LemonCFG::cacheSet(ListDigraph::Node node) {
+	return _cache_set[node];
+}
+
 
 void
 LemonCFG::setLoopHead(ListDigraph::Node n, ListDigraph::Node head) {

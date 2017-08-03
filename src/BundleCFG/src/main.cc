@@ -150,12 +150,19 @@ int main(int argc, char** argv) {
 
 	/* Convert to Control Flow Graph that can be analyzed */
 	LemonCFG *cvtd = LemonFactory::convert(prog);
+	for (map<int, Cache*>::iterator it = iCache.begin();
+	     it != iCache.end(); ++it) {
+		int level = it->first;
+		stringstream ss;
+		ss << base << "-level-" << level << ".jpg";
+		cvtd->cacheAssign(it->second);
+		cvtd->toJPG(ss.str());
+	}
 
 	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
 	
 	xmlCleanupParser();
 
-	cvtd->toDOT("test.dot");
 	delete cvtd;
 
 	if (!vflag) {

@@ -8,17 +8,9 @@
 #include <sstream>
 #include <stack>
 #include <stdexcept>
+#include "Cache.h"
 using namespace lemon;
 using namespace std;
-
-/*
- * Typedefs required for maps
- */
-typedef dim2::Point<int> Point;
-
-class foo {
-public:
-};	
 
 /**
  * @class LemonCFG
@@ -60,18 +52,29 @@ public:
 	 */
 	ListDigraph::Node getRoot();
 	/**
-	 * Converts the CFG to an EPS file.
+	 * Assigns cache sets to individual instructions
 	 *
-	 * @param[in] path the full path to the EPS file being
-	 * written.
+	 * @param[in] cache the cache being used to assign sets
 	 */
-	void toEPS(string path);
+	void cacheAssign(Cache *cache);
+	/**
+	 * Gets the cache set associated with an individual instruction.
+	 *
+	 * @param[in] node the node of the instruction
+	 */
+	unsigned int cacheSet(ListDigraph::Node node);
 	/**
 	 * Converts a CFG to a graphvis dot file
 	 *
 	 * @param[in] path the full path to the dot file being written.
 	 */
 	void toDOT(string path);
+	/**
+	 * Converts a CFG to a jpeg file
+	 * 
+	 * @param[in] path the full path to the jpg file being written
+	 */
+	void toJPG(string path);
 	/**
 	 * Sets the address of the instruction 
 	 */
@@ -127,7 +130,6 @@ public:
 	 * @param[in] exit the node immediately following n that is outside the loop.
 	 */
 	void setLoopHead(ListDigraph::Node n, ListDigraph::Node head);
-
 	/**
 	 * Marks a node as a loop header
 	 *
@@ -167,6 +169,10 @@ public:
 private:
 	/*
 	 * Private Members
+	 *
+	 * When adding a new private member, make sure update the
+	 * constructors as well as the copyMaps method if the new
+	 * member is a map.
 	 */
 
 	/* Address of the first byte in main memory of instruction */
@@ -189,19 +195,11 @@ private:
 	ListDigraph::NodeMap<unsigned int> _loop_bound;
 	/* True for nodes that are loop heads */
 	ListDigraph::NodeMap<bool> _is_loop_head;
+	/* Instruction -> Cache Set mapping */
+	ListDigraph::NodeMap<unsigned int> _cache_set;
 	
 	/* Map from instruction address to Lemon node */
 	map<unsigned long, ListDigraph::Node> _addr2node;
-
-	/* Graphing Maps */
-	/* Coordinates for plotting */
-	ListDigraph::NodeMap<Point> _coords;
-	/* Widths for archs */
-	ListDigraph::ArcMap<double> _awidths;
-	/* Node sizes */
-	ListDigraph::NodeMap<double> _nsizes;
-	/* Node shapes */
-	ListDigraph::NodeMap<int> _nshapes;
 
 	/* Root node */
 	ListDigraph::Node _root;
