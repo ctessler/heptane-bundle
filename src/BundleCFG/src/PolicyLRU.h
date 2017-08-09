@@ -1,6 +1,7 @@
 #ifndef POLICYLRU_H
 #define POLICYLRU_H
 #include "ReplacementPolicy.h"
+#include <iostream>
 
 /**
  * LRU Least Recently Used
@@ -40,6 +41,9 @@ public:
 	 */
 	string typeName() {
 		return "LRU";
+	}
+	~PolicyLRU() {
+	  cout << "ohai! " << this << endl;
 	}
 };
 

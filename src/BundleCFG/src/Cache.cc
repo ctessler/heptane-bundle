@@ -34,10 +34,21 @@ uint32_t Cache::setIndex(t_address addr) const {
 	return set;
 }
 
+void Cache::insert(t_address addr) {
+	CacheSet *cs = setOf(addr);
+	cs->insert(addr);
+}
+
 Cache::~Cache() {
+	/* One policy pointer per policy type is leaked.
+	 * This is because the copy constructor cannot instance the
+	 * derived type. It can be fixed, for the moment the single
+	 * object is leaked.
 	if (_policy) {
 		delete _policy;
+		_policy = NULL;
 	}
+	*/
 	map<int, CacheSet*>::iterator it;
 	for (it = _sets.begin(); it != _sets.end(); it++) {
 		delete it->second;

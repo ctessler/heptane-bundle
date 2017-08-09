@@ -46,6 +46,10 @@ public:
 	 * Returns true if the cache set is empty
 	 */
 	bool empty();
+	/**
+	 * Returns true if the cache ses is full
+	 */
+	bool isFull();
 private:
 	/**
 	 * Storage for the Cache Set, each of the ways is given a CacheLine

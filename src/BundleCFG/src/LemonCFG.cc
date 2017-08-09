@@ -25,20 +25,21 @@ LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	dc.nodeMap(src._loop_bound, dst._loop_bound);
 	dc.nodeMap(src._is_loop_head, dst._is_loop_head);
 	dc.nodeMap(src._cache_set, dst._cache_set);
+	dc.nodeMap(src._node_color, dst._node_color);
 	dst._addr2node = src._addr2node;
 }
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
 		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-		       _cache_set(*this) {
+		       _cache_set(*this), _node_color(*this) {
 	_root = INVALID;
 }
 
 LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
 				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-				    _cache_set(*this) {
+				    _cache_set(*this), _node_color(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
 	ListDigraph::NodeMap<ListDigraph::Node> map(src);
 	copyMaps(dc, src, *this);
@@ -184,6 +185,7 @@ string
 LemonCFG::nodeDOTstart(ListDigraph::Node node) {
 	string nlbl = nodeLabel(node);
 	string rv;
+
 	rv = "\t" + nlbl + "[shape=plaintext]\n"
 		+ "\t" + nlbl
 		+ "[label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n"
@@ -203,7 +205,15 @@ LemonCFG::nodeDOTrow(ListDigraph::Node node) {
 	uint32_t set = cacheSet(node);
 	stringstream ss ;
 	ss << set;
-	string text = "\t\t<TR><TD PORT=\"" + label + "\">"
+
+	string color = "#FFFFFF";
+	if (_node_color[node].compare("") != 0) {
+		color = _node_color[node];
+	}
+
+
+	string text = "\t\t<TR><TD BGCOLOR=\""
+		+ color + "\" PORT=\"" + label + "\">"
 		+ _haddr[node] + "</TD>"
 		+ "<TD>" + ss.str() + "</TD>"
 		+ "</TR>";
@@ -245,7 +255,7 @@ LemonCFG::loopDOT(ListDigraph::Node head, ofstream &os,
 	if (visited[head]) {
 		return;
 	}
-	
+
 	os << "subgraph cluster_loop_" << getStartString(head) << "{" << endl
 	   << "graph [label =\"loop [" << getLoopBound(head) << "]\"];" << endl;
 
@@ -325,7 +335,7 @@ LemonCFG::findFollowers(ListDigraph::Node node, stack<ListDigraph::Node> &follow
 		ListDigraph::Node tgt = runningNode(a);
 		cout << "findFollowers adding: " << getStartString(node) << " -> "
 		     << getStartString(tgt) << endl;
-			
+
 		followers.push(tgt);
 	}
 }
@@ -383,72 +393,6 @@ LemonCFG::getFunc(ListDigraph::Node node) {
 	return fname;
 }
 
-
-
-static bool
-contractOne(LemonCFG &cfg, ListDigraph::NodeMap<unsigned long> &coverage,
-	    ListDigraph::Node node) {
-	if (countOutArcs(cfg, node) != 1) {
-		/*
-		 * If this node has zero or >1 edges, it cannot be
-		 * reduced with it's subsequent nodes
-		 */
-		cout << "Skipping (out arc != 1) : " << cfg.getStartString(node) << endl;
-		return false;
-	}
-	/* There can be only one */
-	ListDigraph::OutArcIt a(cfg, node);
-	ListDigraph::Node src = cfg.baseNode(a);
-	ListDigraph::Node tgt = cfg.runningNode(a);
-	string src_s = cfg.getStartString(src);
-	string tgt_s = cfg.getStartString(tgt);
-	string edge = src_s + " -> " + tgt_s;
-	unsigned long tgt_i;
-	tgt_i = cfg.getStartLong(tgt);
-
-	cout << "Considering Contracting: " << edge << endl;
-
-	if (tgt_i - coverage[src] != 4) {
-		cout << "Not contracting (distance) : " << edge << endl;
-		return false;
-	}
-
-	if (countInArcs(cfg, tgt) != 1) {
-		cout << "Not contracting (in arc) : " << edge << endl;
-		return false;
-	}
-
-	cout << "Contracting : " << edge;
-	cfg.contract(src, tgt);
-	coverage[src] = tgt_i;
-
-	return true;
-}
-
-void
-LemonCFG::reduceGraph() {
-	ListDigraph::Node root = getRoot();
-	cout << "My root: " << _haddr[root] << endl;
-
-	/* Node coverage */
-	ListDigraph::NodeMap<unsigned long> coverage(*this, 0);
-
-	for (ListDigraph::NodeIt n(*this); n != INVALID; ++n) {
-		bool changes;
-		do {
-			cout << "Checking node: " << getStartString(n) << endl;
-			if (coverage[n] == 0) {
-				coverage[n] = _saddr[n];
-			}
-			changes = contractOne(*this, coverage, n);
-			if (changes) {
-				cout << "  contracted" << endl;
-			}
-		} while (changes);
-	}
-	return;
-}
-
 void
 LemonCFG::setRoot(ListDigraph::Node node) {
 	_root = node;
@@ -469,6 +413,8 @@ LemonCFG::cacheAssign(Cache *cache) {
 		     << " maps to cache set " << setIndex << endl;
 	}
 }
+
+
 
 unsigned int
 LemonCFG::cacheSet(ListDigraph::Node node) {
@@ -507,3 +453,142 @@ LemonCFG::isLoopHead(ListDigraph::Node node) {
 	return _is_loop_head[node];
 }
 
+bool
+LemonCFG::conflicts(ListDigraph::Node node, Cache *cache) {
+	unsigned long addr = _saddr[node];
+	CacheSet *cs = cache->setOf(addr);
+
+	if (cs->present(addr)) {
+		/* Definitely not an eviction, could have been cached by an
+		   earlier load of this block */
+		return false;
+	}
+	if (cs->evicts(addr)) {
+		/* Definitely an eviction */
+		return true;
+	}
+	if (!cs->empty()) {
+		/* It would be tempting to say that because this cache set is
+		 * not full there is room for the value.
+		 * However, there may be multiple paths of unknown length
+		 * leading to this instruction. If there is any value in the
+		 * set, then it could be a conflict.
+		 */
+		return true;
+	}
+
+	return false;
+}
+
+map<ListDigraph::Node, bool>
+LemonCFG::getConflictsIn(ListDigraph::Node u, Cache *cache,
+    ListDigraph::NodeMap<bool> &visited) {
+	/* Caller must ensure getConflictsIn is called with unvisited nodes */
+	visited[u] = true;
+
+	map<ListDigraph::Node, bool> xflicts;
+	unsigned long addr = _saddr[u];
+
+	/*
+	 * If this node would cause a conflict, stop add it to the list
+	 * and abort
+	 */
+	if (conflicts(u, cache)) {
+		cout << "getConflictsIn: " << getStartString(u) << " conflicts" << endl;
+		xflicts[u] = true;
+		return xflicts;
+	}
+
+	/*
+	 * If this node does not cause a conflict, process it and its
+	 * children.
+	 * Processing means:
+	 *   Copy the cache as it is
+	 *   Insert this node into the new cache copy
+	 *   Visit children recursively
+	 */
+	Cache *cacheCopy = new Cache(*cache);
+	cacheCopy->insert(addr);
+
+	stack<ListDigraph::Node> kids;
+	findFollowers(u, kids);
+	while (!kids.empty()) {
+		ListDigraph::Node v = kids.top(); kids.pop();
+		if (visited[v]) {
+			continue;
+		}
+		/* Recursive call */
+		map<ListDigraph::Node, bool> newflicts =
+			getConflictsIn(v, cacheCopy, visited);
+
+		/* Merge the conflicts */
+		for (map<ListDigraph::Node, bool>::iterator it = newflicts.begin();
+		     it != newflicts.end(); it++) {
+			if (it->second != true) {
+				/* BIG PROBLEM! */
+				throw runtime_error("Unexpected false value");
+			}
+			xflicts[it->first] = it->second;
+		}
+	}
+	delete(cacheCopy);
+
+	return xflicts;
+}
+
+/*
+ * This needs to be a recursive DFS, or there will be problems with the cache
+ * state at each node.
+ */
+map<ListDigraph::Node, bool>
+LemonCFG::getConflicts(ListDigraph::Node root, Cache *cache) {
+	ListDigraph::NodeMap<bool> visited(*this);
+	map<ListDigraph::Node, bool> xflicts =
+	    getConflictsIn(root, cache, visited);
+
+	return xflicts;
+}
+
+map<ListDigraph::Node, bool>
+LemonCFG::getCFREntry(Cache *cache) {
+	ListDigraph::NodeMap<bool> procd(*this);
+	stack<ListDigraph::Node> waiting;
+	map<ListDigraph::Node, bool> result;
+
+	ListDigraph::Node cur = getRoot();
+	waiting.push(cur);
+	result[cur] = true;
+	while (!waiting.empty()) {
+		cur = waiting.top(); waiting.pop();
+		procd[cur] = true;
+
+		/* Get the conflicts from *this* instruction */
+		Cache *copy = new Cache(*cache);
+		map<ListDigraph::Node, bool> xflicts =
+			getConflicts(cur, copy);
+		delete(copy);
+
+		/* Add the conflicts to the waiting stack *only* if they have
+		   not been processed */
+		cout << "getCFGEntry " << getStartString(cur) << " has conflicts: " << endl;
+		for (map<ListDigraph::Node, bool>::iterator it = xflicts.begin();
+		     it != xflicts.end(); it++) {
+			cout << "\t" << getStartString(it->first);
+			if (procd[it->first]) {
+				cout << endl;
+				continue;
+			}
+			cout << " starts a new CFR" << endl;
+			waiting.push(it->first);
+			result[it->first] = true;
+		}
+
+	}
+	return result;
+}
+
+
+void
+LemonCFG::setColor(ListDigraph::Node node, string color) {
+	_node_color[node] = color;
+}

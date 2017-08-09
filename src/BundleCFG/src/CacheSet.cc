@@ -12,11 +12,6 @@ CacheSet::CacheSet(CacheSet &other) : _cache(other._cache) {
 	for (it = other._storage.begin(); it != other._storage.end(); it++) {
 		_storage[it->first] = it->second;
 	}
-	/*
-	for (uint32_t line=0; line < _ways; line++) {
-		_storage[line] = other._storage[line];
-	}
-	*/
 }
 
 bool CacheSet::present(t_address addr) {
@@ -26,16 +21,12 @@ bool CacheSet::present(t_address addr) {
 			return true;
 		}
 	}
-	/*
-	for (uint32_t line=0; line < _ways; line++) {
-		if (_storage[line].present(addr)) {
-			return true;
-		}
-	}
-	*/
 	return false;
 }
 
+/**
+ * This method is an artifact, remove it when the CRFactory is removed.
+ */
 bool CacheSet::visited(t_address addr) {
 	map<uint32_t, CacheLine>::iterator it;
 	for (it = _storage.begin(); it != _storage.end(); it++) {
@@ -43,13 +34,6 @@ bool CacheSet::visited(t_address addr) {
 			return true;
 		}
 	}
-	/*
-	for (uint32_t line=0; line < _ways; line++) {
-		if (_storage[line].visited(addr)) {
-			return true;
-		}
-	}
-	*/
 	return false;
 }
 
@@ -80,3 +64,6 @@ bool CacheSet::empty() {
 	return _storage.empty();
 }
 	
+bool CacheSet::isFull() {
+	return _storage.size() < _ways;
+}

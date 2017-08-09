@@ -119,10 +119,6 @@ public:
 	 */
 	string getFunc(ListDigraph::Node node);
 	/**
-	 * Reduces a graph to consolidate the number of nodes
-	 */
-	void reduceGraph();
-	/**
 	 * Sets the loop head of node n to the node head, if n ==
 	 * head, then bound must be > 0 
 	 *
@@ -166,6 +162,47 @@ public:
 	 * @param[in] bound the maximum iterations
 	 */
 	void setLoopBound(ListDigraph::Node node, unsigned int bound);
+	/**
+	 * Returns the set of conflicts starting from a specific node
+	 *
+	 * @param[in] root the node to start from
+	 * @param[in] cache the cache to use to evaluate what
+	 * conflicts are
+	 *
+	 * @return a map from Node to boolean values, though the
+	 * boolean is superfluous. All entries (that are keys) will
+	 * have a value of true in the map indicating they are indeed
+	 * conflicts. A map is chosen for quick lookups on the result
+	 *
+	 * Cache cache;
+	 * map<ListDigraph::Node, bool> xflicts;
+	 * xflicts = lemonCFG.getConflicts(lemonCFG.getRoot(), &cache);
+	 */
+	map<ListDigraph::Node, bool>
+	    getConflicts(ListDigraph::Node root, Cache *cache);
+
+	/**
+	 * Returns the set of conflict free region entry points
+	 *
+	 * @param[in] cache the cache used to evaluate what conflicts
+	 *     exist 
+	 *
+	 * @return a map from Node to boolean values, though the
+	 * boolean is superfluous. All entries (that are keys) will have
+	 * a value of true in the map indicating they are entry points
+	 * for conflict free regions.
+	 */
+	map<ListDigraph::Node, bool> getCFREntry(Cache *cache);
+
+	/**
+	 * Gives a node a specific color in the CFG when printed to
+	 * DOT
+	 * 
+	 * @param[in] node the node being colored
+	 * @param[in] color the text string of the color
+	 */
+	void setColor(ListDigraph::Node node, string color);
+	
 private:
 	/*
 	 * Private Members
@@ -197,6 +234,8 @@ private:
 	ListDigraph::NodeMap<bool> _is_loop_head;
 	/* Instruction -> Cache Set mapping */
 	ListDigraph::NodeMap<unsigned int> _cache_set;
+	/* Instruciton -> Color */
+	ListDigraph::NodeMap<string> _node_color;
 	
 	/* Map from instruction address to Lemon node */
 	map<unsigned long, ListDigraph::Node> _addr2node;
@@ -204,18 +243,20 @@ private:
 	/* Root node */
 	ListDigraph::Node _root;
 
-	/*
-	 * Private Methods
-	 */
+	/* Private Methods */
 	void copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	    LemonCFG &src, LemonCFG &dst);
-	void makeSpanningTree(LemonCFG &src, LemonCFG &dst,
-	    ListDigraph::NodeMap<ListDigraph::Node> &map);
+	bool sameFunc(ListDigraph::Node u, ListDigraph::Node v);
+	void findFollowers(ListDigraph::Node entry, stack<ListDigraph::Node> &followers);
+	bool conflicts(ListDigraph::Node node, Cache *cache);
+	map<ListDigraph::Node, bool> getConflictsIn(ListDigraph::Node u,
+	    Cache *cache, ListDigraph::NodeMap<bool> &visited);
+
+	/* Display methods */
 	string nodeLabel(ListDigraph::Node node);
 	string nodeDOTstart(ListDigraph::Node node);
 	string nodeDOTend(ListDigraph::Node node);	
 	ListDigraph::Node nodeDOT(ofstream &os, ListDigraph::Node node);
-	
 	string nodeDOTrow(ListDigraph::Node node);
 	string edgeDOT(ListDigraph::Node u, ListDigraph::Node port_u,
 		       ListDigraph::Node v, ListDigraph::Node port_v);
@@ -223,9 +264,7 @@ private:
 		     stack<ListDigraph::Node> &calls,
 		     stack<ListDigraph::Node> &subsq,
 		     ListDigraph::NodeMap<bool> &visited);
-	bool sameFunc(ListDigraph::Node u, ListDigraph::Node v);
 
-	void findFollowers(ListDigraph::Node entry, stack<ListDigraph::Node> &followers);
 };
 
 

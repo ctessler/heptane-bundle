@@ -75,6 +75,10 @@ public:
 	 * Returns true if the address is currently cached.
 	 */
 	bool present(t_address addr);
+	/**
+	 * Caches a value by address
+	 */
+	void insert(t_address addr);
 private:
 	map <int, CacheSet *> _sets;
 	ReplacementPolicy *_policy;

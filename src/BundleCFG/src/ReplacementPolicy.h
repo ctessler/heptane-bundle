@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include "HeptaneStdTypes.h"
+#include <iostream>
 using namespace std;
 
 /**
@@ -16,6 +17,11 @@ class CacheSet;
  */
 class ReplacementPolicy {
 public:
+	/**
+	 * Copy constructor
+	 */
+	ReplacementPolicy() { };	
+	ReplacementPolicy(ReplacementPolicy &other) { };
 	/**
 	 * Returns the index cache line the address will be stored in.
 	 *
@@ -48,6 +54,8 @@ public:
 	 * Returns the name of the replacement policy
 	 */
 	virtual string typeName() = 0;
+
+	virtual ~ReplacementPolicy() { cout << "Hello " << this << endl; }
 };
 
 #include "CacheSet.h"

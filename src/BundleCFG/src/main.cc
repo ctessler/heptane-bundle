@@ -148,8 +148,28 @@ int main(int argc, char** argv) {
 	DotPrint dotprint(prog, config.getWorkDir(), base, iCache, dCache);
 	dotprint.PerformAnalysis();
 
+	//	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
+
 	/* Convert to Control Flow Graph that can be analyzed */
 	LemonCFG *cvtd = LemonFactory::convert(prog);
+	
+	map<ListDigraph::Node, bool> xflicts =
+	    cvtd->getConflicts(cvtd->getRoot(), iCache[1]);
+	cout << cvtd->getStartString(cvtd->getRoot()) << " has conflicts: ";
+	for (map<ListDigraph::Node, bool>::iterator it = xflicts.begin();
+	     it != xflicts.end(); it++) {
+		cout << cvtd->getStartString(it->first) << " " ;
+	}
+	cout << endl;
+
+	map<ListDigraph::Node, bool> cfrentry =	cvtd->getCFREntry(iCache[1]);
+	cout << "Conflict Free Region Entry Points: " << endl;
+	for (map<ListDigraph::Node, bool>::iterator it = cfrentry.begin();
+	     it != cfrentry.end(); it++) {
+		cout << "\t" << cvtd->getStartString(it->first) << endl;
+		cvtd->setColor(it->first, "red");
+	}
+
 	for (map<int, Cache*>::iterator it = iCache.begin();
 	     it != iCache.end(); ++it) {
 		int level = it->first;
@@ -159,12 +179,10 @@ int main(int argc, char** argv) {
 		cvtd->toJPG(ss.str());
 	}
 
-	CFRFactory::makeCFRG(prog, config.getWorkDir(), iCache, dCache);
-	
+
+	/* Clean up and shutdown */
 	xmlCleanupParser();
-
 	delete cvtd;
-
 	if (!vflag) {
 		/* Restore cout, now you can output status */
 		cout.rdbuf(old_cout);
