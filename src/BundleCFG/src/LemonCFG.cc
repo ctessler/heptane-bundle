@@ -520,6 +520,7 @@ LemonCFG::getConflictsIn(ListDigraph::Node u, Cache *cache,
 	 * and abort
 	 */
 	if (conflicts(u, cache)) {
+#ifdef DBG_GETCONFLICTSIN
 		cout << "getConflictsIn: " << getStartString(u) << " conflicts" << endl;
 		cout << "getConflictsIn: Cache Set Index[" << cache->setIndex(addr) << "] "
 		     << "contents:" << endl;
@@ -532,8 +533,7 @@ LemonCFG::getConflictsIn(ListDigraph::Node u, Cache *cache,
 			cout << "\tWay[" << way << "] Range 0x"
 			     <<	hex << cl->getStartAddress() << " -> 0x" << cl->getEndAddress() << dec << endl;
 		}
-		
-		cout << "getConflictsIn: " << getStartString(u) << " conflicts" << endl;
+#endif /* DBG_GETCONFLICTSIN */		
 		xflicts[u] = true;
 		return xflicts;
 	}
@@ -609,15 +609,24 @@ LemonCFG::getCFREntry(Cache *cache) {
 
 		/* Add the conflicts to the waiting stack *only* if they have
 		   not been processed */
+#ifdef DBG_GETCFGENTRY
 		cout << "getCFGEntry " << getStartString(cur) << " has conflicts: " << endl;
+#endif /* DBG_GETCFGENTRY */
 		for (map<ListDigraph::Node, bool>::iterator it = xflicts.begin();
 		     it != xflicts.end(); it++) {
+#ifdef DBG_GETCFGENTRY
 			cout << "\t" << getStartString(it->first);
+#endif /* DBG_GETCFGENTRY */
 			if (procd[it->first]) {
+#ifdef DBG_GETCFGENTRY
 				cout << endl;
+#endif /* DBG_GETCFGENTRY */
+
 				continue;
 			}
+#ifdef DBG_GETCFGENTRY
 			cout << " starts a new CFR" << endl;
+#endif /* DBG_GETCFGENTRY */
 			waiting.push(it->first);
 			result[it->first] = true;
 		}
