@@ -91,18 +91,7 @@ CFRFactory::extractNode(Cfg *cfg, Node* parent, Node* node, Cache *cache) {
 		     << "\tXFlict: ";
 
 		if (cache_set->present(addr)) {
-			/* This value is cached */
-			if (cache_set->visited(addr)) {
-				/* Already executed, loop! */
-				cout << "Loop!" << endl;
-				Node *target = cfg->findNode(addr);
-				if (!target) {
-					throw runtime_error("Loop found without an existing node");
-				}
-				
-				
-				return rval;
-			}
+
 		} else {
 			if (cache_set->evicts(addr)) {
 				/* Certainly would cause an eviction */

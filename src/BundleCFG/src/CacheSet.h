@@ -4,6 +4,7 @@
 #include "Cache.h"
 #include <map>
 #include <vector>
+#include <stdexcept>
 
 /**
  * Represents an individual Cache Set
@@ -24,10 +25,6 @@ public:
 	 * Returns true if the address is present in the set.
 	 */
 	bool present(t_address addr);
-	/**
-	 * Returns true if the address has been visited, see CacheLine::visited.
-	 */
-	bool visited(t_address addr);
 	/**
 	 * Returns true if placing the address in the set would cause
 	 * an eviction
@@ -50,6 +47,14 @@ public:
 	 * Returns true if the cache ses is full
 	 */
 	bool isFull();
+	/**
+	 * Returns a pointer to the cache line at the index
+	 */
+	CacheLine* cacheLine(uint32_t index);
+	/**
+	 * Returns the number of ways in the cache set
+	 */
+	uint32_t ways() { return _ways; }
 private:
 	/**
 	 * Storage for the Cache Set, each of the ways is given a CacheLine

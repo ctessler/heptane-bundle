@@ -73,23 +73,27 @@ addBBIns(LemonCFG *cfg, ListDigraph::Node cursor, Node *node) {
 			ListDigraph::Arc a = findArc(*cfg, last, newNode);
 			/* Check to see if the arc was already added */
 			if (a == INVALID) {
+#ifdef DBG_LEMONFACTORY
 				cout << "addBBIns Adding a.1: " << cfg->getStartString(last) << " -> "
 				     << cfg->getStartString(newNode) << endl;
+#endif /* DBG_LEMONFACTORY */
 				cfg->addArc(last, newNode);
 			}
 		}
-
+#ifdef DBG_LEMONFACTORY
 		if (last == INVALID) {
 			cout << "addBBIns Adding n.1: " << cfg->getStartString(newNode) << " (new)" << endl;
 		} else {
 			cout << "addBBIns Adding n.2: " << cfg->getStartString(last) << " -> "
 			     << cfg->getStartString(newNode) << " (new)" << endl;
 		}
-		
+#endif /* DBG_LEMONFACTORY */
 		/* Don't forget to increment last */
 		last = newNode;
 	}
+#ifdef DBG_LEMONFACTORY
 	cout << "addBBIns last node: " << cfg->getStartString(last) << endl;
+#endif /* DBG_LEMONFACTORY */
 
 	return last;
 }
@@ -110,27 +114,32 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 	stack<unsigned long> pcs;
 	stack<ListDigraph::Node> returns;
 	stack<Node*> hepStack;
-	
+
+#ifdef DBG_DOCALL
 	cout << "doCall with predecessor: ";
 	if (last != INVALID) {
 		cout << cfg->getStartString(last) << endl;
 	} else {
 		cout << "none" << endl;
 	}
-
+#endif /* DBG_DOCALL */
 	t_address addr = getFirstAddress(node);
 	ListDigraph::Node entry = cfg->getNode(addr);
 	if (entry != INVALID) {
+#ifdef DBG_DOCALL
 		cout << "doCall " << cfg->getStartString(entry) << " exists" << endl;
+#endif /* DBG_DOCALL */
 		/* Check for the arc */
 		ListDigraph::Arc a = INVALID;
 		if (last != INVALID) {
 			findArc(*cfg, last, entry);
 		}
 		if (a == INVALID) {
+#ifdef DBG_DOCALL
 			cout << "doCall Adding a.1: "
 			     << cfg->getStartString(last) << " -> "
 			     << cfg->getStartString(entry) << endl;
+#endif /* DBG_DOCALL */
 			cfg->addArc(last, entry);
 		}
 		return INVALID;
@@ -144,9 +153,11 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 	if (last != INVALID) {
 		ListDigraph::Arc a = findArc(*cfg, last, entry);
 		if (a == INVALID) {
+#ifdef DBG_DOCALL
 			cout << "doCall Adding a.2: "
 			     << cfg->getStartString(last) << " -> "
 			     << cfg->getStartString(entry) << endl;
+#endif /* DBG_DOCALL */
 			cfg->addArc(last, entry);
 		}
 	}
@@ -156,11 +167,15 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 	/* Process the outgoing edges from this Heptane node */
 	vector<Node*> outbound = node->GetCfg()->GetSuccessors(node);
 	vector<Node*>::iterator nit;
+#ifdef DBG_DOCALL
 	cout << "doCall Finding successors of 0x" << hex << getFirstAddress(node) << endl;
+#endif /* DBG_DOCALL */
 	for (nit = outbound.begin(); nit != outbound.end(); nit++) {
 		Node *next = (*nit);
+#ifdef DBG_DOCALL
 		t_address next_node = getFirstAddress(next);
 		cout << "  0x" << hex << next_node << endl;
+#endif /* DBG_DOCALL */
 
 		/* Recursive call */
 		ListDigraph::Node cand = doCall(cfg, final, next);
@@ -184,8 +199,10 @@ doCall(LemonCFG *cfg, ListDigraph::Node last, Node *node) {
 			throw runtime_error("Cannot find return node");
 		}
 		
+#ifdef DBG_DOCALL
 		cout << "doCall Adding a.3: " << cfg->getStartString(terminal) << " -> "
 		     << cfg->getStartString(ret_to) << endl;
+#endif /* DBG_DOCALL */
 		cfg->addArc(terminal, ret_to);
 
 		/* This will seem odd, but Heptane connects the basic blocks of
@@ -342,7 +359,9 @@ identifyLoops(LemonCFG &cfg) {
 static void
 boundLoops(LemonCFG &cfg, Cfg* hep_cfg) {
 	vector<Loop*> hep_loops = hep_cfg->GetAllLoops();
+#ifdef DBG_BOUNDLOOPS
 	cout << "boundLoops found " << hep_loops.size() << " loops in this CFG" << endl;
+#endif /* DBG_BOUNDLOOPS */
 	for (unsigned int i = 0; i < hep_loops.size(); i++) {
 		/* Get the maximum number of iterations */
 		SerialisableIntegerAttribute ai = (SerialisableIntegerAttribute &)
@@ -358,8 +377,10 @@ boundLoops(LemonCFG &cfg, Cfg* hep_cfg) {
 		if (lemon_node == INVALID) {
 			throw runtime_error("Unable to find node");
 		}
+#ifdef DBG_BOUNDLOOPS
 		cout << "boundLoops " << cfg.getStartString(lemon_node) << " has "
 		     << dec << maxiter << " iterations" << endl;
+#endif /* DBG_BOUNDLOOPS */
 		if (!cfg.isLoopHead(lemon_node)) {
 			throw runtime_error("Node not marked as a loop header");
 		}

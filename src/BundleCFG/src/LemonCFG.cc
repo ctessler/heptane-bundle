@@ -78,9 +78,9 @@ LemonCFG::toDOT(string path) {
 	ListDigraph::NodeMap<bool> visited(*this, false);
 	stack<ListDigraph::Node> calls, subsq;
 	stack<string> edges;
-
+#ifdef DBG_TODOT
 	cout << "toDOT begins with: " << getStartString(root) << endl;
-
+#endif /* DBG_TODOT */
 	calls.push(root);
 	while (!calls.empty()) {
 		/* New function call */
@@ -100,14 +100,18 @@ LemonCFG::toDOT(string path) {
 				continue;
 			}
 			if (isLoopHead(bb_start)) {
+#ifdef DBG_TODOT
 				cout << "toDOT " << getStartString(bb_start) << " is a loop head" << endl;
+#endif /* DBG_TODOT */
 				loopDOT(bb_start, os, calls, subsq, visited);
 				continue;
 			}
 			visited[bb_start] = true;
 
 			/* Print this node, and all entries that are in the same BB */
+#ifdef DBG_TODOT
 			cout << "toDOT Calling nodeDOT with " << getStartString(bb_start) << endl;
+#endif /* DBG_TODOT */
 			ListDigraph::Node bb_last = nodeDOT(os, bb_start);
 
 			/* Find the instructions immediately following the last one */
@@ -116,7 +120,10 @@ LemonCFG::toDOT(string path) {
 
 			while (!followers.empty()) {
 				ListDigraph::Node bb_next = followers.top(); followers.pop();
-				cout << "Pushing edge " << edgeDOT(bb_start, bb_last, bb_next, bb_next) << endl;
+#ifdef DBG_TODOT
+				cout << "toDOT Pushing edge " << edgeDOT(bb_start,
+				    bb_last, bb_next, bb_next) << endl;
+#endif /* DBG_TODOT */
 				edges.push(edgeDOT(bb_start, bb_last, bb_next, bb_next));
 				if (!sameFunc(bb_start, bb_next)) {
 					/* next is a function entry point */
@@ -149,29 +156,40 @@ LemonCFG::nodeDOT(ofstream &os, ListDigraph::Node node) {
 	os << nodeDOTrow(node) << endl;
 	ListDigraph::Node last = node;
 
+#ifdef DBG_NODEDOT
 	int count = countOutArcs(*this, last);
 	cout << "nodeDOT " << getStartString(node) << " out arcs: " << count << endl;
-
+#endif /* DBG_NODEDOT */
 	while (countOutArcs(*this, last) == 1) {
 		ListDigraph::OutArcIt a(*this, last);
 		ListDigraph::Node next = runningNode(a);
+#ifdef DBG_NODEDOT
 		cout << "node DOT " << getStartString(last) << " -> " << getStartString(next) << " ";
+#endif /* DBG_NODEDOT */
 		if (!sameFunc(last, next)) {
 			/* Function call */
+#ifdef DBG_NODEDOT
 			cout << "preserved function call" << endl;
+#endif /* DBG_NODEDOT */
 			break;
 		}
 		if ( _saddr[next] - _saddr[last] != 4) {
 			/* Not consecutive */
+#ifdef DBG_NODEDOT
 			cout << "preserved non-consecutive" << endl;
+#endif /* DBG_NODEDOT */
 			break;
 		}
 		if (countInArcs(*this, next) > 1) {
 			/* Multiple ingressing egdes */
+#ifdef DBG_NODEDOT
 			cout << "preserved next node has an incoming edge" << endl;
+#endif /* DBG_NODEDOT */
 			break;
 		}
+#ifdef DBG_NODEDOT
 		cout << "contracted" << endl;
+#endif /* DBG_NODEDOT */
 		os << nodeDOTrow(next) << endl;
 		last = next;
 	}
@@ -265,9 +283,10 @@ LemonCFG::loopDOT(ListDigraph::Node head, ofstream &os,
 		if (visited[u]) {
 			continue;
 		}
+#ifdef DBG_LOOPDOT
 		cout << "loopDOT working loop " << getStartString(head)
 		     <<	" node: " << getStartString(u) << endl;
-
+#endif /* DBG_LOOPDOT */
 		if (u != head && isLoopHead(u)) {
 			/*
 			 * Case: An embedded loop starting with u
@@ -307,7 +326,9 @@ LemonCFG::loopDOT(ListDigraph::Node head, ofstream &os,
 
 		while (!followers.empty()) {
 			ListDigraph::Node bb_next = followers.top(); followers.pop();
+#ifdef DBG_LOOPDOT
 			cout << "loopDOT Pushing edge " << edgeDOT(u, bb_last, bb_next, bb_next) << endl;
+#endif /* DBG_LOOPDOT */
 			edges.push(edgeDOT(u, bb_last, bb_next, bb_next));
 			if (!sameFunc(u, bb_next)) {
 				/* next is a function entry point */
@@ -329,13 +350,16 @@ LemonCFG::findFollowers(ListDigraph::Node node, stack<ListDigraph::Node> &follow
 	while (!followers.empty()) {
 		followers.pop();
 	}
+#ifdef DBG_FINDFOLLOWERS
 	cout << "findFollowers: " << getStartString(node) << " "
 	     << countOutArcs(*this, node) << " outgoing arcs" << endl;
+#endif /* DBG_FINDFOLLOWERS */
 	for (ListDigraph::OutArcIt a(*this, node); a != INVALID; ++a) {
 		ListDigraph::Node tgt = runningNode(a);
+#ifdef DBG_FINDFOLLOWERS
 		cout << "findFollowers adding: " << getStartString(node) << " -> "
 		     << getStartString(tgt) << endl;
-
+#endif /* DBG_FINDFOLLOWERS */
 		followers.push(tgt);
 	}
 }
@@ -409,8 +433,10 @@ LemonCFG::cacheAssign(Cache *cache) {
 		ListDigraph::Node node = nodeFromId(id(n));
 		uint32_t setIndex = cache->setIndex(getStartLong(node));
 		_cache_set[node] = setIndex;
+#ifdef DBG_CACHEASSIGN		
 		cout << "cacheAssign " << getStartString(node)
 		     << " maps to cache set " << setIndex << endl;
+#endif /* DBG_CACHEASSIGN */
 	}
 }
 
@@ -494,6 +520,19 @@ LemonCFG::getConflictsIn(ListDigraph::Node u, Cache *cache,
 	 * and abort
 	 */
 	if (conflicts(u, cache)) {
+		cout << "getConflictsIn: " << getStartString(u) << " conflicts" << endl;
+		cout << "getConflictsIn: Cache Set Index[" << cache->setIndex(addr) << "] "
+		     << "contents:" << endl;
+		CacheSet *cs = cache->setOf(addr);
+		for (uint32_t way=0; way <= cs->ways(); way++) {
+			CacheLine *cl = cs->cacheLine(way);
+			if (!cl) {
+				break;
+			}
+			cout << "\tWay[" << way << "] Range 0x"
+			     <<	hex << cl->getStartAddress() << " -> 0x" << cl->getEndAddress() << dec << endl;
+		}
+		
 		cout << "getConflictsIn: " << getStartString(u) << " conflicts" << endl;
 		xflicts[u] = true;
 		return xflicts;
@@ -587,8 +626,61 @@ LemonCFG::getCFREntry(Cache *cache) {
 	return result;
 }
 
-
 void
 LemonCFG::setColor(ListDigraph::Node node, string color) {
 	_node_color[node] = color;
+}
+
+
+void
+LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
+    ListDigraph::Node cur, Cache* cache,
+    ListDigraph::NodeMap<ListDigraph::Node> &cfr,
+    ListDigraph::NodeMap<bool> &visited) {
+	/* Caller must ensure this node (u) has not been visited */
+	visited[cur] = true;
+
+	unsigned long addr = _saddr[cur];
+
+
+	/*
+	 * If this node would cause a conflict, it belongs to
+	 * a different conflict free region
+	 *
+	 * If it has not been assigned to a previous conflict
+	 * free region, it will become the entry point for a
+	 * new one. This is indicated by setting the cfr of
+	 * the current node to itself.
+	 */
+	if (conflicts(cur, cache)) {
+		cout << "getConflictors: " << getStartString(cur) << " conflicts" << endl;
+		if (cfr[cur] == INVALID) {
+			cfr[cur] = cur;
+		}
+		return;
+	}
+	/* Does not conflict, assign cur to the CFR */
+	cfr[cur] = cfrentry;
+	Cache *copy = new Cache(*cache);
+	copy->insert(addr);
+
+	for (ListDigraph::OutArcIt a(*this, cur); a != INVALID; ++a) {
+		ListDigraph::Node tgt = runningNode(a);
+		if (visited[tgt]) {
+			continue;
+		}
+		/* Recursive Call */
+		getConflictorsIn(cfrentry, tgt, copy, cfr, visited);
+	}
+	delete(copy);
+}
+
+ListDigraph::NodeMap<ListDigraph::Node>*
+LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache) {
+	ListDigraph::NodeMap<ListDigraph::Node> *cfr = new ListDigraph::NodeMap<ListDigraph::Node>(*this);
+	ListDigraph::NodeMap<bool> visited (*this);
+
+	getConflictorsIn(root, root, cache, *cfr, visited);
+	
+	return cfr;
 }

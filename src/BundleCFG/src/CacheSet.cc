@@ -24,19 +24,6 @@ bool CacheSet::present(t_address addr) {
 	return false;
 }
 
-/**
- * This method is an artifact, remove it when the CRFactory is removed.
- */
-bool CacheSet::visited(t_address addr) {
-	map<uint32_t, CacheLine>::iterator it;
-	for (it = _storage.begin(); it != _storage.end(); it++) {
-		if (it->second.visited(addr)) {
-			return true;
-		}
-	}
-	return false;
-}
-
 bool CacheSet::evicts(t_address addr) {
 	ReplacementPolicy *p = _cache->getPolicy();
 	return p->evicts(*this, addr);
@@ -66,4 +53,14 @@ bool CacheSet::empty() {
 	
 bool CacheSet::isFull() {
 	return _storage.size() < _ways;
+}
+
+CacheLine* CacheSet::cacheLine(uint32_t index) {
+	if (index >= _ways) {
+		throw runtime_error("CacheSet::cacheLine index out of bounds");
+	}
+	if (index >= _storage.size()) {
+		return NULL;
+	}
+	return &_storage[index];
 }

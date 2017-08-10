@@ -194,6 +194,13 @@ public:
 	 */
 	map<ListDigraph::Node, bool> getCFREntry(Cache *cache);
 
+
+	/**
+	 *
+	 */
+	ListDigraph::NodeMap<ListDigraph::Node>*
+	    getConflictors(ListDigraph::Node root, Cache *cache);
+
 	/**
 	 * Gives a node a specific color in the CFG when printed to
 	 * DOT
@@ -251,6 +258,10 @@ private:
 	bool conflicts(ListDigraph::Node node, Cache *cache);
 	map<ListDigraph::Node, bool> getConflictsIn(ListDigraph::Node u,
 	    Cache *cache, ListDigraph::NodeMap<bool> &visited);
+	void getConflictorsIn(ListDigraph::Node cfrentry,
+	    ListDigraph::Node cur, Cache* cache,
+	    ListDigraph::NodeMap<ListDigraph::Node> &cfr,
+	    ListDigraph::NodeMap<bool> &visited);
 
 	/* Display methods */
 	string nodeLabel(ListDigraph::Node node);
