@@ -196,11 +196,33 @@ public:
 
 
 	/**
+	 * Gets the CFR from a specific node
+	 *
+	 * @param[in] root the beginning of a CFR
+	 * @param[in] cache cache used to determine the boundaries of the CFR
+	 * @param[in|out] membership contains the current mapping of instruction to CFR, 
+	 *    membership[a] = b means that a is in the CFR with entry point b. 
+	 *    membership[a] = a means that a is the entry point of a CFR with entry point a.
+	 *
+	 * @return a mapping of entry points for subsequent CFRs
+	 */
+	map<ListDigraph::Node, bool> getConflictors(ListDigraph::Node root,
+	    Cache *cache, ListDigraph::NodeMap<ListDigraph::Node> &membership);
+
+	/**
+	 * Finds the membership of instructions to their CFR for the entire CFG
+	 *
+	 * @param[in] cache the cache used to determine CFR boundaries
+	 *
+	 * @return membership for each instruction, must be deleted by the
+	 *    caller:
+	 *    membership[a] = b means that a is in the CFR with entry point b.
+	 *    membership[a] = a means that a is the entry point of a CFR with
+	 *        entry point a. 
 	 *
 	 */
-	ListDigraph::NodeMap<ListDigraph::Node>*
-	    getConflictors(ListDigraph::Node root, Cache *cache);
-
+	ListDigraph::NodeMap<ListDigraph::Node>* getCFRMembership(Cache *cache);
+	
 	/**
 	 * Gives a node a specific color in the CFG when printed to
 	 * DOT
@@ -258,7 +280,7 @@ private:
 	bool conflicts(ListDigraph::Node node, Cache *cache);
 	map<ListDigraph::Node, bool> getConflictsIn(ListDigraph::Node u,
 	    Cache *cache, ListDigraph::NodeMap<bool> &visited);
-	void getConflictorsIn(ListDigraph::Node cfrentry,
+	map<ListDigraph::Node, bool> getConflictorsIn(ListDigraph::Node cfrentry,
 	    ListDigraph::Node cur, Cache* cache,
 	    ListDigraph::NodeMap<ListDigraph::Node> &cfr,
 	    ListDigraph::NodeMap<bool> &visited);

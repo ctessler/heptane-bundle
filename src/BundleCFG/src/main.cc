@@ -171,10 +171,21 @@ int main(int argc, char** argv) {
 		cvtd->toJPG(ss.str());
 
 		/* clear the colors */
-		for (map<ListDigraph::Node, bool>::iterator it = cfrentry.begin();
-		     it != cfrentry.end(); it++) {
-			cvtd->setColor(it->first, "");
+		for (map<ListDigraph::Node, bool>::iterator cfrit = cfrentry.begin();
+		     cfrit != cfrentry.end(); cfrit++) {
+			cvtd->setColor(cfrit->first, "");
 		}
+
+		ListDigraph::NodeMap<ListDigraph::Node> *xflicts =
+			cvtd->getCFRMembership(it->second);
+		for (ListDigraph::NodeIt nodeit(*cvtd); nodeit != INVALID; ++nodeit) {
+			ListDigraph::Node node = cvtd->nodeFromId(cvtd->id(nodeit));
+			ListDigraph::Node cfr = xflicts->operator[](node);
+			string test = cvtd->getStartString(cfr);
+			cout << "Node: " << cvtd->getStartString(nodeit) << " CFR: "
+			     << test << endl;
+		}
+		delete(xflicts);
 	}
 
 
