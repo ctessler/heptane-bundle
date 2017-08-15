@@ -168,13 +168,6 @@ int main(int argc, char** argv) {
 		}
 		
 		cvtd->cacheAssign(it->second);
-		cvtd->toJPG(ss.str());
-
-		/* clear the colors */
-		for (map<ListDigraph::Node, bool>::iterator cfrit = cfrentry.begin();
-		     cfrit != cfrentry.end(); cfrit++) {
-			cvtd->setColor(cfrit->first, "");
-		}
 
 		ListDigraph::NodeMap<ListDigraph::Node> *xflicts =
 			cvtd->getCFRMembership(it->second);
@@ -184,8 +177,19 @@ int main(int argc, char** argv) {
 			string test = cvtd->getStartString(cfr);
 			cout << "Node: " << cvtd->getStartString(nodeit) << " CFR: "
 			     << test << endl;
+			if (node == cfr) {
+				cvtd->setColor(node, "green");
+			}
 		}
 		delete(xflicts);
+		
+		cvtd->toJPG(ss.str());
+		/* clear the colors */
+		for (map<ListDigraph::Node, bool>::iterator cfrit = cfrentry.begin();
+		     cfrit != cfrentry.end(); cfrit++) {
+			cvtd->setColor(cfrit->first, "");
+		}
+
 	}
 
 

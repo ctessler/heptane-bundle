@@ -222,6 +222,16 @@ public:
 	 *
 	 */
 	ListDigraph::NodeMap<ListDigraph::Node>* getCFRMembership(Cache *cache);
+
+	/**
+	 * Clears the CFR entries added by getCFRMembership
+	 */
+	void clearCFR();
+
+	/**
+	 * Gets the CFR assigned by getCFRMembership
+	 */
+	ListDigraph::Node getCFR(ListDigraph::Node node);
 	
 	/**
 	 * Gives a node a specific color in the CFG when printed to
@@ -263,8 +273,10 @@ private:
 	ListDigraph::NodeMap<bool> _is_loop_head;
 	/* Instruction -> Cache Set mapping */
 	ListDigraph::NodeMap<unsigned int> _cache_set;
-	/* Instruciton -> Color */
+	/* Instruction -> Color */
 	ListDigraph::NodeMap<string> _node_color;
+	/* Instruction -> CFR entry point */
+	ListDigraph::NodeMap<ListDigraph::Node> _node_cfr;	
 	
 	/* Map from instruction address to Lemon node */
 	map<unsigned long, ListDigraph::Node> _addr2node;

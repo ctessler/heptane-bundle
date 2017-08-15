@@ -26,20 +26,21 @@ LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	dc.nodeMap(src._is_loop_head, dst._is_loop_head);
 	dc.nodeMap(src._cache_set, dst._cache_set);
 	dc.nodeMap(src._node_color, dst._node_color);
+	dc.nodeMap(src._node_cfr, dst._node_cfr);	
 	dst._addr2node = src._addr2node;
 }
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
 		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-		       _cache_set(*this), _node_color(*this) {
+		       _cache_set(*this), _node_color(*this), _node_cfr(*this) {
 	_root = INVALID;
 }
 
 LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
 				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-				    _cache_set(*this), _node_color(*this) {
+				    _cache_set(*this), _node_color(*this), _node_cfr(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
 	ListDigraph::NodeMap<ListDigraph::Node> map(src);
 	copyMaps(dc, src, *this);
@@ -57,6 +58,7 @@ LemonCFG::addNode(void) {
 	_loop_bound[rv] = 0;
 	_is_loop_head[rv] = false;
 	_cache_set[rv] = 0;
+	_node_cfr[rv] = INVALID;
 	return rv;
 }
 
@@ -207,7 +209,7 @@ LemonCFG::nodeDOTstart(ListDigraph::Node node) {
 	rv = "\t" + nlbl + "[shape=plaintext]\n"
 		+ "\t" + nlbl
 		+ "[label=<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">\n"
-		+ "<TR><TD>Address</TD><TD>Cache Set</TD></TR>";
+		+ "<TR><TD>Address</TD><TD>Cache Set</TD><TD>CFR</TD></TR>";
 
 	return rv;
 }
@@ -234,6 +236,7 @@ LemonCFG::nodeDOTrow(ListDigraph::Node node) {
 		+ color + "\" PORT=\"" + label + "\">"
 		+ _haddr[node] + "</TD>"
 		+ "<TD>" + ss.str() + "</TD>"
+		+ "<TD>" + getStartString(_node_cfr[node]) + "</TD>"
 		+ "</TR>";
 
 	return text;
@@ -741,6 +744,28 @@ LemonCFG::getCFRMembership(Cache *cache) {
 		
 	}
 
+	/*
+	 * Set the CFR membership while we're here, just because it's
+	 * easy. Allow the caller to clear with LemonCFG::clearCFR
+	 */
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nodeFromId(id(nit));
+		ListDigraph::Node cfr = membership->operator[](node);
+		_node_cfr[node] = cfr;
+	}
+	
 	return membership;
+}
+
+void
+LemonCFG::clearCFR() {
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		_node_cfr[nit] = INVALID;
+	}
+}
+
+ListDigraph::Node
+LemonCFG::getCFR(ListDigraph::Node node) {
+	return _node_cfr[node];
 }
 
