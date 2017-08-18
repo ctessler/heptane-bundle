@@ -158,22 +158,11 @@ int main(int argc, char** argv) {
 		stringstream ss;
 		ss << base << "-level-" << level << ".jpg";
 
-		map<ListDigraph::Node, bool> cfrentry =	cvtd->getCFREntry(it->second);
-		cout << "Cache Level " << it->first
-		     << " Conflict Free Region Entry Points: " << endl;
-		for (map<ListDigraph::Node, bool>::iterator cfrit = cfrentry.begin();
-		     cfrit != cfrentry.end(); cfrit++) {
-			cout << "\t" << cvtd->getStartString(cfrit->first) << endl;
-			cvtd->setColor(cfrit->first, "red");
-		}
-		
 		cvtd->cacheAssign(it->second);
-
-		ListDigraph::NodeMap<ListDigraph::Node> *xflicts =
-			cvtd->getCFRMembership(it->second);
+		cvtd->getCFRMembership(it->second);
 		for (ListDigraph::NodeIt nodeit(*cvtd); nodeit != INVALID; ++nodeit) {
 			ListDigraph::Node node = cvtd->nodeFromId(cvtd->id(nodeit));
-			ListDigraph::Node cfr = xflicts->operator[](node);
+			ListDigraph::Node cfr = cvtd->getCFR(node);
 			string test = cvtd->getStartString(cfr);
 			cout << "Node: " << cvtd->getStartString(nodeit) << " CFR: "
 			     << test << endl;
@@ -181,13 +170,11 @@ int main(int argc, char** argv) {
 				cvtd->setColor(node, "green");
 			}
 		}
-		delete(xflicts);
-		
+
 		cvtd->toJPG(ss.str());
 		/* clear the colors */
-		for (map<ListDigraph::Node, bool>::iterator cfrit = cfrentry.begin();
-		     cfrit != cfrentry.end(); cfrit++) {
-			cvtd->setColor(cfrit->first, "");
+		for (ListDigraph::NodeIt nit(*cvtd); nit != INVALID; ++nit) {
+			cvtd->setColor(nit, "");
 		}
 
 	}

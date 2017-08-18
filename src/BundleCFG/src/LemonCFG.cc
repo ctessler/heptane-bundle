@@ -26,21 +26,24 @@ LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	dc.nodeMap(src._is_loop_head, dst._is_loop_head);
 	dc.nodeMap(src._cache_set, dst._cache_set);
 	dc.nodeMap(src._node_color, dst._node_color);
-	dc.nodeMap(src._node_cfr, dst._node_cfr);	
+	dc.nodeMap(src._node_cfr, dst._node_cfr);
+	dc.nodeMap(src._node_is_entry, dst._node_is_entry);
 	dst._addr2node = src._addr2node;
 }
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
 		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-		       _cache_set(*this), _node_color(*this), _node_cfr(*this) {
+		       _cache_set(*this), _node_color(*this), _node_cfr(*this),
+		       _node_is_entry(*this) {
 	_root = INVALID;
 }
 
 LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
 				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
-				    _cache_set(*this), _node_color(*this), _node_cfr(*this) {
+				    _cache_set(*this), _node_color(*this), _node_cfr(*this),
+				    _node_is_entry(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
 	ListDigraph::NodeMap<ListDigraph::Node> map(src);
 	copyMaps(dc, src, *this);
@@ -59,6 +62,7 @@ LemonCFG::addNode(void) {
 	_is_loop_head[rv] = false;
 	_cache_set[rv] = 0;
 	_node_cfr[rv] = INVALID;
+	_node_is_entry[rv] = false;	
 	return rv;
 }
 
@@ -669,20 +673,21 @@ LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
 	 * the current node to itself.
 	 */
 	if (conflicts(cur, cache)) {
+		/* cur is a conflict, that makes it a CFR entry point */
+		_node_is_entry[cur] = true;
 		cout << "getConflictorsIn: " << getStartString(cfrentry)
 		     << " -x-> " << getStartString(cur) << endl;
-		if (cfr[cur] == INVALID) {
+		if (_node_cfr[cur] == INVALID) {
+			/* This CFR has not yet been visited */
 			cout << "getConflictorsIn: " << getStartString(cur)
 			     << " begins a new CFR " << endl;
-			/* cur already has an existing CFR */
-			cfr[cur] = cur;
-			entry[cfr[cur]] = true;
+			_node_cfr[cur] = cur;
+			entry[cur] = true;
 		}
-		/* A new CFR */
 		return entry;
 	}
 	/* Does not conflict, assign cur to the CFR */
-	cfr[cur] = cfrentry;
+	_node_cfr[cur] = cfrentry;
 	cache->insert(addr);
 
 	for (ListDigraph::OutArcIt a(*this, cur); a != INVALID; ++a) {
@@ -709,12 +714,15 @@ LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache,
 	ListDigraph::NodeMap<bool> visited (*this);
 	map<ListDigraph::Node, bool> entry;
 
+	
+	cout << "getConflictors: starting with " << getStartString(root) << endl;
+	
 	Cache *copy = new Cache(*cache);
 	entry = getConflictorsIn(root, root, copy, membership, visited);
 	delete(copy);
 
+	cout << "getConflictors conflicts from " << getStartString(root) << endl;
 	map<ListDigraph::Node, bool>::iterator it = entry.begin();
-	cout << "getConflictors entry points for " << getStartString(root) << endl;
 	for ( ; it != entry.end(); it++) {
 		cout << "\t" << getStartString(it->first) << endl;
 	}
@@ -744,6 +752,7 @@ LemonCFG::getCFRMembership(Cache *cache) {
 		
 	}
 
+	#if 0
 	/*
 	 * Set the CFR membership while we're here, just because it's
 	 * easy. Allow the caller to clear with LemonCFG::clearCFR
@@ -753,6 +762,7 @@ LemonCFG::getCFRMembership(Cache *cache) {
 		ListDigraph::Node cfr = membership->operator[](node);
 		_node_cfr[node] = cfr;
 	}
+	#endif
 	
 	return membership;
 }
@@ -761,6 +771,7 @@ void
 LemonCFG::clearCFR() {
 	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
 		_node_cfr[nit] = INVALID;
+		_node_is_entry[nit] = false;
 	}
 }
 

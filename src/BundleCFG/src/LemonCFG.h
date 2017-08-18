@@ -276,7 +276,11 @@ private:
 	/* Instruction -> Color */
 	ListDigraph::NodeMap<string> _node_color;
 	/* Instruction -> CFR entry point */
-	ListDigraph::NodeMap<ListDigraph::Node> _node_cfr;	
+	ListDigraph::NodeMap<ListDigraph::Node> _node_cfr;
+	/* Instruction -> Bool (is entry point) */
+	ListDigraph::NodeMap<bool> _node_is_entry;
+
+	
 	
 	/* Map from instruction address to Lemon node */
 	map<unsigned long, ListDigraph::Node> _addr2node;
