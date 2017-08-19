@@ -162,6 +162,23 @@ public:
 	 * @param[in] bound the maximum iterations
 	 */
 	void setLoopBound(ListDigraph::Node node, unsigned int bound);
+
+
+	/**
+	 * Returns a list of nodes that are loop heads in "order"
+	 *
+	 * To be in order, no node (that is a loop head) that is contained
+	 * within another loop may occur later in the list. For example:
+	 * if a is a loop head that is contained within a loop starting with b,
+	 *    { a, ..., b } will be true
+	 *
+	 * Using less than to mean that a is included in b. For the loop heads: 
+	 *   a < b, c < d
+	 * There is no ordering between a & c, a & d, b & c, or b & d, the
+	 * resulting ordered list may look like this
+	 *   { c, a, d, b }
+	 */
+	std::list<ListDigraph::Node> orderLoopHeads();
 	/**
 	 * Returns the set of conflicts starting from a specific node
 	 *
@@ -207,7 +224,7 @@ public:
 	 * @return a mapping of entry points for subsequent CFRs
 	 */
 	map<ListDigraph::Node, bool> getConflictors(ListDigraph::Node root,
-	    Cache *cache, ListDigraph::NodeMap<ListDigraph::Node> &membership);
+	    Cache *cache);
 
 	/**
 	 * Finds the membership of instructions to their CFR for the entire CFG
@@ -221,7 +238,7 @@ public:
 	 *        entry point a. 
 	 *
 	 */
-	ListDigraph::NodeMap<ListDigraph::Node>* getCFRMembership(Cache *cache);
+	void getCFRMembership(Cache *cache);
 
 	/**
 	 * Clears the CFR entries added by getCFRMembership
@@ -232,6 +249,10 @@ public:
 	 * Gets the CFR assigned by getCFRMembership
 	 */
 	ListDigraph::Node getCFR(ListDigraph::Node node);
+	/**
+	 * Returns true if the node is a CFR entry point
+	 */
+	bool isCFREntry(ListDigraph::Node node);
 	
 	/**
 	 * Gives a node a specific color in the CFG when printed to
@@ -279,7 +300,8 @@ private:
 	ListDigraph::NodeMap<ListDigraph::Node> _node_cfr;
 	/* Instruction -> Bool (is entry point) */
 	ListDigraph::NodeMap<bool> _node_is_entry;
-
+	/* Visited mapping for searching */
+	ListDigraph::NodeMap<bool> _visited;
 	
 	
 	/* Map from instruction address to Lemon node */
@@ -294,11 +316,11 @@ private:
 	bool sameFunc(ListDigraph::Node u, ListDigraph::Node v);
 	void findFollowers(ListDigraph::Node entry, stack<ListDigraph::Node> &followers);
 	bool conflicts(ListDigraph::Node node, Cache *cache);
+	void clearVisited();
 	map<ListDigraph::Node, bool> getConflictsIn(ListDigraph::Node u,
 	    Cache *cache, ListDigraph::NodeMap<bool> &visited);
 	map<ListDigraph::Node, bool> getConflictorsIn(ListDigraph::Node cfrentry,
 	    ListDigraph::Node cur, Cache* cache,
-	    ListDigraph::NodeMap<ListDigraph::Node> &cfr,
 	    ListDigraph::NodeMap<bool> &visited);
 
 	/* Display methods */

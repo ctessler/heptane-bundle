@@ -28,6 +28,7 @@ LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	dc.nodeMap(src._node_color, dst._node_color);
 	dc.nodeMap(src._node_cfr, dst._node_cfr);
 	dc.nodeMap(src._node_is_entry, dst._node_is_entry);
+	dc.nodeMap(src._visited, dst._visited);	
 	dst._addr2node = src._addr2node;
 }
 
@@ -35,7 +36,7 @@ LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
 		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
 		       _cache_set(*this), _node_color(*this), _node_cfr(*this),
-		       _node_is_entry(*this) {
+		       _node_is_entry(*this), _visited(*this) {
 	_root = INVALID;
 }
 
@@ -43,7 +44,7 @@ LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
 				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
 				    _cache_set(*this), _node_color(*this), _node_cfr(*this),
-				    _node_is_entry(*this) {
+				    _node_is_entry(*this), _visited(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
 	ListDigraph::NodeMap<ListDigraph::Node> map(src);
 	copyMaps(dc, src, *this);
@@ -63,6 +64,7 @@ LemonCFG::addNode(void) {
 	_cache_set[rv] = 0;
 	_node_cfr[rv] = INVALID;
 	_node_is_entry[rv] = false;	
+	_visited[rv] = false;
 	return rv;
 }
 
@@ -489,6 +491,35 @@ LemonCFG::isLoopHead(ListDigraph::Node node) {
 	return _is_loop_head[node];
 }
 
+std::list<ListDigraph::Node>
+LemonCFG::orderLoopHeads() {
+	std::list<ListDigraph::Node> rval;
+
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		if (!isLoopHead(node)) {
+			/* Not a loop head continue */
+			continue;
+		}
+		ListDigraph::Node parent = getLoopHead(node);
+		if (parent == INVALID) {
+			/* Top level loop head, put it on the back */
+			rval.push_back(node);
+			continue;
+		}
+		/* Find the parent on the list */
+		std::list<ListDigraph::Node>::iterator lit = rval.begin();
+		for ( ; lit != rval.end(); ++lit) {
+			if (*lit == parent) {
+				break;
+			}
+		}
+		/* lit is at the index of parent in the list (or end) */
+		rval.insert(lit, node);		
+	}
+	return rval;
+}
+
 bool
 LemonCFG::conflicts(ListDigraph::Node node, Cache *cache) {
 	unsigned long addr = _saddr[node];
@@ -654,13 +685,12 @@ LemonCFG::setColor(ListDigraph::Node node, string color) {
 map<ListDigraph::Node, bool>
 LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
     ListDigraph::Node cur, Cache* cache,
-    ListDigraph::NodeMap<ListDigraph::Node> &cfr,
     ListDigraph::NodeMap<bool> &visited) {
 	/* CFR Entry points found from *this* node to continue the search */
 	map<ListDigraph::Node, bool> entry;
 	
 	/* Caller must ensure this node (u) has not been visited */
-	visited[cur] = true;
+	_visited[cur] = true;
 	unsigned long addr = _saddr[cur];
 
 	/*
@@ -692,12 +722,12 @@ LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
 
 	for (ListDigraph::OutArcIt a(*this, cur); a != INVALID; ++a) {
 		ListDigraph::Node tgt = runningNode(a);
-		if (visited[tgt]) {
+		if (_visited[tgt]) {
 			continue;
 		}
 		/* Recursive Call */
 		map<ListDigraph::Node, bool> lower;
-		lower = getConflictorsIn(cfrentry, tgt, cache, cfr, visited);
+		lower = getConflictorsIn(cfrentry, tgt, cache, visited);
 
 		/* Join result */
 		map<ListDigraph::Node, bool>::iterator it;
@@ -709,16 +739,14 @@ LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
 }
 
 map<ListDigraph::Node, bool>
-LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache,
-    ListDigraph::NodeMap<ListDigraph::Node> &membership) {
+LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache) {
 	ListDigraph::NodeMap<bool> visited (*this);
 	map<ListDigraph::Node, bool> entry;
-
 	
 	cout << "getConflictors: starting with " << getStartString(root) << endl;
 	
 	Cache *copy = new Cache(*cache);
-	entry = getConflictorsIn(root, root, copy, membership, visited);
+	entry = getConflictorsIn(root, root, copy, visited);
 	delete(copy);
 
 	cout << "getConflictors conflicts from " << getStartString(root) << endl;
@@ -730,41 +758,41 @@ LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache,
 	return entry;
 }
 
-ListDigraph::NodeMap<ListDigraph::Node>*
+void
 LemonCFG::getCFRMembership(Cache *cache) {
-	ListDigraph::NodeMap<ListDigraph::Node> *membership =
-		new ListDigraph::NodeMap<ListDigraph::Node>(*this);
+	map<ListDigraph::Node, bool> entries, nexts;
+	clearVisited();
 
-	ListDigraph::NodeMap<bool> visited(*this);
+	/* Process loop heads as conflict free region entry points to
+	 * start, always starting with the inner loop heads
+	 */
+	std::list<ListDigraph::Node> heads = orderLoopHeads();
+	std::list<ListDigraph::Node>::iterator lit;
+	for (lit = heads.begin(); lit != heads.end(); ++lit) {
+		ListDigraph::Node node = *lit;
+		if (!_is_loop_head[node]) {
+			continue; 
+		}
+		_node_is_entry[node] = true;
+		nexts = getConflictors(node, cache);
+		entries.insert(nexts.begin(), nexts.end());
+	}
 	
-
 	ListDigraph::Node cur = getRoot();
-	map<ListDigraph::Node, bool> entries;
-	entries = getConflictors(cur, cache, *membership);
+	_node_is_entry[cur] = true;
+	nexts = getConflictors(cur, cache);
+	entries.insert(nexts.begin(), nexts.end());	
 	while (entries.size() != 0) {
 		map<ListDigraph::Node, bool>::iterator it = entries.begin();
 		cur = it->first;
 		entries.erase(cur);
-		map<ListDigraph::Node, bool> nexts = getConflictors(cur, cache, *membership);
+		map<ListDigraph::Node, bool> nexts = getConflictors(cur, cache);
 		for (it = nexts.begin(); it != nexts.end(); it++) {
 			entries[it->first] = it->second;
 		}
 		
 	}
-
-	#if 0
-	/*
-	 * Set the CFR membership while we're here, just because it's
-	 * easy. Allow the caller to clear with LemonCFG::clearCFR
-	 */
-	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
-		ListDigraph::Node node = nodeFromId(id(nit));
-		ListDigraph::Node cfr = membership->operator[](node);
-		_node_cfr[node] = cfr;
-	}
-	#endif
-	
-	return membership;
+	clearVisited();	
 }
 
 void
@@ -775,8 +803,19 @@ LemonCFG::clearCFR() {
 	}
 }
 
+void
+LemonCFG::clearVisited() {
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		_visited[nit] = false;
+	}
+}
+
 ListDigraph::Node
 LemonCFG::getCFR(ListDigraph::Node node) {
 	return _node_cfr[node];
 }
 
+bool
+LemonCFG::isCFREntry(ListDigraph::Node node) {
+	return _node_is_entry[node];
+}

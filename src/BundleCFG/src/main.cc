@@ -166,8 +166,11 @@ int main(int argc, char** argv) {
 			string test = cvtd->getStartString(cfr);
 			cout << "Node: " << cvtd->getStartString(nodeit) << " CFR: "
 			     << test << endl;
-			if (node == cfr) {
-				cvtd->setColor(node, "green");
+			if (cvtd->isCFREntry(node)) {
+				cvtd->setColor(node, "yellow");
+				if (cvtd->getCFR(node) == node) {
+					cvtd->setColor(node, "green");
+				} 
 			}
 		}
 
