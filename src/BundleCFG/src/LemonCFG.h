@@ -300,6 +300,8 @@ private:
 	ListDigraph::NodeMap<ListDigraph::Node> _node_cfr;
 	/* Instruction -> Bool (is entry point) */
 	ListDigraph::NodeMap<bool> _node_is_entry;
+	/* Instruction -> Bool is the first instruction exiting a loop */
+	ListDigraph::NodeMap<bool> _node_is_exit;
 	/* Visited mapping for searching */
 	ListDigraph::NodeMap<bool> _visited;
 	
@@ -322,6 +324,7 @@ private:
 	map<ListDigraph::Node, bool> getConflictorsIn(ListDigraph::Node cfrentry,
 	    ListDigraph::Node cur, Cache* cache,
 	    ListDigraph::NodeMap<bool> &visited);
+	void markLoopExits(ListDigraph::Node node);
 
 	/* Display methods */
 	string nodeLabel(ListDigraph::Node node);

@@ -28,6 +28,7 @@ LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	dc.nodeMap(src._node_color, dst._node_color);
 	dc.nodeMap(src._node_cfr, dst._node_cfr);
 	dc.nodeMap(src._node_is_entry, dst._node_is_entry);
+	dc.nodeMap(src._node_is_exit, dst._node_is_exit);	
 	dc.nodeMap(src._visited, dst._visited);	
 	dst._addr2node = src._addr2node;
 }
@@ -36,7 +37,7 @@ LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
 		       _iwidth(*this), _asm(*this), _function(*this),
 		       _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
 		       _cache_set(*this), _node_color(*this), _node_cfr(*this),
-		       _node_is_entry(*this), _visited(*this) {
+		       _node_is_entry(*this), _node_is_exit(*this), _visited(*this) {
 	_root = INVALID;
 }
 
@@ -44,7 +45,7 @@ LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 				    _iwidth(*this), _asm(*this), _function(*this),
 				    _loop_head(*this), _loop_bound(*this), _is_loop_head(*this),
 				    _cache_set(*this), _node_color(*this), _node_cfr(*this),
-				    _node_is_entry(*this), _visited(*this) {
+				    _node_is_entry(*this), _node_is_exit(*this), _visited(*this) {
 	DigraphCopy<ListDigraph, ListDigraph> dc(src, *this);
 	ListDigraph::NodeMap<ListDigraph::Node> map(src);
 	copyMaps(dc, src, *this);
@@ -63,7 +64,8 @@ LemonCFG::addNode(void) {
 	_is_loop_head[rv] = false;
 	_cache_set[rv] = 0;
 	_node_cfr[rv] = INVALID;
-	_node_is_entry[rv] = false;	
+	_node_is_entry[rv] = false;
+	_node_is_exit[rv] = false;		
 	_visited[rv] = false;
 	return rv;
 }
@@ -483,6 +485,7 @@ LemonCFG::setLoopBound(ListDigraph::Node node, unsigned int bound) {
 
 void
 LemonCFG::markLoopHead(ListDigraph::Node node, bool yes) {
+	cout << "Marking " << getStartString(node) << " as a loop head" << endl;
 	_is_loop_head[node] = yes;
 }
 
@@ -713,6 +716,7 @@ LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
 			     << " begins a new CFR " << endl;
 			_node_cfr[cur] = cur;
 			entry[cur] = true;
+			setColor(cur, "green");
 		}
 		return entry;
 	}
@@ -723,6 +727,21 @@ LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
 	for (ListDigraph::OutArcIt a(*this, cur); a != INVALID; ++a) {
 		ListDigraph::Node tgt = runningNode(a);
 		if (_visited[tgt]) {
+			/* This node has been visited before, if it's
+			 * on a path that was not from the current CFR it
+			 * needs to be marked as an entry point, though
+			 * it still belongs to the CFR it was already
+			 * assigned to. */
+			if (_node_cfr[tgt] != cfrentry) {
+				_node_is_entry[tgt] = true;
+				setColor(tgt, "yellow");
+			}
+			continue;
+		}
+		if (_node_is_entry[tgt]) {
+			/* This node begins a different conflict
+			   free region */
+			entry[tgt] = true;
 			continue;
 		}
 		/* Recursive Call */
@@ -758,27 +777,65 @@ LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache) {
 	return entry;
 }
 
+
+void
+LemonCFG::markLoopExits(ListDigraph::Node node) {
+	_visited[node] = true;
+	ListDigraph::Node head = getLoopHead(node);
+	if (isLoopHead(node)) {
+		head = node;
+	}
+	if (head == INVALID) {
+		return;
+	}
+	for (ListDigraph::OutArcIt a(*this, node); a != INVALID; ++a) {
+		ListDigraph::Node tgt = runningNode(a);
+		ListDigraph::Node tgt_head = getLoopHead(tgt);
+#ifdef DBG_MARKLOOPEXITS
+		cout << "Node " << getStartString(node) << " has head "
+		     << getStartString(head) << " descendant "
+		     << getStartString(tgt) << " has head "
+		     << getStartString(tgt_head) << endl;
+#endif /* DBG_MARKLOOPEXITS */
+		if (isLoopHead(tgt)) {
+			/* Skip this guy, we'll handle him separately
+			   later */
+			continue;
+		}
+		if (tgt_head != head) {
+			/* tgt is a first node out of the loop */
+			_node_is_entry[tgt] = true;
+			_node_is_exit[tgt] = true;
+			setColor(tgt, "orange");
+			continue;
+		}
+		if (_visited[tgt]) {
+			continue;
+		}
+		markLoopExits(tgt);
+	}
+}
+
 void
 LemonCFG::getCFRMembership(Cache *cache) {
 	map<ListDigraph::Node, bool> entries, nexts;
-	clearVisited();
-
 	/* Process loop heads as conflict free region entry points to
 	 * start, always starting with the inner loop heads
 	 */
-	std::list<ListDigraph::Node> heads = orderLoopHeads();
-	std::list<ListDigraph::Node>::iterator lit;
-	for (lit = heads.begin(); lit != heads.end(); ++lit) {
-		ListDigraph::Node node = *lit;
-		if (!_is_loop_head[node]) {
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		clearVisited();
+		ListDigraph::Node node = nit;
+		if (!isLoopHead(node)) {
 			continue; 
 		}
 		_node_is_entry[node] = true;
-		nexts = getConflictors(node, cache);
-		entries.insert(nexts.begin(), nexts.end());
+		setColor(node, "gray");
+		markLoopExits(node);
 	}
-	
+
+	clearVisited();
 	ListDigraph::Node cur = getRoot();
+	setColor(cur, "green");
 	_node_is_entry[cur] = true;
 	nexts = getConflictors(cur, cache);
 	entries.insert(nexts.begin(), nexts.end());	

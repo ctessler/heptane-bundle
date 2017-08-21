@@ -166,12 +166,14 @@ int main(int argc, char** argv) {
 			string test = cvtd->getStartString(cfr);
 			cout << "Node: " << cvtd->getStartString(nodeit) << " CFR: "
 			     << test << endl;
+#if 0
 			if (cvtd->isCFREntry(node)) {
 				cvtd->setColor(node, "yellow");
 				if (cvtd->getCFR(node) == node) {
 					cvtd->setColor(node, "green");
 				} 
 			}
+#endif
 		}
 
 		cvtd->toJPG(ss.str());
