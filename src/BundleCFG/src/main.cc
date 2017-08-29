@@ -150,31 +150,18 @@ int main(int argc, char** argv) {
 
 	/* Convert to Control Flow Graph that can be analyzed */
 	LemonCFG *cvtd = LemonFactory::convert(prog);
-	LemonCFG copy(*cvtd);
-
-	copy.cacheAssign(iCache[1]);
-	copy.getCFRMembership(iCache[1]);
-	copy.toFile("bsort100-level-1-copy.dat");	
-	copy.toDOT("bsort100-level-1-copy.dot");
-	copy.toJPG("bsort100-level-1-copy.jpg");
-	
-	cvtd->cacheAssign(iCache[1]);
-	cvtd->getCFRMembership(iCache[1]);
-	cvtd->toFile("bsort100-level-1-precopy.dat");
-	cvtd->toDOT("bsort100-level-1-precopy.dot");
-	cvtd->toJPG("bsort100-level-1-precopy.jpg");
-
-	return 0;
 
 	/* Display the LemonCFG for each level of the cache */
 	for (map<int, Cache*>::iterator it = iCache.begin();
 	     it != iCache.end(); ++it) {
 		LemonCFG lcfg(*cvtd);
 		int level = it->first;
-		stringstream ss;
-		stringstream ssdot;
-		ss << base << "-level-" << level << ".jpg";
-		ssdot << base << "-level-" << level << ".dot";
+		stringstream jpg_name, dot_name, dat_name;
+		jpg_name << base << "-level-" << level << ".jpg";
+		dot_name << base << "-level-" << level << ".dot";
+		dat_name << base << "-level-" << level << ".dat";
+
+		cout << "Working on Cache level " << level << endl;
 
 		lcfg.cacheAssign(it->second);
 		lcfg.getCFRMembership(it->second);
@@ -182,12 +169,11 @@ int main(int argc, char** argv) {
 			ListDigraph::Node node = lcfg.nodeFromId(lcfg.id(nodeit));
 			ListDigraph::Node cfr = lcfg.getCFR(node);
 			string test = lcfg.getStartString(cfr);
-			cout << "Node: " << lcfg.getStartString(nodeit) << " CFR: "
-			     << test << endl;
 		}
 
-		lcfg.toJPG(ss.str());
-		lcfg.toDOT(ssdot.str());
+		lcfg.toFile(dat_name.str());
+		lcfg.toJPG(jpg_name.str());
+		lcfg.toDOT(dot_name.str());
 	}
 
 
