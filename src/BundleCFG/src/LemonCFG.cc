@@ -52,6 +52,27 @@ LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 	dc.nodeRef(map);
 	dc.run();
 
+	for (ListDigraph::NodeIt nit(src); nit != INVALID; ++nit) {
+		ListDigraph::Node org = nit;
+		ListDigraph::Node dup = map[org];
+
+		/* Copy the Loop Heads manually */
+		ListDigraph::Node org_loop_head = src.getLoopHead(org);
+		if (org_loop_head != INVALID) {
+			ListDigraph::Node dup_loop_head = map[org_loop_head];
+			setLoopHead(dup, dup_loop_head);
+		}
+
+		/* Copy the CFR's manually */
+		ListDigraph::Node org_cfr = src.getCFR(org);
+		if (org_cfr != INVALID) {
+			ListDigraph::Node dup_cfr = map[org_cfr];
+			setCFR(dup, dup_cfr);
+		}
+	}
+
+	
+
 	ListDigraph::Node o_root = src.getRoot();
 	setRoot(map[o_root]);
 }
@@ -95,6 +116,11 @@ LemonCFG::toDOT(string path) {
 	while (!calls.empty()) {
 		/* New function call */
 		ListDigraph::Node entry = calls.top(); calls.pop();
+#ifdef DBG_TODOT
+		cout << "toDOT starting function call " << getFunc(entry) << ":"
+		     << getStartString(entry) << endl; 
+#endif /* DBG_TODOT */
+		
 		if (visited[entry]) {
 			/* This function has been seen */
 			continue;
@@ -143,7 +169,7 @@ LemonCFG::toDOT(string path) {
 				subsq.push(bb_next);
 			}
 		}
-		os << "}" << endl; // function cluster is done
+		os << "} // end function cluster_" << fname << endl; // function cluster is done
 	}
 
 	while (!edges.empty()) {
@@ -295,7 +321,7 @@ LemonCFG::loopDOT(ListDigraph::Node head, ofstream &os,
 			continue;
 		}
 #ifdef DBG_LOOPDOT
-		cout << "loopDOT working loop " << getStartString(head)
+		cout << "loopDOT loop " << getStartString(head)
 		     <<	" node: " << getStartString(u) << endl;
 #endif /* DBG_LOOPDOT */
 		if (u != head && isLoopHead(u)) {
@@ -338,7 +364,7 @@ LemonCFG::loopDOT(ListDigraph::Node head, ofstream &os,
 		while (!followers.empty()) {
 			ListDigraph::Node bb_next = followers.top(); followers.pop();
 #ifdef DBG_LOOPDOT
-			cout << "loopDOT Pushing edge " << edgeDOT(u, bb_last, bb_next, bb_next) << endl;
+			cout << "loopDOT loop " << getStartString(head) << " Pushing edge " << edgeDOT(u, bb_last, bb_next, bb_next) << endl;
 #endif /* DBG_LOOPDOT */
 			edges.push(edgeDOT(u, bb_last, bb_next, bb_next));
 			if (!sameFunc(u, bb_next)) {
@@ -872,7 +898,33 @@ LemonCFG::getCFR(ListDigraph::Node node) {
 	return _node_cfr[node];
 }
 
+void
+LemonCFG::setCFR(ListDigraph::Node node, ListDigraph::Node cfr) {
+	_node_cfr[node] = cfr;
+}
+
 bool
 LemonCFG::isCFREntry(ListDigraph::Node node) {
 	return _node_is_entry[node];
 }
+
+
+void
+LemonCFG::toFile(string path) {
+	ofstream dfile (path.c_str());
+	ListDigraph::Node node = getRoot();
+	dfile << "Root: " << getStartString(node) << endl;
+	dfile << "Node\tCache Set\tIs Entry\tCFR\tLoop Head" << endl;
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		node = nit;
+		string isEntry = isCFREntry(node) ? "Yes" : "No";
+		dfile << getStartString(node) << "\t"
+		      << cacheSet(node) << "\t"
+		      << isEntry << "\t"
+		      << getStartString(getCFR(node)) << "\t"
+		      << getStartString(getLoopHead(node))
+		      << endl;
+	}
+	dfile.close();
+}
+       

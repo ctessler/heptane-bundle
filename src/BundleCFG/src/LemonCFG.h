@@ -249,6 +249,16 @@ public:
 	 * Gets the CFR assigned by getCFRMembership
 	 */
 	ListDigraph::Node getCFR(ListDigraph::Node node);
+
+	/**
+	 * Sets the CFR the node belongs to
+	 *
+	 * CFR memebership is typically set by getCFRMembership() but this
+	 * function can be used to modify a CFR. Take special care when doing
+	 * so, incorrect CFR membership may break expectations
+	 */
+	void setCFR(ListDigraph::Node node, ListDigraph::Node cfr);
+	
 	/**
 	 * Returns true if the node is a CFR entry point
 	 */
@@ -262,7 +272,11 @@ public:
 	 * @param[in] color the text string of the color
 	 */
 	void setColor(ListDigraph::Node node, string color);
-	
+
+	/**
+	 * Dumps the LemonCFG to a file.
+	 */
+	void toFile(string path);
 private:
 	/*
 	 * Private Members

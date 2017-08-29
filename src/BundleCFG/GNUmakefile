@@ -11,10 +11,14 @@ OBJS+=obj/CacheLine.o obj/CacheSet.o obj/PolicyLRU.o obj/LemonCFG.o obj/LemonFac
 vbin=../../bin/BundleCFG
 all: $(vbin)
 
+CXXFLAGS=-DDBG_TODOT -DDBG_LOOPDOT
+CXXFLAGS=
+
 include ../makefile.common
 include makefile.depends
 
 LINKSFLAGS+=-lemon
+
 
 $(vbin): $(CFGLIBDIR)/lib/libcfg.a $(OBJS) \
 	$(GLOB_ATTR_DIR_OBJ)/SymbolTableAttribute.o \
@@ -33,7 +37,7 @@ $(vbin): $(CFGLIBDIR)/lib/libcfg.a $(OBJS) \
 	$(UTILITY_DIR_OBJ)/InstructionARM.o \
 	../HeptaneAnalysis/obj/Analysis.o \
 	../HeptaneAnalysis/obj/CallGraph.o
-	$(CXX) $^ $(LINKSFLAGS) -o $@
+	$(CXX) $^ $(LINKSFLAGS) $(DEBUGFLAGS) -o $@
 
 
 clean:

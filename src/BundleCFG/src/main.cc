@@ -150,38 +150,44 @@ int main(int argc, char** argv) {
 
 	/* Convert to Control Flow Graph that can be analyzed */
 	LemonCFG *cvtd = LemonFactory::convert(prog);
+	LemonCFG copy(*cvtd);
+
+	copy.cacheAssign(iCache[1]);
+	copy.getCFRMembership(iCache[1]);
+	copy.toFile("bsort100-level-1-copy.dat");	
+	copy.toDOT("bsort100-level-1-copy.dot");
+	copy.toJPG("bsort100-level-1-copy.jpg");
+	
+	cvtd->cacheAssign(iCache[1]);
+	cvtd->getCFRMembership(iCache[1]);
+	cvtd->toFile("bsort100-level-1-precopy.dat");
+	cvtd->toDOT("bsort100-level-1-precopy.dot");
+	cvtd->toJPG("bsort100-level-1-precopy.jpg");
+
+	return 0;
 
 	/* Display the LemonCFG for each level of the cache */
 	for (map<int, Cache*>::iterator it = iCache.begin();
 	     it != iCache.end(); ++it) {
+		LemonCFG lcfg(*cvtd);
 		int level = it->first;
 		stringstream ss;
+		stringstream ssdot;
 		ss << base << "-level-" << level << ".jpg";
+		ssdot << base << "-level-" << level << ".dot";
 
-		cvtd->cacheAssign(it->second);
-		cvtd->getCFRMembership(it->second);
+		lcfg.cacheAssign(it->second);
+		lcfg.getCFRMembership(it->second);
 		for (ListDigraph::NodeIt nodeit(*cvtd); nodeit != INVALID; ++nodeit) {
-			ListDigraph::Node node = cvtd->nodeFromId(cvtd->id(nodeit));
-			ListDigraph::Node cfr = cvtd->getCFR(node);
-			string test = cvtd->getStartString(cfr);
-			cout << "Node: " << cvtd->getStartString(nodeit) << " CFR: "
+			ListDigraph::Node node = lcfg.nodeFromId(lcfg.id(nodeit));
+			ListDigraph::Node cfr = lcfg.getCFR(node);
+			string test = lcfg.getStartString(cfr);
+			cout << "Node: " << lcfg.getStartString(nodeit) << " CFR: "
 			     << test << endl;
-#if 0
-			if (cvtd->isCFREntry(node)) {
-				cvtd->setColor(node, "yellow");
-				if (cvtd->getCFR(node) == node) {
-					cvtd->setColor(node, "green");
-				} 
-			}
-#endif
 		}
 
-		cvtd->toJPG(ss.str());
-		/* clear the colors */
-		for (ListDigraph::NodeIt nit(*cvtd); nit != INVALID; ++nit) {
-			cvtd->setColor(nit, "");
-		}
-
+		lcfg.toJPG(ss.str());
+		lcfg.toDOT(ssdot.str());
 	}
 
 
