@@ -79,6 +79,10 @@ public:
 	 * Caches a value by address
 	 */
 	void insert(t_address addr);
+	/**
+	 * Returns the latency (block reload time)
+	 */
+	uint32_t latency() { return _latency; }
 private:
 	map <int, CacheSet *> _sets;
 	ReplacementPolicy *_policy;

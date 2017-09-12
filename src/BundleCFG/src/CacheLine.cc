@@ -1,4 +1,5 @@
 #include "CacheLine.h"
+#include <iostream>
 
 void
 CacheLine::_run_check() const {
@@ -59,10 +60,12 @@ CacheLine::store(t_address addr) {
 
 t_address
 CacheLine::startAddress(t_address addr) {
+	t_address rval;
 	if (_size <= 0) {
 		throw runtime_error("Cannot call startAddress without setting a size");
 	}
-	return addr - (addr % _size);
+	rval = addr - (addr % _size);
+	return rval;
 }
 
 t_address
@@ -70,7 +73,8 @@ CacheLine::endAddress(t_address addr) {
 	if (_size <= 0) {
 		throw runtime_error("Cannot call endAddress without setting a size");
 	}
-	return addr - (addr % _size) + _size - 1;
+	t_address rval = addr - (addr % _size) + _size - 1;
+	return rval;
 }
 
 t_address

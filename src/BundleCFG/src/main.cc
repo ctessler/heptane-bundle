@@ -15,6 +15,7 @@
 /* Bundle includes */
 #include "DotPrint.h"
 #include "CFRFactory.h"
+#include "CFRGFactory.h"
 #include "LemonCFG.h"
 #include "LemonFactory.h"
 using namespace std;
@@ -156,24 +157,50 @@ int main(int argc, char** argv) {
 	     it != iCache.end(); ++it) {
 		LemonCFG lcfg(*cvtd);
 		int level = it->first;
-		stringstream jpg_name, dot_name, dat_name;
+		stringstream jpg_name, dot_name, dat_name, cfr_name;
 		jpg_name << base << "-level-" << level << ".jpg";
 		dot_name << base << "-level-" << level << ".dot";
 		dat_name << base << "-level-" << level << ".dat";
+		cfr_name << base << "-level-" << level << ".cfr";
 
 		cout << "Working on Cache level " << level << endl;
 
+		/* Perform the cache assignment */
 		lcfg.cacheAssign(it->second);
+		/* Assign CFR Membership */
 		lcfg.getCFRMembership(it->second);
-		for (ListDigraph::NodeIt nodeit(*cvtd); nodeit != INVALID; ++nodeit) {
-			ListDigraph::Node node = lcfg.nodeFromId(lcfg.id(nodeit));
-			ListDigraph::Node cfr = lcfg.getCFR(node);
-			string test = lcfg.getStartString(cfr);
-		}
 
+		lcfg.toCFR(cfr_name.str());
 		lcfg.toFile(dat_name.str());
 		lcfg.toJPG(jpg_name.str());
 		lcfg.toDOT(dot_name.str());
+
+		/* Let's look at the CFRs */
+		map<ListDigraph::Node, LemonCFG*> cfrm = CFRFactory::separateCFRs(lcfg);
+		map<ListDigraph::Node, LemonCFG*>::iterator cfrit;
+		for (cfrit = cfrm.begin(); cfrit != cfrm.end(); cfrit++) {
+			cout << "CFR [" << lcfg.getStartString(cfrit->first) << "] has nodes: " << endl;
+			LemonCFG *cfr = cfrit->second;
+			for (ListDigraph::NodeIt nit(*cfr); nit != INVALID; ++nit) {
+				ListDigraph::Node cursor = nit;
+				cout << "\t" << cfr->getStartString(cursor) << endl;
+			}
+		}
+		for (cfrit = cfrm.begin(); cfrit != cfrm.end(); cfrit++) {
+			LemonCFG *cfr = cfrit->second;
+			cout << "CFR [" << cfr->getStartString(cfr->getRoot()) 
+			     << "] WCET : " << cfr->CFRWCET(cfr->getRoot(), 5, *it->second)
+			     << endl;
+		}
+		for (cfrit = cfrm.begin(); cfrit != cfrm.end(); cfrit++) {
+			delete cfrit->second;
+		}
+
+		LemonCFG cfg_copy(*cvtd);
+		CFRGFactory fact(cfg_copy, *it->second);
+		LemonCFRG *cfrg = fact.run();
+		cfrg->dump();
+		
 	}
 
 

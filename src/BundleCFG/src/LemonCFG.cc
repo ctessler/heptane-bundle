@@ -30,7 +30,6 @@ LemonCFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
 	dc.nodeMap(src._node_is_entry, dst._node_is_entry);
 	dc.nodeMap(src._node_is_exit, dst._node_is_exit);	
 	dc.nodeMap(src._visited, dst._visited);	
-	dst._addr2node = src._addr2node;
 }
 
 LemonCFG::LemonCFG() : ListDigraph(), _saddr(*this), _haddr(*this),
@@ -69,6 +68,10 @@ LemonCFG::LemonCFG(LemonCFG &src) : ListDigraph(), _saddr(*this), _haddr(*this),
 			ListDigraph::Node dup_cfr = map[org_cfr];
 			setCFR(dup, dup_cfr);
 		}
+
+		/* Copy the addresses manually */
+		unsigned long org_addr = src.getStartLong(org);
+		start(dup, org_addr);
 	}
 
 	
@@ -734,12 +737,8 @@ LemonCFG::getConflictorsIn(ListDigraph::Node cfrentry,
 	if (conflicts(cur, cache)) {
 		/* cur is a conflict, that makes it a CFR entry point */
 		_node_is_entry[cur] = true;
-		cout << "getConflictorsIn: " << getStartString(cfrentry)
-		     << " -x-> " << getStartString(cur) << endl;
 		if (_node_cfr[cur] == INVALID) {
 			/* This CFR has not yet been visited */
-			cout << "getConflictorsIn: " << getStartString(cur)
-			     << " begins a new CFR " << endl;
 			_node_cfr[cur] = cur;
 			entry[cur] = true;
 			setColor(cur, "green");
@@ -788,17 +787,17 @@ LemonCFG::getConflictors(ListDigraph::Node root, Cache *cache) {
 	ListDigraph::NodeMap<bool> visited (*this);
 	map<ListDigraph::Node, bool> entry;
 	
-	cout << "getConflictors: starting with " << getStartString(root) << endl;
-	
 	Cache *copy = new Cache(*cache);
 	entry = getConflictorsIn(root, root, copy, visited);
 	delete(copy);
 
+#ifdef DBG_GETCONFLICTORS
 	cout << "getConflictors conflicts from " << getStartString(root) << endl;
 	map<ListDigraph::Node, bool>::iterator it = entry.begin();
 	for ( ; it != entry.end(); it++) {
 		cout << "\t" << getStartString(it->first) << endl;
 	}
+#endif /* DBG_GETCONFLICTORS */
 	
 	return entry;
 }
@@ -893,6 +892,17 @@ LemonCFG::clearVisited() {
 	}
 }
 
+void
+LemonCFG::markVisited(ListDigraph::Node node) {
+	_visited[node] = true;
+}
+
+bool
+LemonCFG::isVisited(ListDigraph::Node node) {
+	return _visited[node];
+}
+	
+
 ListDigraph::Node
 LemonCFG::getCFR(ListDigraph::Node node) {
 	return _node_cfr[node];
@@ -927,4 +937,105 @@ LemonCFG::toFile(string path) {
 	}
 	dfile.close();
 }
-       
+
+void
+LemonCFG::toCFR(string path) {
+	ofstream ofile (path.c_str());
+	ofile << hex;
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		if (!isCFREntry(node)) {
+			continue;
+		}
+		
+		ofile << "0x" << getStartString(node) << endl;
+	}
+	ofile.close();
+	return;
+}
+
+
+unsigned int
+LemonCFG::CFRWCET(ListDigraph::Node node, unsigned int threads, Cache &cache) {
+	if (threads <= 0) {
+		return 0;
+	}
+	/*
+	 * Determine if this CFR contains (part of) a loop
+	 *   Because loop heads and loop exits are always CFR initial
+	 *   instructions, if a CFR contains one instruction in a loop
+	 *   all instructions contained within the CFR will be within the
+	 *   loop.
+	 *
+	 *   Some considerations
+	 *   1.) The CFR's initial instruction (a loop head) may also
+	 *   be contained in another loop. It's loop head will be
+	 *   different if that's the case.
+	 *
+	 *   2.) The entire loop may not be contained within the
+	 *   CFR. Though for the calculation of the bound this is
+	 *   immaterial. 
+	 */
+	unsigned int lbound=1;
+	for (ListDigraph::OutArcIt ait(*this, node); ait != INVALID; ++ait) {
+		ListDigraph::Node succ = runningNode(ait);
+		ListDigraph::Node lhead = getLoopHead(succ);
+		if (lhead != INVALID) {
+			lbound = getLoopBound(lhead);
+		}
+	}
+
+	unsigned int num_nodes = countNodes(*this);
+	if (num_nodes <= 0) {
+		return 0;
+	}
+
+	/* Cache overhead first */
+	unsigned int wcet = cache.latency() * num_nodes;
+	/* Non parallel execution cost */
+	wcet += 4;
+
+	/* Find the longest path */
+	ListDigraph::ArcMap<int> lengths(*this);
+	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
+		ListDigraph::Arc a = ait;
+		lengths[a] = -1;
+	}
+
+	Dijkstra<ListDigraph, ListDigraph::ArcMap<int> > dijkstra(*this, lengths);
+	dijkstra.init();
+	dijkstra.addSource(node);
+	dijkstra.start();
+
+	/* Another approach would be to find the terminal node, and
+	   then use it as the target in the search. However, that
+	   would also require an O(n) walk of the nodes and in
+	   addition, it would have to accomodate multiple loop heads
+	   to find the longest one. Looking for the single longest
+	   path is faster and simpler */
+	int distance = 0;
+	ListDigraph::Node t = node; /* Covers CFR of 1 node */
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node cursor = nit;
+		int cdist = dijkstra.dist(cursor);
+		if (distance > cdist) {
+			distance = cdist;
+			t = cursor;
+		}
+	}
+	distance *= -1;
+	distance += 1; /* Number of edges + 1 */
+	
+	/* Worst case execution time cost */
+	wcet += distance * lbound * threads;
+
+	#ifdef DBG_CFRWCET
+	cout << "CFR: " << getStartString(node) << " WCET: " << wcet
+	     << " Nodes: " << num_nodes << " Latency: " << cache.latency()
+	     << " BRT: " << cache.latency() * num_nodes << " Threads: "
+	     << threads << " Loops: " << lbound << endl
+	     << "    Worst Path " << getStartString(node)
+	     << " --> " << getStartString(t) << " " << distance  << endl;
+	#endif /* DBG_CFRWCET */
+	return wcet;
+}

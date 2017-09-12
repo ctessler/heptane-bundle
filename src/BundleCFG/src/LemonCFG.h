@@ -4,6 +4,7 @@
 #include <lemon/core.h>
 #include <lemon/list_graph.h>
 #include <lemon/graph_to_eps.h>
+#include <lemon/dijkstra.h>
 #include <string>
 #include <sstream>
 #include <stack>
@@ -261,6 +262,14 @@ public:
 	
 	/**
 	 * Returns true if the node is a CFR entry point
+	 *
+	 * A node may be an entry point to a CFR, but it may not
+	 * identify the CFR. Meaning, a CFR has an initial instruction
+	 * A, while node B may be reachable from some other path thate
+	 * does not go through A. B is classified as an entry point to
+	 * A, but not the initial instruction. To find the initial
+	 * instruction of B call getCFR(B) to get A. The result of
+	 * calling getCFR(A) will be A as well.
 	 */
 	bool isCFREntry(ListDigraph::Node node);
 	
@@ -277,6 +286,12 @@ public:
 	 * Dumps the LemonCFG to a file.
 	 */
 	void toFile(string path);
+	/**
+	 * Dumps the CFR entry points to a file.
+	 */
+	void toCFR(string path);
+
+	unsigned int CFRWCET(ListDigraph::Node node, unsigned int threads, Cache &cache);
 private:
 	/*
 	 * Private Members
@@ -333,6 +348,8 @@ private:
 	void findFollowers(ListDigraph::Node entry, stack<ListDigraph::Node> &followers);
 	bool conflicts(ListDigraph::Node node, Cache *cache);
 	void clearVisited();
+	void markVisited(ListDigraph::Node);
+	bool isVisited(ListDigraph::Node);
 	map<ListDigraph::Node, bool> getConflictsIn(ListDigraph::Node u,
 	    Cache *cache, ListDigraph::NodeMap<bool> &visited);
 	map<ListDigraph::Node, bool> getConflictorsIn(ListDigraph::Node cfrentry,
