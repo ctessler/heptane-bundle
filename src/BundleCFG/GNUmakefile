@@ -7,7 +7,7 @@ INCLS+=-I../../src/HeptaneAnalysis/src/Generic
 
 OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o obj/CFRFactory.o
 OBJS+=obj/CacheLine.o obj/CacheSet.o obj/PolicyLRU.o obj/LemonCFG.o obj/LemonFactory.o
-OBJS+=obj/CFRGFactory.o obj/LemonCFR.o
+OBJS+=obj/CFRGFactory.o obj/LemonCFR.o obj/CFG.o obj/CFGFactory.o
 
 vbin=../../bin/BundleCFG
 all: $(vbin)
