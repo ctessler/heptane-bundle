@@ -28,7 +28,6 @@ firstAddr(Node *node) {
 
 CFG*
 CFGFactory::produce() {
-	cout << "PRODUCE CALLED" << endl;
 	CFG *cfg = new CFG();
 
 	Cfg* hep_cfg = _prog->GetEntryPoint();
@@ -59,7 +58,7 @@ CFGFactory::produce() {
 	}
 	_indent = indent_save;
 	cout << _debug.str();
-	
+
 	return cfg;
 }
 
@@ -326,13 +325,18 @@ CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 void
 CFGFactory::tagHead(CFG &cfg, ListDigraph::Node node,
 		    ListDigraph::Node head, ListDigraph::NodeMap<int> &pathp) {
-	_debug << _indent << "tagHead "
+	string pre = "tagHead ";
+	_debug << _indent << pre
 	       << cfg.stringNode(node) << " pos:" << pathp[node] << " "
 	       << cfg.stringNode(head) << " pos: " << (head != INVALID ? pathp[head] : -1) << endl;
 	if (node == head) {
 		return;
 	}
 	if (head == INVALID) {
+		_debug << _indent << pre
+		       << cfg.stringNode(node) << " no head assigned, aborting "
+		       << "existing head " << cfg.stringNode(cfg.getHead(node))
+		       << endl;
 		return;
 	}
 	string indent_save = _indent;
@@ -345,17 +349,19 @@ CFGFactory::tagHead(CFG &cfg, ListDigraph::Node node,
 			 * Stopping condition found *this* head at the
 			 * right position
 			 */
-			_debug << _indent << cfg.stringNode(node)
+			_debug << _indent << pre << cfg.stringNode(node)
 			       << " already has head " << cfg.stringNode(head) << endl;
 			return;
 		}
-		_debug << _indent << cfg.stringNode(head) << " pos:" << pathp[head] << " "
+		_debug << _indent << pre
+		       << cfg.stringNode(head) << " pos:" << pathp[head] << " "
 		       << cfg.stringNode(in_head) << " pos:" << pathp[in_head]
 		       << endl;
 		if (pathp[in_head] < pathp[head]) {
 			/* in_head is earlier in the path than head,
 			 * swap positions */
-			_debug << _indent << cfg.stringNode(node) << " new head " << cfg.stringNode(head) << endl;
+			_debug << _indent << pre
+			       << cfg.stringNode(node) << " new head " << cfg.stringNode(head) << endl;
 			cfg.setHead(node, head);
 			node = head;
 			head = in_head;
@@ -363,7 +369,8 @@ CFGFactory::tagHead(CFG &cfg, ListDigraph::Node node,
 		}
 		node = in_head;
 	}
-	_debug << _indent << cfg.stringNode(node) << " assigned head " << cfg.stringNode(head) << endl;
+	_debug << _indent << pre
+	       << cfg.stringNode(node) << " assigned head " << cfg.stringNode(head) << endl;
 	cfg.setHead(node, head);
 	_indent = indent_save;
 }
@@ -390,14 +397,17 @@ CFGFactory::boundLoops(CFG &cfg, Cfg* hep_cfg) {
 		
 		t_address addr = firstAddr(first);
 		list<ListDigraph::Node> cfg_nodes = cfg.find(addr);
-		ListDigraph::Node cfg_node = cfg_nodes.front();
-		if (cfg_node == INVALID) {
-			throw runtime_error("Unable to find node");
+		list<ListDigraph::Node>::iterator lit;
+		for (lit = cfg_nodes.begin(); lit != cfg_nodes.end(); ++lit) {
+			ListDigraph::Node cfg_node = *lit;
+			if (cfg_node == INVALID) {
+				throw runtime_error("Unable to find node");
+			}
+			if (!cfg.isHead(cfg_node)) {
+				throw runtime_error("Node not marked as a loop header");
+			}
+			cfg.setIters(cfg_node, maxiter);
+			_debug << _indent << cfg.stringNode(cfg_node) << endl;
 		}
-		if (!cfg.isHead(cfg_node)) {
-			throw runtime_error("Node not marked as a loop header");
-		}
-		cfg.setIters(cfg_node, maxiter);
-		_debug << _indent << cfg.stringNode(cfg_node) << endl;
 	}
 }

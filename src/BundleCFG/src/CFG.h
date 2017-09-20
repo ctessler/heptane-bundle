@@ -24,6 +24,7 @@ public:
 	FunctionCall(string name="UNASSIGNED", iaddr_t call_site=0);
 	FunctionCall(const FunctionCall &other);
 	bool operator==(const FunctionCall &other) const;
+	bool operator!=(const FunctionCall &other) const { return !(*this == other); }
 	FunctionCall& operator=(const FunctionCall &other);
 	friend std::ostream &operator<< (std::ostream &stream,
 					 const FunctionCall& fcall);
@@ -34,6 +35,7 @@ public:
 	iaddr_t getCallSite() const;
 	void setCallSite(iaddr_t call_site=0);
 	static bool test();
+
 private:
 	/* Function name */
 	string _function_name;
@@ -95,10 +97,13 @@ public:
 	void markHead(ListDigraph::Node node, bool yes=true);
 	/* Gets and sets the number of iterations in the loop started at the
 	   instruction */
-	unsigned int getIters(ListDigraph::Node loop_head) const;
-	void setIters(ListDigraph::Node loop_head, unsigned int iters);
+	unsigned int getIters(ListDigraph::Node head) const;
+	void setIters(ListDigraph::Node head, unsigned int iters);
 	
 	static bool test();
+
+	/* To allow polymorphism */
+	virtual ~CFG() {};
 private:
 	ListDigraph::Node _initial, _terminal;
 	

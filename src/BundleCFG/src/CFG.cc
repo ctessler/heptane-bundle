@@ -76,7 +76,6 @@ operator<< (std::ostream &stream, const FunctionCall& fcall) {
 	       << "0x" << hex << fcall.getCallSite() << dec;
 	return stream;
 }
-	
 
 /**
  * CFG Class
@@ -209,12 +208,13 @@ CFG::stringNode(ListDigraph::Node node) const {
 	}
 	stringstream ss;
 	ss << stringAddr(node);
-	if (_is_loop_head[node]) {
+	if (isHead(node)) {
 		ss << "[" << _loop_iters[node] << "]";
 	}
+	ListDigraph::Node head = getHead(node);
 	ss << "("
 	   << _function[node] << ", ";
-	ss << "head:" << stringAddr(_loop_head[node])
+	ss << "head:" << stringAddr(head)
 	   << ")";
 	return ss.str();
 }
@@ -262,7 +262,7 @@ CFG::stringAddr(ListDigraph::Node node) const {
 	if (node == INVALID) {
 		return "INVALID";
 	}
-	ss << "0x" << hex << _addr[node] << dec;
+	ss << "0x" << hex << getAddr(node) << dec;
 	return ss.str();
 }
 
@@ -317,13 +317,13 @@ CFG::markHead(ListDigraph::Node node, bool yes) {
 }
 
 unsigned int
-CFG::getIters(ListDigraph::Node loop_head) const {
-	return _loop_iters[loop_head];
+CFG::getIters(ListDigraph::Node head) const {
+	return _loop_iters[head];
 }
 
 void
-CFG::setIters(ListDigraph::Node loop_head, unsigned int iters) {
-	_loop_iters[loop_head] = iters;
+CFG::setIters(ListDigraph::Node head, unsigned int iters) {
+	_loop_iters[head] = iters;
 }
 
 

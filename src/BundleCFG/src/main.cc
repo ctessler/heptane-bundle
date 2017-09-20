@@ -18,6 +18,13 @@
 #include "CFRGFactory.h"
 #include "LemonCFG.h"
 #include "LemonFactory.h"
+
+
+#include "CFG.h"
+#include "CFGFactory.h"
+#include "DOTFactory.h"
+#include "JPGFactory.h"
+#include "CFRFactory.h"
 using namespace std;
 using namespace cfglib;
 
@@ -149,6 +156,39 @@ int main(int argc, char** argv) {
 	DotPrint dotprint(prog, config.getWorkDir(), base, iCache, dCache);
 	dotprint.PerformAnalysis();
 
+	FunctionCall::test();
+	CFG::test();
+
+	CFGFactory cfgFact(prog);
+	CFG *cfg = cfgFact.produce();
+
+	DOTFactory dot(*cfg);
+	dot.setPath("test.dot");
+	dot.setCache(iCache[1]);
+	dot.produce();
+
+	JPGFactory jpg(dot);
+	jpg.produce();
+
+	CFRFactory cfr_fact(*cfg, *iCache[1]);
+	map<ListDigraph::Node, CFR*> cfrs = cfr_fact.produce();
+	map<ListDigraph::Node, CFR*>::iterator cfrit;
+	cout << "CFR Identification: " << endl;
+	for (cfrit = cfrs.begin(); cfrit != cfrs.end(); ++cfrit) {
+		cout << "  " << cfg->stringNode(cfrit->first) << endl
+		     << "    --> " << *cfrit->second << endl;
+	}
+	CFRG *cfrg = cfr_fact.getCFRG();
+
+	DOTfromCFRG dot_cfrg_fact(*cfrg);
+	dot_cfrg_fact.setPath("cfrg.dot");
+	dot_cfrg_fact.produce();
+	
+	JPGFactory cfrg_jpg(dot_cfrg_fact);
+	cfrg_jpg.produce();
+	
+	return 0;
+
 	/* Convert to Control Flow Graph that can be analyzed */
 	LemonCFG *cvtd = LemonFactory::convert(prog);
 
@@ -211,6 +251,7 @@ int main(int argc, char** argv) {
 		/* Restore cout, now you can output status */
 		cout.rdbuf(old_cout);
 	}
+
 	
 	return 0;
 }
