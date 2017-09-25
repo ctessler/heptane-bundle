@@ -7,6 +7,7 @@
 #include <sstream>
 #include <stack>
 #include <stdexcept>
+#include <fstream>
 #include "Cache.h"
 using namespace lemon;
 using namespace std;
@@ -101,6 +102,7 @@ public:
 	void setIters(ListDigraph::Node head, unsigned int iters);
 	
 	static bool test();
+	void dump(string path);
 
 	/* To allow polymorphism */
 	virtual ~CFG() {};

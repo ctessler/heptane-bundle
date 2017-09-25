@@ -1,6 +1,13 @@
 #ifndef CFRG_H
 #define CFRG_H
 
+#include <lemon/core.h>
+#include <lemon/list_graph.h>
+
+#include "CFG.h"
+#include "CFR.h"
+using namespace lemon;
+
 class CFRG : public ListDigraph {
 public:
 	CFRG(CFG &cfg) : _cfg(cfg) {
@@ -37,11 +44,14 @@ public:
 	CFR *getInitialCFR() {
 		return _initial;
 	}
+	void order();
 private:
 	CFG &_cfg;
 	CFR *_initial = NULL;
 	map<CFR*, ListDigraph::Node> _from_cfr_to_node;
 	map<ListDigraph::Node, CFR*> _from_node_to_cfr;
+
+	void doLoopOffsets(ListDigraph::NodeMap<int> &loopOffset);
 };
 
 #endif /* CFRG_H */

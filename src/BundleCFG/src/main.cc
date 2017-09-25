@@ -25,6 +25,7 @@
 #include "DOTFactory.h"
 #include "JPGFactory.h"
 #include "CFRFactory.h"
+#include "DOTfromCFR.h"
 using namespace std;
 using namespace cfglib;
 
@@ -174,15 +175,29 @@ int main(int argc, char** argv) {
 	map<ListDigraph::Node, CFR*> cfrs = cfr_fact.produce();
 	map<ListDigraph::Node, CFR*>::iterator cfrit;
 	cout << "CFR Identification: " << endl;
+	int count = 0;
 	for (cfrit = cfrs.begin(); cfrit != cfrs.end(); ++cfrit) {
+		DOTfromCFR cfrDOT(*cfrit->second);
+		stringstream name;
+		name << "cfr-" << ++count << ".dot";
+		cfrDOT.setPath(name.str());
+		cfrDOT.setCache(iCache[1]);
+		cfrDOT.produce();
+		JPGFactory cfrJPG(cfrDOT);
+		cfrJPG.produce();
+		name.str("");
+		name << "cfr-" << count << ".dat";
+		(*cfrit->second).dump(name.str());
 		cout << "  " << cfg->stringNode(cfrit->first) << endl
-		     << "    --> " << *cfrit->second << endl;
+		     << "    --> " << *cfrit->second
+		     << name.str() << endl;
+		
 	}
 	CFRG *cfrg = cfr_fact.getCFRG();
 
 	DOTfromCFRG dot_cfrg_fact(*cfrg);
 	dot_cfrg_fact.setPath("cfrg.dot");
-	dot_cfrg_fact.produce();
+	dot_cfrg_fact.produce(4);
 	
 	JPGFactory cfrg_jpg(dot_cfrg_fact);
 	cfrg_jpg.produce();

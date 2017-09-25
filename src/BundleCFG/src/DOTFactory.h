@@ -25,6 +25,7 @@ public:
 	void setColor(ListDigraph::Node node, string color) { _color[node] = color; }
 
 	void produce();
+	void succ(ListDigraph::Node node, stack<ListDigraph::Node> &followers);
 private:
 	CFG const &_cfg;
 	Cache *_cache = NULL;
@@ -36,7 +37,6 @@ private:
 		     stack<ListDigraph::Node> &calls, stack<ListDigraph::Node> &subsq,
 		     ListDigraph::NodeMap<bool> &visited);	
 	ListDigraph::Node nodeDOT(ofstream &os, ListDigraph::Node node);
-	void succ(ListDigraph::Node node, stack<ListDigraph::Node> &followers);
 	string edgeDOT(ListDigraph::Node u, ListDigraph::Node port_u,
 		       ListDigraph::Node v, ListDigraph::Node port_v);
 	string nodeDOTstart(ListDigraph::Node node);
@@ -54,7 +54,7 @@ public:
 	string getPath() { return _path; }
 	void setPath(string path) { _path = path; }
 
-	void produce();
+	void produce(unsigned int threads=1);
 private:
 	CFRG &_cfrg;
 

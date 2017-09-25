@@ -161,6 +161,7 @@ CFRFactory::addToConflicts(ListDigraph::Node node, Cache &cache) {
 	cache.insert(_cfg.getAddr(node));
 	CFR *cfr = _from_cfg_to_cfr[node];
 	_debug << pre << _cfg.stringNode(node) << " in CFR " << *cfr << endl;
+	visit(node);
 
 	ListDigraph::Node cfr_node = cfr->find(_cfg.getAddr(node), _cfg.getFunction(node));
 	if (cfr_node == INVALID) {
@@ -223,6 +224,7 @@ CFRFactory::addCFR(ListDigraph::Node cfg_node) {
 	new_cfr = new CFR(_cfg);
 	ListDigraph::Node initial = new_cfr->addNode(cfg_node);
 	new_cfr->setInitial(initial, cfg_node);
+	new_cfr->setCache(&_cache);
 
 	_cfrs[cfg_node] = new_cfr;
 	_from_cfg_to_cfr[cfg_node] = new_cfr;

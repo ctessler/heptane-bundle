@@ -2,10 +2,11 @@
 #define CFR_H
 
 #include "CFG.h"
+#include <lemon/dijkstra.h>
 
 class CFR : public CFG {
 public:
-	CFR(CFG &cfg) : CFG(), _cfg(cfg), _to_cfg(*this) {
+	CFR(CFG &cfg) : CFG(), _cfg(cfg), _to_cfg(*this), _from_cfg(*this) {
 	}
 	/* Returns the CFR membership of this node */
 	ListDigraph::Node membership(ListDigraph::Node node) const {
@@ -20,6 +21,10 @@ public:
 	/* Returns a pointer to the CFG which this CFR was extracted from */
 	CFG* getCFG() { return &_cfg; }
 
+	/* Gets and sets the Cache */
+	void setCache(Cache *cache) { _cache = cache; }
+	Cache* getCache() { return _cache; }
+	
 	/*
 	 * Override to prevent nodes from being added without having a node in
 	 * the original CFG
@@ -30,6 +35,8 @@ public:
 	ListDigraph::Node addNode(ListDigraph::Node from_cfg);
 	/* Gets the node in the original CFG from the CFR */
 	ListDigraph::Node toCFG(ListDigraph::Node);
+	/* Gets the node in the CFR given the CFG node */
+	ListDigraph::Node fromCFG(ListDigraph::Node);
 
 	void setInitial() {
 		throw runtime_error("Cannot set the initial node without a CFG node");
@@ -39,6 +46,7 @@ public:
 	string stringNode(ListDigraph::Node node) const;
 	friend std::ostream &operator<< (std::ostream &stream,
 					 const CFR& cfr);
+	unsigned long int wcet(unsigned int threads);
 private:
 	CFG &_cfg;
 
@@ -51,12 +59,16 @@ private:
 	 */
 	ListDigraph::Node _membership;
 	ListDigraph::NodeMap<ListDigraph::Node> _to_cfg;
-
+	ListDigraph::NodeMap<ListDigraph::Node> _from_cfg;
+	
 	/*
-	 * A note about loop heads of nodes, the CFR stores the node from the
-	 * CFG that is the loop head of the node in the CFR. This is because the
-	 * loop head may no be contained within the CFR.
+	 * A note about loop heads of nodes, the CFR stores the CFG node as the
+	 * loop head. This is because the loop head may not be contained within
+	 * the CFR.
 	 */
+
+	/* A CFR cannot exist without a cache */
+	Cache *_cache;
 };
 
 #endif /* CFR_H */
