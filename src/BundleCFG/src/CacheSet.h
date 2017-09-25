@@ -59,7 +59,7 @@ private:
 	/**
 	 * Storage for the Cache Set, each of the ways is given a CacheLine
 	 */
-	map<uint32_t, CacheLine> _storage;
+	map<uint32_t, CacheLine*> _storage;
 	/**
 	 * The number of lines in the cache set, the associativity
 	 */

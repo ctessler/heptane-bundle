@@ -3,21 +3,23 @@
 using namespace std;
 
 CacheSet::CacheSet(Cache* cache) : _cache(cache) {
-	_ways = cache->getWays();;
+	_ways = cache->getWays();
 }
 
 CacheSet::CacheSet(CacheSet &other) : _cache(other._cache) {
 	_ways = other._ways;
-	map<uint32_t, CacheLine>::iterator it;
+	map<uint32_t, CacheLine*>::iterator it;
 	for (it = other._storage.begin(); it != other._storage.end(); it++) {
-		_storage[it->first] = it->second;
+		CacheLine *value = new CacheLine();
+		*value = *it->second;
+		_storage.insert(make_pair(it->first, value));
 	}
 }
 
 bool CacheSet::present(t_address addr) {
-	map<uint32_t, CacheLine>::iterator it;
+	map<uint32_t, CacheLine*>::iterator it;
 	for (it = _storage.begin(); it != _storage.end(); it++) {
-		if (it->second.present(addr)) {
+		if (it->second->present(addr)) {
 			return true;
 		}
 	}
@@ -32,17 +34,27 @@ bool CacheSet::evicts(t_address addr) {
 void CacheSet::insert(t_address addr) {
 	ReplacementPolicy *p = _cache->getPolicy();
 	uint32_t line = p->lineOf(*this, addr);
-	map<uint32_t, CacheLine>::iterator it = _storage.find(line);
-	if (_storage[line].size() != _cache->getLineSize()) {
-		_storage[line].resize(_cache->getLineSize());
+	uint32_t line_size = _cache->getLineSize();
+	map<uint32_t, CacheLine*>::iterator it = _storage.find(line);
+
+	if (it != _storage.end()) {
+		/* Resize is destructive */
+		if (_storage[line]->size() != line_size) {
+			_storage[line]->resize(line_size);
+		}
+		
+	} else {
+		/* New Cache Line */
+		_storage.insert(make_pair(line, new CacheLine));
+		_storage[line]->resize(line_size);
 	}
-	_storage[line].store(addr);
+	_storage[line]->store(addr);
 }
 
 void CacheSet::clear() {
-	map<uint32_t, CacheLine>::iterator it;
+	map<uint32_t, CacheLine*>::iterator it;
 	for (it = _storage.begin(); it != _storage.end(); it++) {
-		it->second.clear();
+		delete it->second;
 	}
 	_storage.clear();
 }
@@ -62,5 +74,5 @@ CacheLine* CacheSet::cacheLine(uint32_t index) {
 	if (index >= _storage.size()) {
 		return NULL;
 	}
-	return &_storage[index];
+	return _storage[index];
 }
