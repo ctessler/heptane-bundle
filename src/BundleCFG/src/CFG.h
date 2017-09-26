@@ -102,6 +102,7 @@ public:
 	void setIters(ListDigraph::Node head, unsigned int iters);
 	
 	static bool test();
+
 	void dump(string path);
 
 	/* To allow polymorphism */

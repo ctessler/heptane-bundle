@@ -64,9 +64,12 @@ FunctionCall::operator=(const FunctionCall &other) {
 
 bool
 FunctionCall::operator==(const FunctionCall &other) const {
+	/* Function names don't matter in comparisons just the address */
+	#if 0
 	if (0 != _function_name.compare(other._function_name)) {
 		return false;
 	}
+	#endif
 	return (_call_addr == other._call_addr);
 }
 

@@ -22,6 +22,7 @@
 
 #include "CFG.h"
 #include "CFGFactory.h"
+#include "CFGReadWrite.h"
 #include "DOTFactory.h"
 #include "JPGFactory.h"
 #include "CFRFactory.h"
@@ -157,11 +158,19 @@ int main(int argc, char** argv) {
 	DotPrint dotprint(prog, config.getWorkDir(), base, iCache, dCache);
 	dotprint.PerformAnalysis();
 
-	FunctionCall::test();
-	CFG::test();
-
 	CFGFactory cfgFact(prog);
 	CFG *cfg = cfgFact.produce();
+
+	CFGWriter cfgw(*cfg);
+	cfgw.write("bsort100.cfg");
+
+	CFG cfgread;
+	CFGReader cfgr(cfgread);
+	cfgr.read("bsort100.cfg");
+	CFGWriter cfgw2(cfgread);
+	cfgw2.write("bsort100-read.cfg");
+	
+	
 
 	DOTFactory dot(*cfg);
 	dot.setPath("test.dot");
@@ -173,6 +182,8 @@ int main(int argc, char** argv) {
 
 	CFRFactory cfr_fact(*cfg, *iCache[1]);
 	map<ListDigraph::Node, CFR*> cfrs = cfr_fact.produce();
+	return 0;
+	
 	map<ListDigraph::Node, CFR*>::iterator cfrit;
 	cout << "CFR Identification: " << endl;
 	int count = 0;
