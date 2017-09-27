@@ -1,6 +1,6 @@
 #include "CFRFactory.h"
 
-
+#if 0
 map<ListDigraph::Node, LemonCFG*>
 CFRFactory::separateCFRs(LemonCFG &cfg) {
 	map<ListDigraph::Node, LemonCFG*> rval;
@@ -47,7 +47,7 @@ CFRFactory::separateCFRs(LemonCFG &cfg) {
 	}
 	return rval;
 }
-
+#endif 
 map<ListDigraph::Node, CFR*>
 CFRFactory::produce() {
 	_debug.str("");
@@ -226,7 +226,7 @@ CFRFactory::addCFR(ListDigraph::Node cfg_node) {
 	new_cfr->setInitial(initial, cfg_node);
 	new_cfr->setCache(&_cache);
 
-	_cfrs[cfg_node] = new_cfr;
+	_cfrs.insert(make_pair(cfg_node, new_cfr));
 	_from_cfg_to_cfr[cfg_node] = new_cfr;
 	return new_cfr;
 }
