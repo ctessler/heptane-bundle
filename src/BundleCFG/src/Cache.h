@@ -3,10 +3,12 @@
 
 #include <string>
 #include <stdint.h>
-#include "HeptaneStdTypes.h"
 #include <vector>
 #include <map>
 #include <algorithm>
+
+#include "CFG.h"
+using namespace std;
 
 /**
  * Forward declarations
@@ -66,19 +68,19 @@ public:
 	 * This is the cache set being used, modification will effect
 	 * the cache contents.
 	 */
-	CacheSet *setOf(t_address addr);
+	CacheSet *setOf(iaddr_t addr);
 	/**
 	 * Returns the index of the set the address *would* be cached in
 	 */
-	uint32_t setIndex(t_address addr) const;
+	uint32_t setIndex(iaddr_t addr) const;
 	/**
 	 * Returns true if the address is currently cached.
 	 */
-	bool present(t_address addr);
+	bool present(iaddr_t addr);
 	/**
 	 * Caches a value by address
 	 */
-	void insert(t_address addr);
+	void insert(iaddr_t addr);
 	/**
 	 * Returns the latency (block reload time)
 	 */

@@ -16,7 +16,7 @@ CacheSet::CacheSet(CacheSet &other) : _cache(other._cache) {
 	}
 }
 
-bool CacheSet::present(t_address addr) {
+bool CacheSet::present(iaddr_t addr) {
 	map<uint32_t, CacheLine*>::iterator it;
 	for (it = _storage.begin(); it != _storage.end(); it++) {
 		if (it->second->present(addr)) {
@@ -26,12 +26,12 @@ bool CacheSet::present(t_address addr) {
 	return false;
 }
 
-bool CacheSet::evicts(t_address addr) {
+bool CacheSet::evicts(iaddr_t addr) {
 	ReplacementPolicy *p = _cache->getPolicy();
 	return p->evicts(*this, addr);
 }
 
-void CacheSet::insert(t_address addr) {
+void CacheSet::insert(iaddr_t addr) {
 	ReplacementPolicy *p = _cache->getPolicy();
 	uint32_t line = p->lineOf(*this, addr);
 	uint32_t line_size = _cache->getLineSize();

@@ -275,11 +275,13 @@ DOTFactory::nodeDOTrow(ListDigraph::Node node) {
 		color = "#FFFFFF";
 	}
 
-	CFR const* cfr = dynamic_cast<CFR const*>(&_cfg);
 	string cfrs = "nil";
+	#if 0
+	CFR const* cfr = dynamic_cast<CFR const*>(&_cfg);
 	if (cfr != NULL) {
 		cfrs = cfr->stringAddr(cfr->membership(node));
 	}
+	#endif
 
 	string text = "\t\t<TR><TD BGCOLOR=\""
 		+ color + "\" PORT=\"" + label + "\">"
@@ -301,6 +303,7 @@ DOTFactory::nodeLabel(ListDigraph::Node node) {
 }
 
 
+#if 0
 static string
 CFRDOTid(CFR &cfr) {
 	CFG *cfg = cfr.getCFG();
@@ -338,28 +341,4 @@ CFRDOT(CFR &cfr, unsigned int threads) {
 	return node.str();
 }
 
-void
-DOTfromCFRG::produce(unsigned int threads) {
-	ofstream dot(_path.c_str());
-
-	dot << "digraph G {" << endl;
-
-	for (ListDigraph::NodeIt nit(_cfrg); nit != INVALID; ++nit) {
-		ListDigraph::Node cfr_node = nit;
-		CFR *cfr = _cfrg.findCFR(cfr_node);
-		dot << CFRDOT(*cfr, threads);
-	}
-
-	for (ListDigraph::ArcIt ait(_cfrg); ait != INVALID; ++ait) {
-		ListDigraph::Node cfrn_source = _cfrg.source(ait);
-		ListDigraph::Node cfrn_dest = _cfrg.target(ait);
-
-		CFR *cfr_source = _cfrg.findCFR(cfrn_source);
-		CFR *cfr_dest = _cfrg.findCFR(cfrn_dest);
-
-		dot << CFRDOTid(*cfr_source) << " -> " << CFRDOTid(*cfr_dest) << endl;
-	}
-	
-	dot << "} // end digraph G" << endl;
-}
-
+#endif

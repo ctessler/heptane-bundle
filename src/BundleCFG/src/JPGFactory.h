@@ -9,10 +9,6 @@ public:
 		_src_path = dot.getPath();
 		setPath(dot.getPath());
 	};
-	JPGFactory(DOTfromCFRG &cfrgdot) {
-		_src_path = cfrgdot.getPath();		
-		setPath(cfrgdot.getPath());
-	}
 	/* Gets and sets the path */
 	void setPath(string path) {
 		_path = path;

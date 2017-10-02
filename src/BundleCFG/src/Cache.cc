@@ -13,7 +13,7 @@ Cache::Cache(Cache& other) {
 	}
 }
 
-CacheSet* Cache::setOf(t_address addr) {
+CacheSet* Cache::setOf(iaddr_t addr) {
 	uint32_t set = setIndex(addr);
 
 	map<int, CacheSet*>::iterator it = _sets.find(set);
@@ -27,14 +27,14 @@ CacheSet* Cache::setOf(t_address addr) {
 	return rval;
 }
 
-uint32_t Cache::setIndex(t_address addr) const {
-	t_address begin = addr - (addr % _linesize);
+uint32_t Cache::setIndex(iaddr_t addr) const {
+	iaddr_t begin = addr - (addr % _linesize);
 	uint32_t set = (begin / _linesize) % _nsets;
 
 	return set;
 }
 
-void Cache::insert(t_address addr) {
+void Cache::insert(iaddr_t addr) {
 	CacheSet *cs = setOf(addr);
 	cs->insert(addr);
 }

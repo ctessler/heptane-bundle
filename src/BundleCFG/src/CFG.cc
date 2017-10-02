@@ -200,6 +200,7 @@ CFG::addNode() {
 	_loop_head[rv] = INVALID;
 	_is_loop_head[rv] = false;
 	_loop_iters[rv] = 0;
+	_function[rv] = FunctionCall("UNASSIGNED", 0x0);
 	
 	return rv;
 }
@@ -207,10 +208,6 @@ CFG::addNode() {
 string
 CFG::stringNode(ListDigraph::Node node) const {
 	if (node == INVALID) {
-		return "INVALID";
-	}
-	if (!valid(node)) {
-		/* CFRs may include nodes from other CFGs */
 		return "INVALID";
 	}
 	stringstream ss;
@@ -257,6 +254,9 @@ CFG::getFunction(ListDigraph::Node node) const {
 
 iaddr_t
 CFG::getAddr(ListDigraph::Node node) const {
+	if (!valid(node)) {
+		throw runtime_error("Invalid node");
+	}
 	return _addr[node];
 }
 void

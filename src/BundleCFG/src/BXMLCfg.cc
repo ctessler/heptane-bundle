@@ -1,5 +1,4 @@
 #include"BXMLCfg.h"
-#include<iostream>
 #define XPATH_CONFIG	"/CONFIGURATION"
 #define XPATH_ANALYSIS	XPATH_CONFIG "/ANALYSIS"
 #define XPATH_ARCH	XPATH_CONFIG "/ARCHITECTURE"
@@ -24,6 +23,13 @@ BXMLCfg::BXMLCfg(string XMLFile) {
 }
 
 BXMLCfg::~BXMLCfg() {
+	map<int, Cache*>::iterator mit;
+	for (mit=_ins_cache.begin(); mit != _ins_cache.end(); ++mit) {
+		delete mit->second;
+	}
+	for (mit=_dat_cache.begin(); mit != _dat_cache.end(); ++mit) {
+		delete mit->second;
+	}
 	if (_doc) {
 		xmlFreeDoc(_doc);
 	}

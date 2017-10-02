@@ -2,7 +2,7 @@
 
 
 uint32_t
-PolicyLRU::lineOf(CacheSet& set, t_address addr) {
+PolicyLRU::lineOf(CacheSet& set, iaddr_t addr) {
 	/*
 	 * Least Recently Used is decayed first, so the youngest item
 	 * will be stored at index 0 always.
@@ -11,7 +11,7 @@ PolicyLRU::lineOf(CacheSet& set, t_address addr) {
 }
 
 void
-PolicyLRU::store(CacheSet& set, t_address addr) {
+PolicyLRU::store(CacheSet& set, iaddr_t addr) {
 	uint32_t line;
 	for (line=0; line < set._ways; line++) {
 		if (set._storage[line]->present(addr)) {
@@ -33,8 +33,7 @@ PolicyLRU::store(CacheSet& set, t_address addr) {
 
 
 bool
-PolicyLRU::evicts(CacheSet& set, t_address addr) {
-	uint32_t count=0;
+PolicyLRU::evicts(CacheSet& set, iaddr_t addr) {
 	map<uint32_t, CacheLine*>::iterator it;	
 	for (it = set._storage.begin(); it != set._storage.end(); it++) {
 		if (it->second->present(addr)) {
@@ -42,7 +41,7 @@ PolicyLRU::evicts(CacheSet& set, t_address addr) {
 			return false;
 		}
 	}
-	if ((count + 1) == set._ways) {
+	if (set._storage.size() == set._ways) {
 		/* No empty line */
 		return true;
 	}

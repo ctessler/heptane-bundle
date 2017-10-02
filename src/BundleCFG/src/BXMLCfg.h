@@ -1,8 +1,9 @@
 #ifndef BXMLCFG
 #define BXMLCFG
 
-#include<string>
-#include<stdexcept>
+#include <string>
+#include <stdexcept>
+#include <iostream>
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>

@@ -2,6 +2,7 @@
 #define CACHE_SET_H
 #include "CacheLine.h"
 #include "Cache.h"
+#include "CFG.h"
 #include <map>
 #include <vector>
 #include <stdexcept>
@@ -24,17 +25,17 @@ public:
 	/**
 	 * Returns true if the address is present in the set.
 	 */
-	bool present(t_address addr);
+	bool present(iaddr_t addr);
 	/**
 	 * Returns true if placing the address in the set would cause
 	 * an eviction
 	 */
-	bool evicts(t_address addr);
+	bool evicts(iaddr_t addr);
 	/**
 	 * Adds an address to the set, possibly evicting other values
 	 * based on the ReplacementPolicy of the parenting Cache.
 	 */
-	void insert(t_address addr);
+	void insert(iaddr_t addr);
 	/**
 	 * Clears the cache set
 	 */

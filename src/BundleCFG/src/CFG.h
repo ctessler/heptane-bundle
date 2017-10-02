@@ -1,6 +1,11 @@
 #ifndef CFG_H
 #define CFG_H
 
+/**
+ * Instruction address type
+ */
+typedef unsigned long iaddr_t;
+
 #include <lemon/core.h>
 #include <lemon/list_graph.h>
 #include <string>
@@ -11,11 +16,6 @@
 #include "Cache.h"
 using namespace lemon;
 using namespace std;
-
-/**
- * Instruction address type
- */
-typedef unsigned long iaddr_t;
 
 /**
  *

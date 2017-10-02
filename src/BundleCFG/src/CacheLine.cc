@@ -37,7 +37,7 @@ CacheLine::clear() {
 }
 
 bool
-CacheLine::present(t_address addr) const {
+CacheLine::present(iaddr_t addr) const {
 	_run_check();
 	if (_empty) {
 		return false;
@@ -48,7 +48,7 @@ CacheLine::present(t_address addr) const {
 }
 
 void
-CacheLine::store(t_address addr) {
+CacheLine::store(iaddr_t addr) {
 	if (_size <= 0) {
 		throw runtime_error("Cannot call store without setting a size");
 	}
@@ -58,9 +58,9 @@ CacheLine::store(t_address addr) {
 	_run_check();
 }
 
-t_address
-CacheLine::startAddress(t_address addr) {
-	t_address rval;
+iaddr_t
+CacheLine::startAddress(iaddr_t addr) {
+	iaddr_t rval;
 	if (_size <= 0) {
 		throw runtime_error("Cannot call startAddress without setting a size");
 	}
@@ -68,17 +68,17 @@ CacheLine::startAddress(t_address addr) {
 	return rval;
 }
 
-t_address
-CacheLine::endAddress(t_address addr) {
+iaddr_t
+CacheLine::endAddress(iaddr_t addr) {
 	if (_size <= 0) {
 		throw runtime_error("Cannot call endAddress without setting a size");
 	}
-	t_address rval = addr - (addr % _size) + _size - 1;
+	iaddr_t rval = addr - (addr % _size) + _size - 1;
 	return rval;
 }
 
-t_address
-CacheLine::offset(t_address addr) {
+iaddr_t
+CacheLine::offset(iaddr_t addr) {
 	_run_check();
 	return addr - _start;
 	

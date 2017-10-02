@@ -14,19 +14,14 @@
 
 /* Bundle includes */
 #include "DotPrint.h"
-#include "CFRFactory.h"
-#include "CFRGFactory.h"
 #include "LemonCFG.h"
 #include "LemonFactory.h"
-
 
 #include "CFG.h"
 #include "CFGFactory.h"
 #include "CFGReadWrite.h"
 #include "DOTFactory.h"
 #include "JPGFactory.h"
-#include "CFRFactory.h"
-#include "DOTfromCFR.h"
 using namespace std;
 using namespace cfglib;
 
@@ -161,17 +156,25 @@ int main(int argc, char** argv) {
 	CFGFactory cfgFact(prog);
 	CFG *cfg = cfgFact.produce();
 
+	string CFGFile = base + ".cfg";
 	CFGWriter cfgw(*cfg);
-	cfgw.write("bsort100.cfg");
+	cfgw.write(CFGFile);
 
-	CFG cfgread;
-	CFGReader cfgr(cfgread);
-	cfgr.read("bsort100.cfg");
-	CFGWriter cfgw2(cfgread);
-	cfgw2.write("bsort100-read.cfg");
-	
+	/* Clean up and shutdown */
+	xmlCleanupParser();
+	if (!vflag) {
+		/* Restore cout, now you can output status */
+		cout.rdbuf(old_cout);
+	}
+
 	
 
+	cout << "Wrote " << CFGFile << endl;
+
+	
+	return 0;
+}
+#if 0
 	DOTFactory dot(*cfg);
 	dot.setPath("test.dot");
 	dot.setCache(iCache[1]);
@@ -270,18 +273,9 @@ int main(int argc, char** argv) {
 	}
 
 
-	/* Clean up and shutdown */
-	xmlCleanupParser();
-	delete cvtd;
-	if (!vflag) {
-		/* Restore cout, now you can output status */
-		cout.rdbuf(old_cout);
-	}
-
-	
 	return 0;
 }
-
+#endif
 
 int run_tests() {
 	return 0;

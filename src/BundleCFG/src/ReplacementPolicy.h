@@ -3,8 +3,9 @@
 
 #include <stdint.h>
 #include <string>
-#include "HeptaneStdTypes.h"
 #include <iostream>
+
+#include "CFG.h"
 using namespace std;
 
 /**
@@ -30,7 +31,7 @@ public:
 	 * @param[in] set the CacheSet where the @addr will be placed
 	 * @param[in] addr the address of the value
 	 */
-	virtual uint32_t lineOf(CacheSet& set, t_address addr) = 0;
+	virtual uint32_t lineOf(CacheSet& set, iaddr_t addr) = 0;
 	/**
 	 * Stores the block that addr belongs to in the cache
 	 *
@@ -40,7 +41,7 @@ public:
 	 * 	      @addr will be placed 
 	 * @param[in] addr the address (and block) being stored
 	 */
-	virtual void store(CacheSet& set, t_address addr) = 0;
+	virtual void store(CacheSet& set, iaddr_t addr) = 0;
 	/**
 	 * Returns true if storing the address in the cache set would
 	 * evict another value
@@ -48,7 +49,7 @@ public:
 	 * @param[in] set the CacheSet
 	 * @param[in] addr the address that may cause an eviction
 	 */
-	virtual bool evicts(CacheSet& set, t_address addr) = 0;
+	virtual bool evicts(CacheSet& set, iaddr_t addr) = 0;
 	
 	/**
 	 * Returns the name of the replacement policy

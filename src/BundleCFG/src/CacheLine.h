@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <stdexcept>
 #include <set>
-#include "HeptaneStdTypes.h"
+
+class CacheLine;
+
+#include "CFG.h"
 
 class CacheLine {
 public:
@@ -36,7 +39,7 @@ public:
 	 *
 	 * @param[in] addr address being checked
 	 */
-	bool present(t_address addr) const;
+	bool present(iaddr_t addr) const;
 	/**
 	 * Returns the size of the cache line in bytes
 	 */
@@ -44,7 +47,7 @@ public:
 	/**
 	 * "Stores" the data referred to by address in the cache line
 	 */
-	void store(t_address addr);
+	void store(iaddr_t addr);
 	/**
 	 * Clears the cache line
 	 */
@@ -52,22 +55,22 @@ public:
 	/**
 	 * Finds the beginning address of the first byte of the block containing addr.
 	 */
-	t_address startAddress(t_address addr);
-	t_address getStartAddress() { return _start; }
+	iaddr_t startAddress(iaddr_t addr);
+	iaddr_t getStartAddress() { return _start; }
 	/**
 	 * Returns the beginning address of the last byte of the block containing addr.
 	 */
-	t_address endAddress(t_address addr);
-	t_address getEndAddress() { return _end; }	
+	iaddr_t endAddress(iaddr_t addr);
+	iaddr_t getEndAddress() { return _end; }	
 	/**
 	 * Returns the offset from the starting address of the given address
 	 */
-	t_address offset(t_address addr);
+	iaddr_t offset(iaddr_t addr);
 	
 private:
 	bool _empty;
 	uint32_t _size;
-	t_address _start, _end;
+	iaddr_t _start, _end;
 
 	void _run_check() const;
 };

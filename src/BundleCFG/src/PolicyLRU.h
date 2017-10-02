@@ -1,6 +1,7 @@
 #ifndef POLICYLRU_H
 #define POLICYLRU_H
 #include "ReplacementPolicy.h"
+#include "CFG.h"
 #include <iostream>
 
 /**
@@ -16,7 +17,7 @@ public:
 	 * @param[in] set the CacheSet where the @addr will be placed
 	 * @param[in] addr the address of the value
 	 */
-	uint32_t lineOf(CacheSet& set, t_address addr);
+	uint32_t lineOf(CacheSet& set, iaddr_t addr);
 	/**
 	 * Stores the block that addr belongs to in the cache
 	 *
@@ -26,7 +27,7 @@ public:
 	 * 	      @addr will be placed 
 	 * @param[in] addr the address (and block) being stored
 	 */
-	void store(CacheSet& set, t_address addr);
+	void store(CacheSet& set, iaddr_t addr);
 	/**
 	 * Returns true if storing the address in the cache set would
 	 * evict another value
@@ -34,7 +35,7 @@ public:
 	 * @param[in] set the CacheSet
 	 * @param[in] addr the address that may cause an eviction
 	 */
-	bool evicts(CacheSet& set, t_address addr);
+	bool evicts(CacheSet& set, iaddr_t addr);
 	
 	/**
 	 * Returns the name of the replacement policy
