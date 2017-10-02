@@ -1,11 +1,6 @@
 #ifndef CFG_H
 #define CFG_H
 
-/**
- * Instruction address type
- */
-typedef unsigned long iaddr_t;
-
 #include <lemon/core.h>
 #include <lemon/list_graph.h>
 #include <string>
@@ -13,37 +8,11 @@ typedef unsigned long iaddr_t;
 #include <stack>
 #include <stdexcept>
 #include <fstream>
+#include "BundleTypes.h"
 #include "Cache.h"
+#include "FunctionCall.h"
 using namespace lemon;
 using namespace std;
-
-/**
- *
- */
-class FunctionCall {
-public:
-	FunctionCall(string name="UNASSIGNED", iaddr_t call_site=0);
-	FunctionCall(const FunctionCall &other);
-	bool operator==(const FunctionCall &other) const;
-	bool operator!=(const FunctionCall &other) const { return !(*this == other); }
-	FunctionCall& operator=(const FunctionCall &other);
-	friend std::ostream &operator<< (std::ostream &stream,
-					 const FunctionCall& fcall);
-
-	string getName() const;
-	void setName(string name="UNASSIGNED");
-
-	iaddr_t getCallSite() const;
-	void setCallSite(iaddr_t call_site=0);
-	static bool test();
-
-private:
-	/* Function name */
-	string _function_name;
-	/* Call site address of the function */
-	iaddr_t _call_addr;
-};
-
 
 /**
  * @class CFG
