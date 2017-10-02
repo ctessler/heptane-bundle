@@ -120,3 +120,4 @@ CFR::wcet(unsigned int threads) {
 	return wceto;
 	
 }
+

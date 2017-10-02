@@ -12,6 +12,29 @@ using namespace std;
 
 int
 run_tests(void) {
+	if (!CFR::test()) {
+		cout << "CFR failed its tests" << endl;
+		return -1;
+	}
+	cout << "CFR passed its tests" << endl;
+	return 0;
+	if (!FunctionCall::test()) {
+		cout << "FunctionCall failed its tests" << endl;
+		return -1;
+	}
+	cout << "FunctionCall passed its tests" << endl;
+	if (!CFG::test()) {
+		cout << "CFG failed its tests" << endl;
+		return -1;
+	}
+	cout << "CFG passed its tests" << endl;
+
+
+	if (!CFRFactory::test()) {
+		cout << "CFRFactory failed its tests" << endl;
+		return -1;
+	}
+	cout << "CFRFactory passed its tests" << endl;
 	return 0;
 }
 
@@ -128,6 +151,7 @@ main(int argc, char** argv) {
 	BXMLCfg xml_config(cfgfile);
 	map<int, Cache*> ins_cache, dat_cache;
 	xml_config.copyCaches(ins_cache, dat_cache);
+	xmlCleanupParser();
 
 	/* Read the Control Flow Graph from BundleCFG */
 	CFG cfg;
@@ -150,6 +174,5 @@ main(int argc, char** argv) {
 		delete mit->second;
 	}
 	
-	xmlCleanupParser();
 	return 0;
 }

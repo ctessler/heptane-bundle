@@ -1,6 +1,6 @@
 #ifndef DOTFROMCFR_H
 #define DOTFROMCFR_H
-
+#include "CFR.h"
 #include "DOTFactory.h"
 
 class DOTfromCFR : public DOTFactory {
@@ -10,7 +10,7 @@ public:
 private:
 	CFR &_cfr;
 	ListDigraph::NodeMap<bool> _visited;
-	string _path, _indent;
+	string _indent;
 	stringstream _debug;
 
 	void clearVisited() {

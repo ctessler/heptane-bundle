@@ -18,6 +18,9 @@ public:
 		}
 		return _membership;
 	}
+	CFR(CFR &cfr) : CFG(), _cfg(cfr._cfg), _to_cfg(*this), _from_cfg(*this) {
+		cout << "CFR Copy Constructor invoked!" << endl;
+	}
 	/* Returns a pointer to the CFG which this CFR was extracted from */
 	CFG* getCFG() { return &_cfg; }
 
@@ -38,6 +41,7 @@ public:
 	/* Gets the node in the CFR given the CFG node */
 	ListDigraph::Node fromCFG(ListDigraph::Node);
 
+	/* Override to prevent nodes being added without a node from the CFG */
 	void setInitial() {
 		throw runtime_error("Cannot set the initial node without a CFG node");
 	}
@@ -46,7 +50,12 @@ public:
 	string stringNode(ListDigraph::Node node) const;
 	friend std::ostream &operator<< (std::ostream &stream,
 					 const CFR& cfr);
+
+	/* WCETO calculation for *this* CFR */
 	unsigned long int wcet(unsigned int threads);
+
+	/* Unit test */
+	static bool test();
 private:
 	CFG &_cfg;
 

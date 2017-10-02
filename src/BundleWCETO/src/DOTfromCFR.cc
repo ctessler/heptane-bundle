@@ -2,7 +2,7 @@
 
 void
 DOTfromCFR::produce() {
-	ofstream dot(_path.c_str());
+	ofstream dot(getPath().c_str());
 
 	dot << "digraph G {" << endl;
 	ListDigraph::Node root = _cfr.getInitial();

@@ -38,7 +38,9 @@ public:
 	map<ListDigraph::Node, CFR*> produce();
 	/* Gets the CFRG a product of produce */ 
 	CFRG *getCFRG() { return cfrg; }
-private:
+
+	static bool test();
+ private:
 	CFG &_cfg;
 	Cache &_cache;
 	CFRG *cfrg;
