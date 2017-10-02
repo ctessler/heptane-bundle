@@ -1,9 +1,15 @@
 #ifndef TEST_CFG_H
 #define TEST_CFG_H
 
+
+typedef unsigned long iaddr_t;
+
 #include <lemon/core.h>
 #include <lemon/list_graph.h>
+
+#include <string>
 using namespace lemon;
+using namespace std;
 
 /**
  * FunctionCall -- Represents the callsite for each instruction
@@ -34,8 +40,12 @@ private:
 
 class CFG : public ListDigraph {
 public:
-	CFG() : ListDigraph() { }
+	CFG();
 private:
+	/* Every instruction belongs to a function, functions are identified by
+	   their calling address and their name */
+	ListDigraph::NodeMap<FunctionCall> _function;
+	
 };
 
 #endif
