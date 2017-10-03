@@ -24,8 +24,6 @@ using namespace std;
  */
 class CFG : public ListDigraph {
 public:
-	/* Default Constructor */
-	CFG();
 private:
 };
 
