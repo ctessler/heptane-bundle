@@ -122,14 +122,17 @@ main(int argc, char** argv) {
 		cfgfile = argv[i];
 	}
 	if (cfgfile.length() == 0) {
+		cout << "No XML Config File given." << endl;		
 		usage();
 		return -1;
 	}
 	if (bcfg_file.length() == 0) {
+		cout << "No Control Flow Graph [-c] given." << endl;
 		usage();
 		return -1;
 	}
 	if (n_threads == 0) {
+		cout << "No number of threads [-m] given." << endl;
 		usage();
 		return -1;
 	}

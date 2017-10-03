@@ -6,7 +6,8 @@
 
 class CFR : public CFG {
 public:
-	CFR(CFG &cfg) : CFG(), _cfg(cfg), _to_cfg(*this), _from_cfg(*this) {
+	CFR(CFG &cfg) : CFG(), _cfg(cfg), _to_cfg(*this)
+	{
 	}
 	/* Returns the CFR membership of this node */
 	ListDigraph::Node membership(ListDigraph::Node node) const {
@@ -18,8 +19,9 @@ public:
 		}
 		return _membership;
 	}
-	CFR(CFR &cfr) : CFG(), _cfg(cfr._cfg), _to_cfg(*this), _from_cfg(*this) {
-		cout << "CFR Copy Constructor invoked!" << endl;
+	CFR(CFR &cfr) : CFG(), _cfg(cfr._cfg), _to_cfg(*this)
+	{
+
 	}
 	/* Returns a pointer to the CFG which this CFR was extracted from */
 	CFG* getCFG() { return &_cfg; }
@@ -68,7 +70,7 @@ private:
 	 */
 	ListDigraph::Node _membership;
 	ListDigraph::NodeMap<ListDigraph::Node> _to_cfg;
-	ListDigraph::NodeMap<ListDigraph::Node> _from_cfg;
+	map<ListDigraph::Node, ListDigraph::Node> _from_cfg;
 	
 	/*
 	 * A note about loop heads of nodes, the CFR stores the CFG node as the

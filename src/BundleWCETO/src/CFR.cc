@@ -13,7 +13,7 @@ CFR::addNode(ListDigraph::Node from_cfg) {
 	setHead(rv, cfg_head);
 	setFunction(rv, call);
 	_to_cfg[rv] = from_cfg;
-	_from_cfg[from_cfg] = rv;
+	_from_cfg.insert(make_pair(from_cfg, rv));
 	
 	return rv;
 }
@@ -29,7 +29,11 @@ CFR::toCFG(ListDigraph::Node node) {
 ListDigraph::Node
 CFR::fromCFG(ListDigraph::Node node) {
 	if (valid(node)) {
-		return _from_cfg[node];
+		map<ListDigraph::Node, ListDigraph::Node>::iterator mit;
+		mit = _from_cfg.find(node);
+		if (mit != _from_cfg.end()) {
+			return mit->second;
+		}
 	}
 	return INVALID;
 }

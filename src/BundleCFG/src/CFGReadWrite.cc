@@ -217,4 +217,13 @@ CFGReader::read(string path) {
 	}
 	
 	ifile.close();
+
+	for (ListDigraph::NodeIt nit(_cfg); nit != INVALID; ++nit) {
+		if (countInArcs(_cfg, nit) == 0) {
+			_cfg.setInitial(nit);
+		}
+		if (countOutArcs(_cfg, nit) == 0) {
+			_cfg.setTerminal(nit);
+		}
+	}
 }

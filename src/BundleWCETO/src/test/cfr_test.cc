@@ -1,5 +1,5 @@
-#include "test_cfg.h"
-#include "test_cfr.h"
+#include "CFG.h"
+#include "CFR.h"
 
 int
 main(int argc, char** argv) {
