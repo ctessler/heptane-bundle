@@ -30,10 +30,6 @@ public:
 	CFG(CFG &other);
 	friend std::ostream &operator<< (std::ostream &stream,
 					 const CFG& cfg);
-	/**
-	 * Override to protect against incorrect node addition
-	 */
-	ListDigraph::Node addNode(void);
 private:
 };
 

@@ -22,9 +22,3 @@ operator<< (std::ostream &stream, const CFG& cfg) {
 }
 
 
-ListDigraph::Node
-CFG::addNode() {
-	ListDigraph::Node rv = ListDigraph::addNode();
-
-	return rv;
-}
