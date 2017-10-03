@@ -70,8 +70,6 @@ public:
 	unsigned int getIters(ListDigraph::Node head) const;
 	void setIters(ListDigraph::Node head, unsigned int iters);
 	
-	void dump(string path);
-
 private:
 	ListDigraph::Node _initial, _terminal;
 	

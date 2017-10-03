@@ -166,15 +166,3 @@ CFG::setIters(ListDigraph::Node head, unsigned int iters) {
 	_loop_iters[head] = iters;
 }
 
-void
-CFG::dump(string path) {
-	ofstream dump(path.c_str());
-
-	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
-		dump << stringNode(nit) << endl;
-	}
-	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
-		dump << stringNode(source(ait)) << " --> " << stringNode(target(ait)) << endl;
-	}
-	dump.close();
-}
