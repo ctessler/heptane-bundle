@@ -4,8 +4,4 @@ CFG::CFG() : ListDigraph()
 {
 }
 
-CFG::CFG(CFG &other) : ListDigraph()
-{
-		       
-}
 

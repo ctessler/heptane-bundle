@@ -26,8 +26,6 @@ class CFG : public ListDigraph {
 public:
 	/* Default Constructor */
 	CFG();
-	/* Copy constructor */
-	CFG(CFG &other);
 private:
 };
 
