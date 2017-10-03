@@ -21,9 +21,6 @@ public:
 	/* Returns a pointer to the CFG which this CFR was extracted from */
 	CFG* getCFG() { return &_cfg; }
 
-	/* Gets and sets the Cache */
-	void setCache(Cache *cache) { _cache = cache; }
-	Cache* getCache() { return _cache; }
 	
 	/*
 	 * Override to prevent nodes from being added without having a node in
@@ -68,8 +65,6 @@ private:
 	 * the CFR.
 	 */
 
-	/* A CFR cannot exist without a cache */
-	Cache *_cache;
 };
 
 #endif /* CFR_H */

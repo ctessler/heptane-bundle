@@ -53,7 +53,7 @@ operator<< (std::ostream &stream, const CFR& cfr) {
 unsigned long int
 CFR::wcet(unsigned int threads) {
 	int exe = 1; // MIPS constant execution time
-	int brt = _cache->latency();
+	int brt = 5;
 	if (threads == 0) {
 		return 0;
 	}
