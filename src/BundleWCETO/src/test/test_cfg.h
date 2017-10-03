@@ -72,8 +72,6 @@ public:
 	
 	void dump(string path);
 
-	/* To allow polymorphism */
-	virtual ~CFG() {};
 private:
 	ListDigraph::Node _initial, _terminal;
 	
