@@ -87,8 +87,6 @@ private:
 	/* All loop heads have a number of iterations */
 	ListDigraph::NodeMap<unsigned int> _loop_iters;
 
-	void copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc,
-		      CFG &src, CFG &dst);
 };
 
 #endif /* CFG_H */

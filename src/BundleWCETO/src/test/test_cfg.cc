@@ -9,29 +9,6 @@ CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this),
 CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this),
 		       _loop_head(*this), _is_loop_head(*this),
 		       _loop_iters(*this) {
-	_initial = INVALID;
-	
-	DigraphCopy<ListDigraph, ListDigraph> dc(other, *this);
-	ListDigraph::NodeMap<ListDigraph::Node> other_to_this(other);
-	copyMaps(dc, other, *this);
-	dc.nodeRef(other_to_this);
-	dc.run();
-
-	for (ListDigraph::NodeIt nit(other); nit != INVALID; ++nit) {
-		ListDigraph::Node onode = nit;
-		ListDigraph::Node tnode = other_to_this[onode];
-
-		ListDigraph::Node ohead = other.getHead(onode);
-		if (ohead != INVALID) {
-			ListDigraph::Node thead = other_to_this[ohead];
-			setHead(tnode, thead);
-		}
-	}
-	ListDigraph::Node oinit = other.getInitial();
-	if (oinit != INVALID) {
-		ListDigraph::Node tinit = other_to_this[oinit];
-		setInitial(tinit);
-	}
 }
 
 std::ostream&
@@ -200,15 +177,4 @@ CFG::dump(string path) {
 		dump << stringNode(source(ait)) << " --> " << stringNode(target(ait)) << endl;
 	}
 	dump.close();
-}
-/**
- * CFG Private methods
- */
-void
-CFG::copyMaps(DigraphCopy<ListDigraph, ListDigraph> &dc, CFG &src, CFG &dst) {
-	dc.nodeMap(src._function, dst._function);
-	dc.nodeMap(src._addr, dst._addr);
-	/* node -> node maps have to be handled specially */
-	dc.nodeMap(src._is_loop_head, dst._is_loop_head);
-	dc.nodeMap(src._loop_iters, dst._loop_iters);
 }
