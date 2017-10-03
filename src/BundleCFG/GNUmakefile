@@ -5,16 +5,16 @@ INCLS+=-Isrc/DotPrint -Isrc/DummyAnalysis -Isrc/HtmlPrint -Isrc/IPETAnalysis
 INCLS+=-I../../src/HeptaneAnalysis/src -I../../src/HeptaneAnalysis/src
 INCLS+=-I../../src/HeptaneAnalysis/src/Generic
 
-OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o obj/CFRFactory.o
+OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o
 OBJS+=obj/CacheLine.o obj/CacheSet.o obj/PolicyLRU.o obj/LemonCFG.o obj/LemonFactory.o
-OBJS+=obj/CFRGFactory.o obj/LemonCFR.o obj/CFG.o obj/CFGFactory.o obj/DOTFactory.o obj/JPGFactory.o
-OBJS+=obj/CFR.o obj/CFRG.o obj/DOTfromCFR.o
+OBJS+=obj/LemonCFR.o obj/CFG.o obj/CFGFactory.o obj/DOTFactory.o obj/JPGFactory.o
+OBJS+=obj/CFGReadWrite.o obj/FunctionCall.o
 
 vbin=../../bin/BundleCFG
 all: $(vbin)
 
 CXXFLAGS=-DDBG_TODOT -DDBG_LOOPDOT
-CXXFLAGS=
+CXXFLAGS=-O0 -ggdb -std=c++11
 
 include ../makefile.common
 include makefile.depends
@@ -47,11 +47,3 @@ clean:
 
 
 force: clean all doc
-
-
-# $(GLOB_ATTR_DIR_OBJ)/ARMWordsAttribute.o \
-
-# ../../src/HeptaneAnalysis/obj/Context.o \
-# ../../src/HeptaneAnalysis/obj/StackInfoAttribute.o \
-# ../../src/HeptaneAnalysis/obj/CodeLineAttribute.o
-

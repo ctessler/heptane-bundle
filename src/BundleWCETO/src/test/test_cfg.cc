@@ -8,6 +8,12 @@ CFG::CFG() : ListDigraph(), _function(*this)
 	_initial = INVALID;
 }
 
+void
+CFG::setInitial(ListDigraph::Node node) {
+	_initial = node;
+}
+
+
 ListDigraph::Node
 CFG::addNode() {
 	ListDigraph::Node rv = ListDigraph::addNode();

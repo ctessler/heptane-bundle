@@ -21,6 +21,8 @@ public:
 	 * Override to protect against incorrect node addition
 	 */
 	ListDigraph::Node addNode(void);
+
+	void setInitial(ListDigraph::Node node);	
 private:
 	ListDigraph::Node _initial;
 	/* Every instruction belongs to a function, functions are identified by

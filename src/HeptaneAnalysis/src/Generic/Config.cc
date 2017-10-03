@@ -351,6 +351,7 @@ Config::ExecuteFromXml (string xml_file)
 
       // Skip comments in xml
       if (analysis_name == "comment") { continue;}
+      Logger::print("Analysis: " + analysis_name);
 
       // Getting the parameters of the directive.
       pa = getParameters(analysis_name, input_output_dir, ltanalysis[i]);
@@ -387,7 +388,7 @@ Config::ExecuteFromXml (string xml_file)
 
       if ( analysis_name != "ENTRYPOINT")
 	{
-
+	  Logger::print("BCT TEST");
 	  // create the associated analysis object (a) for the current analysis.
 	  a = mkAnalyzerObject(analysis_name, p, pa);
 	  assert (a != NULL);
@@ -421,6 +422,7 @@ Config::ExecuteFromXml (string xml_file)
 	      
 	      cout << endl;
 	    }
+	  Logger::print("ECT TEST");
 	}
       
       // Dump the result to XML if asked for

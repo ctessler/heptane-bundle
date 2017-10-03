@@ -12,8 +12,16 @@ public:
 	ListDigraph::Node addNode(ListDigraph::Node from_cfg) {
 		return CFG::addNode();
 	}
+
+	/* Override to prevent nodes being added without a node from the CFG */
+	void setInitial(ListDigraph::Node) {
+		throw runtime_error("Cannot set the initial node without a CFG node");
+	}
+	void setInitial(ListDigraph::Node cfr_initial, ListDigraph::Node cfg_initial);
 private:
 	CFG &_cfg;
+
+	ListDigraph::Node _membership;	
 };
 
 #endif
