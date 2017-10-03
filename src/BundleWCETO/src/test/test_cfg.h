@@ -28,8 +28,6 @@ public:
 	CFG();
 	/* Copy constructor */
 	CFG(CFG &other);
-	friend std::ostream &operator<< (std::ostream &stream,
-					 const CFG& cfg);
 private:
 };
 

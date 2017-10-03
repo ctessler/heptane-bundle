@@ -9,16 +9,3 @@ CFG::CFG(CFG &other) : ListDigraph()
 		       
 }
 
-std::ostream&
-operator<< (std::ostream &stream, const CFG& cfg) {
-	ListDigraph::Node initial = INVALID;
-	stream << "("
-	       << countNodes(cfg) << "v, "
-	       << countArcs(cfg) << "e, "
-	       << "INVALID" 
-	       << ")";
-
-	return stream;
-}
-
-
