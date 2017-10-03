@@ -15,8 +15,7 @@ operator<< (std::ostream &stream, const CFG& cfg) {
 	stream << "("
 	       << countNodes(cfg) << "v, "
 	       << countArcs(cfg) << "e, "
-	       << (initial == INVALID ?
-		   "INVALID" : cfg.stringNode(initial))
+	       << "INVALID" 
 	       << ")";
 
 	return stream;
@@ -28,16 +27,4 @@ CFG::addNode() {
 	ListDigraph::Node rv = ListDigraph::addNode();
 
 	return rv;
-}
-
-string
-CFG::stringNode(ListDigraph::Node node) const {
-	if (node == INVALID) {
-		return "INVALID";
-	}
-	stringstream ss;
-	ss << "(";
-	ss << "head:"
-	   << ")";
-	return ss.str();
 }

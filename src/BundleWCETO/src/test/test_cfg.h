@@ -34,8 +34,6 @@ public:
 	 * Override to protect against incorrect node addition
 	 */
 	ListDigraph::Node addNode(void);
-	string stringNode(ListDigraph::Node node) const;
-
 private:
 };
 
