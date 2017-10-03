@@ -41,11 +41,6 @@ public:
 	/* Gets the node in the CFR given the CFG node */
 	ListDigraph::Node fromCFG(ListDigraph::Node);
 
-	/* Override to prevent nodes being added without a node from the CFG */
-	void setInitial() {
-		throw runtime_error("Cannot set the initial node without a CFG node");
-	}
-	void setInitial(ListDigraph::Node cfr_initial, ListDigraph::Node cfg_initial);
 
 	string stringNode(ListDigraph::Node node) const;
 	friend std::ostream &operator<< (std::ostream &stream,

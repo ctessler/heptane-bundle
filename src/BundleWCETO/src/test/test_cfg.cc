@@ -2,7 +2,6 @@
 
 CFG::CFG() : ListDigraph()
 {
-	_initial = INVALID;
 }
 
 CFG::CFG(CFG &other) : ListDigraph()
@@ -12,7 +11,7 @@ CFG::CFG(CFG &other) : ListDigraph()
 
 std::ostream&
 operator<< (std::ostream &stream, const CFG& cfg) {
-	ListDigraph::Node initial = cfg.getInitial();
+	ListDigraph::Node initial = INVALID;
 	stream << "("
 	       << countNodes(cfg) << "v, "
 	       << countArcs(cfg) << "e, "
@@ -42,14 +41,3 @@ CFG::stringNode(ListDigraph::Node node) const {
 	   << ")";
 	return ss.str();
 }
-
-void
-CFG::setInitial(ListDigraph::Node node) {
-	_initial = node;
-}
-ListDigraph::Node
-CFG::getInitial() const {
-	return _initial;
-}
-
-

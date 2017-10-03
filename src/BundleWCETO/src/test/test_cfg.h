@@ -36,13 +36,7 @@ public:
 	ListDigraph::Node addNode(void);
 	string stringNode(ListDigraph::Node node) const;
 
-	/* Gets and sets the initial (root) node of the CFG */
-	ListDigraph::Node getInitial() const;
-	void setInitial(ListDigraph::Node node);
-
 private:
-	ListDigraph::Node _initial;
-	
 };
 
 #endif /* CFG_H */

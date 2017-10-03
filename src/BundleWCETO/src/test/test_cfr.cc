@@ -26,12 +26,6 @@ CFR::fromCFG(ListDigraph::Node node) {
 	return INVALID;
 }
 
-void
-CFR::setInitial(ListDigraph::Node cfr_initial, ListDigraph::Node cfg_initial) {
-	_membership = cfg_initial;
-	CFG::setInitial(cfr_initial);
-}
-
 string
 CFR::stringNode(ListDigraph::Node node) const {
 	if (node == INVALID) {
@@ -45,7 +39,7 @@ CFR::stringNode(ListDigraph::Node node) const {
 
 std::ostream&
 operator<< (std::ostream &stream, const CFR& cfr) {
-	ListDigraph::Node initial = cfr.getInitial();
+	ListDigraph::Node initial = INVALID;
 	stream << "("
 	       << countNodes(cfr) << "v, "
 	       << countArcs(cfr) << "e, "
@@ -84,7 +78,6 @@ CFR::wcet(unsigned int threads) {
 	Dijkstra<ListDigraph> dijk_loaded(*this, lengthMap);
 	Dijkstra<ListDigraph>::DistMap dist(*this);
 	dijk_loaded.distMap(dist);
-	dijk_loaded.run(getInitial());
 
 	int loaded = -125;
 	/* That's a longest path for the 1st thread, we're using all
