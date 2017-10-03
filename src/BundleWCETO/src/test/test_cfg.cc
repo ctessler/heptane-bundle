@@ -1,12 +1,11 @@
 #include "test_cfg.h"
 
-CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this)
+CFG::CFG() : ListDigraph(), _function(*this), _addr(*this)
 {
 	_initial = INVALID;
 }
 
-CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this),
-		       _loop_head(*this)
+CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this)
 {
 		       
 }
@@ -30,7 +29,6 @@ CFG::addNode() {
 	ListDigraph::Node rv = ListDigraph::addNode();
 
 	_addr[rv] = 0;
-	_loop_head[rv] = INVALID;
 	_function[rv] = FunctionCall("UNASSIGNED", 0x0);
 	
 	return rv;

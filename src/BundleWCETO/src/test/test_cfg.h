@@ -67,8 +67,6 @@ private:
 	ListDigraph::NodeMap<FunctionCall> _function;
 	/* Every instruction has a starting address */
 	ListDigraph::NodeMap<iaddr_t> _addr;
-	/* Some instructions have loop heads */
-	ListDigraph::NodeMap<ListDigraph::Node> _loop_head;
 };
 
 #endif /* CFG_H */
