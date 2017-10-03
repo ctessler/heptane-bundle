@@ -1,13 +1,12 @@
 #include "test_cfg.h"
 
-CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this),
-	     _is_loop_head(*this)
+CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this)
 {
 	_initial = INVALID;
 }
 
 CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this),
-		       _loop_head(*this), _is_loop_head(*this)
+		       _loop_head(*this)
 {
 		       
 }
@@ -32,7 +31,6 @@ CFG::addNode() {
 
 	_addr[rv] = 0;
 	_loop_head[rv] = INVALID;
-	_is_loop_head[rv] = false;
 	_function[rv] = FunctionCall("UNASSIGNED", 0x0);
 	
 	return rv;
@@ -45,13 +43,9 @@ CFG::stringNode(ListDigraph::Node node) const {
 	}
 	stringstream ss;
 	ss << stringAddr(node);
-	if (isHead(node)) {
-
-	}
-	ListDigraph::Node head = getHead(node);
 	ss << "("
 	   << _function[node] << ", ";
-	ss << "head:" << stringAddr(head)
+	ss << "head:"
 	   << ")";
 	return ss.str();
 }
@@ -136,23 +130,5 @@ CFG::find(iaddr_t addr) {
 }
 
 
-ListDigraph::Node
-CFG::getHead(ListDigraph::Node node) const {
-	return _loop_head[node];
-}
 
-void
-CFG::setHead(ListDigraph::Node node, ListDigraph::Node head) {
-	_loop_head[node] = head;
-}
-
-bool
-CFG::isHead(ListDigraph::Node node) const {
-	return _is_loop_head[node];
-}
-
-void
-CFG::markHead(ListDigraph::Node node, bool yes) {
-	_is_loop_head[node] = yes;
-}
 

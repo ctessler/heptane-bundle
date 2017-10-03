@@ -59,12 +59,6 @@ public:
 	/* Finds all instructions with the address */
 	list<ListDigraph::Node> find(iaddr_t addr);
 
-	/* Gets and sets the loop head of the instruction */
-	ListDigraph::Node getHead(ListDigraph::Node node) const;
-	void setHead(ListDigraph::Node node, ListDigraph::Node head);
-	/* Gets and sets if the instruction is a loop head */
-	bool isHead(ListDigraph::Node node) const;
-	void markHead(ListDigraph::Node node, bool yes=true);
 private:
 	ListDigraph::Node _initial, _terminal;
 	
@@ -75,8 +69,6 @@ private:
 	ListDigraph::NodeMap<iaddr_t> _addr;
 	/* Some instructions have loop heads */
 	ListDigraph::NodeMap<ListDigraph::Node> _loop_head;
-	/* Some instructions are loop heads */
-	ListDigraph::NodeMap<bool> _is_loop_head;
 };
 
 #endif /* CFG_H */

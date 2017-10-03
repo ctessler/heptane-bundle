@@ -4,12 +4,9 @@ ListDigraph::Node
 CFR::addNode(ListDigraph::Node from_cfg) {
 	ListDigraph::Node rv = CFG::addNode();
 
-	ListDigraph::Node cfg_head = _cfg.getHead(from_cfg);
 	FunctionCall call = _cfg.getFunction(from_cfg);
 
 	setAddr(rv, _cfg.getAddr(from_cfg));
-	markHead(rv, _cfg.isHead(from_cfg));
-	setHead(rv, cfg_head);
 	setFunction(rv, call);
 	_to_cfg[rv] = from_cfg;
 	_from_cfg[from_cfg] = rv;
@@ -46,12 +43,9 @@ CFR::stringNode(ListDigraph::Node node) const {
 	}
 	stringstream ss;
 	ss << stringAddr(node);
-	if (isHead(node)) {
-	}
 	ss << "(" << getFunction(node) << ", ";
 
-	ListDigraph::Node head = getHead(node);
-	ss << "head:" << _cfg.stringAddr(head)
+	ss << "head:" 
 	   << ")";
 	return ss.str();
 }
