@@ -18,9 +18,6 @@ public:
 		}
 		return _membership;
 	}
-	CFR(CFR &cfr) : CFG(), _cfg(cfr._cfg), _to_cfg(*this), _from_cfg(*this) {
-		cout << "CFR Copy Constructor invoked!" << endl;
-	}
 	/* Returns a pointer to the CFG which this CFR was extracted from */
 	CFG* getCFG() { return &_cfg; }
 
