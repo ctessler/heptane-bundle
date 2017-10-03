@@ -40,12 +40,8 @@ public:
 	ListDigraph::Node getInitial() const;
 	void setInitial(ListDigraph::Node node);
 
-	/* Gets and sets the terminal node of the CFG */
-	ListDigraph::Node getTerminal() const;
-	void setTerminal(ListDigraph::Node node);
-
 private:
-	ListDigraph::Node _initial, _terminal;
+	ListDigraph::Node _initial;
 	
 };
 

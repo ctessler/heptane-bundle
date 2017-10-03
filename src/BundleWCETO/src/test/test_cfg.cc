@@ -52,13 +52,4 @@ CFG::getInitial() const {
 	return _initial;
 }
 
-ListDigraph::Node
-CFG::getTerminal() const {
-	return _terminal;
-}
-
-void
-CFG::setTerminal(ListDigraph::Node node) {
-	_terminal = node;
-}
 

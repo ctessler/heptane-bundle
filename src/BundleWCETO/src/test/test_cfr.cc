@@ -69,7 +69,6 @@ CFR::wcet(unsigned int threads) {
 		if (countOutArcs(*this, terminal) > 0) {
 			continue;
 		}
-		setTerminal(terminal);
 	}
 
 	/*
@@ -87,10 +86,10 @@ CFR::wcet(unsigned int threads) {
 	dijk_loaded.distMap(dist);
 	dijk_loaded.run(getInitial());
 
-	int loaded = dist[getTerminal()] * -1;
+	int loaded = -125;
 	/* That's a longest path for the 1st thread, we're using all
 	   nodes for the moment */ 
-	loaded = countNodes(*this) * (brt) + dist[getTerminal()] * exe;
+	loaded = -125;
 
 	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
 		ListDigraph::Arc a = ait;
@@ -98,9 +97,7 @@ CFR::wcet(unsigned int threads) {
 	}
 	Dijkstra<ListDigraph> dijk_unloaded(*this, lengthMap);
 	dijk_unloaded.distMap(dist);
-	dijk_unloaded.run(getInitial(), getTerminal());
-	int unloaded = dist[getTerminal()] * -1;
-
+	int unloaded = 0;
 	unsigned long int wceto = loaded + (threads -1) * unloaded;
 	return wceto;
 	
