@@ -48,25 +48,12 @@ public:
 	FunctionCall getFunction(ListDigraph::Node node) const;
 	void setFunction(ListDigraph::Node, FunctionCall const &fcall);
 
-	/* Gets and sets the address of the instruction */
-	iaddr_t getAddr(ListDigraph::Node node) const;
-	string stringAddr(ListDigraph::Node node) const;
-	void setAddr(ListDigraph::Node, iaddr_t addr);
-
-	/* Finds the instruction with the address and function */
-	ListDigraph::Node find(iaddr_t addr, FunctionCall const &fcall);
-
-	/* Finds all instructions with the address */
-	list<ListDigraph::Node> find(iaddr_t addr);
-
 private:
 	ListDigraph::Node _initial, _terminal;
 	
 	/* Every instruction belongs to a function, functions are identified by
 	   their calling address and their name */
 	ListDigraph::NodeMap<FunctionCall> _function;
-	/* Every instruction has a starting address */
-	ListDigraph::NodeMap<iaddr_t> _addr;
 };
 
 #endif /* CFG_H */
