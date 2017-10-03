@@ -44,16 +44,9 @@ public:
 	ListDigraph::Node getTerminal() const;
 	void setTerminal(ListDigraph::Node node);
 
-	/* Gets and sets the function associated with the instruction */
-	FunctionCall getFunction(ListDigraph::Node node) const;
-	void setFunction(ListDigraph::Node, FunctionCall const &fcall);
-
 private:
 	ListDigraph::Node _initial, _terminal;
 	
-	/* Every instruction belongs to a function, functions are identified by
-	   their calling address and their name */
-	ListDigraph::NodeMap<FunctionCall> _function;
 };
 
 #endif /* CFG_H */

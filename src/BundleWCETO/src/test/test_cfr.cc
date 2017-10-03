@@ -4,9 +4,6 @@ ListDigraph::Node
 CFR::addNode(ListDigraph::Node from_cfg) {
 	ListDigraph::Node rv = CFG::addNode();
 
-	FunctionCall call = _cfg.getFunction(from_cfg);
-
-	setFunction(rv, call);
 	_to_cfg[rv] = from_cfg;
 	_from_cfg[from_cfg] = rv;
 	
@@ -41,8 +38,6 @@ CFR::stringNode(ListDigraph::Node node) const {
 		return "INVALID";
 	}
 	stringstream ss;
-	ss << "(" << getFunction(node) << ", ";
-
 	ss << "head:" 
 	   << ")";
 	return ss.str();

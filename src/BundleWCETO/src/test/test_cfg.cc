@@ -1,11 +1,11 @@
 #include "test_cfg.h"
 
-CFG::CFG() : ListDigraph(), _function(*this)
+CFG::CFG() : ListDigraph()
 {
 	_initial = INVALID;
 }
 
-CFG::CFG(CFG &other) : ListDigraph(), _function(*this)
+CFG::CFG(CFG &other) : ListDigraph()
 {
 		       
 }
@@ -28,8 +28,6 @@ ListDigraph::Node
 CFG::addNode() {
 	ListDigraph::Node rv = ListDigraph::addNode();
 
-	_function[rv] = FunctionCall("UNASSIGNED", 0x0);
-	
 	return rv;
 }
 
@@ -39,8 +37,7 @@ CFG::stringNode(ListDigraph::Node node) const {
 		return "INVALID";
 	}
 	stringstream ss;
-	ss << "("
-	   << _function[node] << ", ";
+	ss << "(";
 	ss << "head:"
 	   << ")";
 	return ss.str();
@@ -63,15 +60,5 @@ CFG::getTerminal() const {
 void
 CFG::setTerminal(ListDigraph::Node node) {
 	_terminal = node;
-}
-
-void
-CFG::setFunction(ListDigraph::Node node, FunctionCall const &fcall) {
-	_function[node] = fcall;
-}
-
-FunctionCall
-CFG::getFunction(ListDigraph::Node node) const {
-	return _function[node];
 }
 
