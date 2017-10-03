@@ -16,11 +16,17 @@ using namespace std;
 class CFG : public ListDigraph {
 public:
 	CFG();
+
+	/**
+	 * Override to protect against incorrect node addition
+	 */
+	ListDigraph::Node addNode(void);
 private:
+	ListDigraph::Node _initial;
 	/* Every instruction belongs to a function, functions are identified by
 	   their calling address and their name */
 	ListDigraph::NodeMap<FunctionCall> _function;
 	
 };
 
-#endif
+#endif /* TEST_CFG_H */

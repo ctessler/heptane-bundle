@@ -38,5 +38,5 @@ ext:
 %.cc: %.h
 
 clean:
-	rm -rf obj ext $(tgt) 
+	rm -rf obj ext $(tgt) vgcore.*
 
