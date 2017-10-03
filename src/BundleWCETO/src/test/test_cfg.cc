@@ -1,14 +1,15 @@
 #include "test_cfg.h"
 
 CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this),
-	     _is_loop_head(*this), _loop_iters(*this)
+	     _is_loop_head(*this)
 {
 	_initial = INVALID;
 }
 
 CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this),
-		       _loop_head(*this), _is_loop_head(*this),
-		       _loop_iters(*this) {
+		       _loop_head(*this), _is_loop_head(*this)
+{
+		       
 }
 
 std::ostream&
@@ -32,7 +33,6 @@ CFG::addNode() {
 	_addr[rv] = 0;
 	_loop_head[rv] = INVALID;
 	_is_loop_head[rv] = false;
-	_loop_iters[rv] = 0;
 	_function[rv] = FunctionCall("UNASSIGNED", 0x0);
 	
 	return rv;
@@ -46,7 +46,7 @@ CFG::stringNode(ListDigraph::Node node) const {
 	stringstream ss;
 	ss << stringAddr(node);
 	if (isHead(node)) {
-		ss << "[" << _loop_iters[node] << "]";
+
 	}
 	ListDigraph::Node head = getHead(node);
 	ss << "("
@@ -154,15 +154,5 @@ CFG::isHead(ListDigraph::Node node) const {
 void
 CFG::markHead(ListDigraph::Node node, bool yes) {
 	_is_loop_head[node] = yes;
-}
-
-unsigned int
-CFG::getIters(ListDigraph::Node head) const {
-	return _loop_iters[head];
-}
-
-void
-CFG::setIters(ListDigraph::Node head, unsigned int iters) {
-	_loop_iters[head] = iters;
 }
 

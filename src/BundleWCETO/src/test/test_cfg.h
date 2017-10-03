@@ -65,11 +65,6 @@ public:
 	/* Gets and sets if the instruction is a loop head */
 	bool isHead(ListDigraph::Node node) const;
 	void markHead(ListDigraph::Node node, bool yes=true);
-	/* Gets and sets the number of iterations in the loop started at the
-	   instruction */
-	unsigned int getIters(ListDigraph::Node head) const;
-	void setIters(ListDigraph::Node head, unsigned int iters);
-	
 private:
 	ListDigraph::Node _initial, _terminal;
 	
@@ -82,9 +77,6 @@ private:
 	ListDigraph::NodeMap<ListDigraph::Node> _loop_head;
 	/* Some instructions are loop heads */
 	ListDigraph::NodeMap<bool> _is_loop_head;
-	/* All loop heads have a number of iterations */
-	ListDigraph::NodeMap<unsigned int> _loop_iters;
-
 };
 
 #endif /* CFG_H */
