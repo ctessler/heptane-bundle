@@ -169,6 +169,9 @@ CFG::setFunction(ListDigraph::Node node, FunctionCall const &fcall) {
 
 FunctionCall
 CFG::getFunction(ListDigraph::Node node) const {
+	if (!valid(node)) {
+		throw runtime_error("Invalid node");
+	}
 	return _function[node];
 }
 
@@ -225,6 +228,9 @@ CFG::find(iaddr_t addr) {
 
 ListDigraph::Node
 CFG::getHead(ListDigraph::Node node) const {
+	if (!valid(node)) {
+		return INVALID;
+	}
 	return _loop_head[node];
 }
 
