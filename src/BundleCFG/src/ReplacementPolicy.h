@@ -56,7 +56,8 @@ public:
 	 */
 	virtual string typeName() = 0;
 
-	virtual ~ReplacementPolicy() { cout << "Hello " << this << endl; }
+	virtual ~ReplacementPolicy() {
+	}
 };
 
 #include "CacheSet.h"

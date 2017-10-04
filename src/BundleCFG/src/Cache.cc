@@ -51,9 +51,10 @@ Cache::~Cache() {
 	*/
 	map<int, CacheSet*>::iterator it;
 	for (it = _sets.begin(); it != _sets.end(); it++) {
+		it->second->clear();
 		delete it->second;
-		_sets.erase(it);
 	}
+	_sets.clear();
 }
 
 
