@@ -80,6 +80,8 @@ private:
 	xmlNodePtr getSingletonNode(const char* xpath);
 
 	void addCacheLevel(xmlNodePtr node);
+
+	PolicyLRU lru;
 };
 
 #endif /* BXMLCFG */

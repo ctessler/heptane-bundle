@@ -212,7 +212,8 @@ xmlNodePtr BXMLCfg::getCacheNodes() {
 	return NULL;
 }
 
-void BXMLCfg::addCacheLevel(xmlNodePtr node) {
+void
+BXMLCfg::addCacheLevel(xmlNodePtr node) {
 	if (!xmlHasProp(node, (xmlChar *) "level")) {
 		throw runtime_error("CACHE tag has no level");
 	}
@@ -260,7 +261,6 @@ void BXMLCfg::addCacheLevel(xmlNodePtr node) {
 	sscanf(buff, "%i", &latency);
 	free(buff);
 
-
 	buff = (char *)xmlGetProp(node, (xmlChar *) "type");
 	Cache *new_cache = new Cache(nsets, nways, linesize, latency);
 	if (string ("icache") == buff) {
@@ -270,7 +270,7 @@ void BXMLCfg::addCacheLevel(xmlNodePtr node) {
 			    "Multiple CACHE tags at the same level and type");
 		}
 		iord = "instruction";
-		_ins_cache[level] = new_cache;
+		_ins_cache.insert(make_pair(level, new_cache));
 	}
 	if (string ("dcache") == buff) {
 		if (_dat_cache.find(level) != _dat_cache.end()) {
@@ -279,21 +279,19 @@ void BXMLCfg::addCacheLevel(xmlNodePtr node) {
 			    "Multiple CACHE tags at the same level and type");
 		}
 		iord = "data";
-		_dat_cache[level] = new_cache;
+		_dat_cache.insert(make_pair(level, new_cache));
 	}
-	free (buff);
+	free(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "replacement_policy");
 	if (string ("LRU") == buff) {
-		PolicyLRU *lru = new PolicyLRU();
-		new_cache->setPolicy(lru);
+		new_cache->setPolicy(&lru);
 		valid_policy = true;
 	}
 	free(buff);
 	if (!valid_policy) {
 		throw runtime_error("CACHE has no supported replacement policy");
 	}
-
 }
 
 /**
