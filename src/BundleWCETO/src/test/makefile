@@ -5,13 +5,14 @@ LDFLAGS=-lemon $(shell xml2-config --libs) -lcppunit
 
 CXXFLAGS=-DGLIBCXX_FORCE_NEW -O0 -g -std=c++11 $(INCLUDE) $(LDFLAGS)
 
-cfg_srcs=FunctionCall.cc CFG.cc
+cfg_srcs= FunctionCall.cc CFG.cc PolicyLRU.cc Cache.cc CacheLine.cc
+cfg_srcs+=CacheSet.cc
 cod=../../../BundleCFG/src
 cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
 cfg_objs=$(patsubst %.cc,ext/%.o,$(cfg_srcs))
 
 
-wcet_srcs=CFR.cc
+wcet_srcs=CFR.cc 
 wcet=../
 wcet_srcs_path=$(patsubst %.cc,$(wcet)/%.cc,$(wcet_srcs))
 wcet_objs=$(patsubst %.cc,wcet/%.o,$(wcet_srcs))
