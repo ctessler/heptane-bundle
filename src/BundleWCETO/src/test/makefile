@@ -1,6 +1,6 @@
-tgt=cfr_test
-INCLUDE=$(shell xml2-config --cflags) -I../../../BundleCFG/src -I../
-LDFLAGS=-lemon $(shell xml2-config --libs)
+tgt=unit_test
+INCLUDE=$(shell xml2-config --cflags) -I../../../BundleCFG/src -I../ 
+LDFLAGS=-lemon $(shell xml2-config --libs) -lcppunit
 .PHONY=run_valgrind obj ext
 
 CXXFLAGS=-DGLIBCXX_FORCE_NEW -O0 -g -std=c++11 $(INCLUDE) $(LDFLAGS)
@@ -16,7 +16,7 @@ wcet=../
 wcet_srcs_path=$(patsubst %.cc,$(wcet)/%.cc,$(wcet_srcs))
 wcet_objs=$(patsubst %.cc,wcet/%.o,$(wcet_srcs))
 
-test_srcs=cfr_test.cc
+test_srcs=unit_test.cc CFRTest.cc CacheTest.cc
 #test_srcs_path=$(patsubst %.cc,test/%.cc,$(test_srcs))
 test_objs=$(patsubst %.cc,obj/%.o,$(test_srcs))
 
@@ -34,7 +34,7 @@ obj:
 obj/%.o: %.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(wcet_objs): wcet
+$(wcet_objs): | wcet
 wcet:
 	mkdir wcet
 
@@ -44,7 +44,7 @@ wcet/%.o: ../%.cc
 ext/%.o: $(cod)/%.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-$(cfg_objs): ext
+$(cfg_objs): | ext
 ext:
 	mkdir ext
 

@@ -1,17 +1,22 @@
+#include <cppunit/TextOutputter.h>
+#include <cppunit/extensions/TestFactoryRegistry.h>
+#include <cppunit/ui/text/TestRunner.h>
+
 #include "CFG.h"
 #include "CFR.h"
 
 int
 main(int argc, char** argv) {
+	CppUnit::Test *suite =
+		CppUnit::TestFactoryRegistry::getRegistry().makeTest();
 
-	CFG cfg;
-	ListDigraph::Node a = cfg.addNode();
-	ListDigraph::Node b = cfg.addNode();
+	CppUnit::TextUi::TestRunner runner;
+	runner.addTest(suite);
 
-	CFR cfr(cfg);
-	ListDigraph::Node c = cfr.addNode(b);
-
-	return 0;
+	if (runner.run()) {
+		return 0;
+	}
+	return 1;
 }
 
 #if 0
