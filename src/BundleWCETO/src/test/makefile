@@ -12,12 +12,13 @@ cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
 cfg_objs=$(patsubst %.cc,ext/%.o,$(cfg_srcs))
 
 
-wcet_srcs=CFR.cc 
+wcet_srcs=CFR.cc CFRFactory.cc
 wcet=../
 wcet_srcs_path=$(patsubst %.cc,$(wcet)/%.cc,$(wcet_srcs))
 wcet_objs=$(patsubst %.cc,wcet/%.o,$(wcet_srcs))
 
-test_srcs=unit_test.cc CFRTest.cc CacheTest.cc BXMLCFGTest.cc
+test_srcs= unit_test.cc CFRTest.cc CacheTest.cc BXMLCFGTest.cc
+test_srcs+=CFRFactoryTest.cc
 #test_srcs_path=$(patsubst %.cc,test/%.cc,$(test_srcs))
 test_objs=$(patsubst %.cc,obj/%.o,$(test_srcs))
 

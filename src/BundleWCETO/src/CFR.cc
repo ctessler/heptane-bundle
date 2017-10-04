@@ -41,6 +41,9 @@ CFR::fromCFG(ListDigraph::Node node) {
 void
 CFR::setInitial(ListDigraph::Node cfr_initial, ListDigraph::Node cfg_initial) {
 	_membership = cfg_initial;
+	if (!valid(cfr_initial)) {
+		throw runtime_error("Invalid CFR initial node");
+	}
 	CFG::setInitial(cfr_initial);
 }
 

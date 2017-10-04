@@ -1,5 +1,15 @@
 #include "CFRFactory.h"
 
+CFRFactory::~CFRFactory() {
+	delete cfrg;
+	map<ListDigraph::Node, CFR*>::iterator mit;
+	for (mit = _cfrs.begin(); mit != _cfrs.end(); ++mit) {
+		delete mit->second;
+	}
+	_cfrs.clear();
+}
+
+
 map<ListDigraph::Node, CFR*>
 CFRFactory::produce() {
 	_debug.str("");
@@ -7,23 +17,26 @@ CFRFactory::produce() {
 	markLoops();
 
 	ListDigraph::NodeMap<bool> starter(_cfg);
-
 	list<ListDigraph::Node> next_cfrs;
+	
 	ListDigraph::Node initial = _cfg.getInitial();
+	if (initial == INVALID) {
+		return _cfrs;
+	}
 	next_cfrs.push_front(initial);
 	do {
 		visitClear();
 		ListDigraph::Node cursor = next_cfrs.front(); next_cfrs.pop_front();
 		CFR *cfr = addCFR(cursor);
-		_from_cfg_to_cfr[cursor] = cfr;
 		_initial[cursor] = true;
 		starter[cursor] = true;
 		ListDigraph::Node cfr_node = cfrg->addNode(cfr);
-
+		
 		Cache copy(_cache);
-		list<ListDigraph::Node> xflicts = addToConflicts(cursor, copy);
+		list<ListDigraph::Node> xflicts = addToConflicts(cursor, cursor, copy);
 		for (list<ListDigraph::Node>::iterator lit = xflicts.begin(); lit != xflicts.end(); lit++) {
 			CFR *next_cfr = addCFR(*lit);
+			
 			ListDigraph::Node next_cfr_node = cfrg->addNode(next_cfr);
 			if (cfr_node != next_cfr_node) {
 				cfrg->addArc(cfr_node, next_cfr_node);
@@ -34,16 +47,15 @@ CFRFactory::produce() {
 			}
 			next_cfrs.push_back(*lit);
 			starter[*lit] = true;
-
 		}
 	} while (!next_cfrs.empty());
-	CFR *cfr = _from_cfg_to_cfr[initial];
+	CFR *cfr = getCFR(initial);
 	cfrg->setInitialCFR(cfr);
 
 	try {
-	  cout << _debug.str();
+		cout << _debug.str();
 	} catch(exception &except) {
-	  cout << except.what() << endl;
+		cout << except.what() << endl;
 	}
 	return _cfrs;
 }
@@ -101,21 +113,26 @@ CFRFactory::markLoopExits(ListDigraph::Node node) {
 }
 
 list<ListDigraph::Node>
-CFRFactory::addToConflicts(ListDigraph::Node node, Cache &cache) {
+CFRFactory::addToConflicts(ListDigraph::Node cfr_initial,
+    ListDigraph::Node node, Cache &cache) {
 	list<ListDigraph::Node> xflicts;
 	string pre = _indent + "addToConflicts ";
 	string indent_save = _indent; _indent += " ";
 	_debug << pre << _cfg.stringNode(node) << endl;
-	
+
 	if (conflicts(node, cache)) {
 		_debug << pre << _cfg.stringNode(node) << " conflicts, stopping" << endl;
 		/* Node is a conflict, time to stop */
 		xflicts.push_back(node);
 		return xflicts;
 	}
+	
 	/* Add this node to the cache */
 	cache.insert(_cfg.getAddr(node));
-	CFR *cfr = _from_cfg_to_cfr[node];
+	CFR *cfr = addCFR(cfr_initial);
+	if (!cfr) {
+		throw runtime_error("No CFR");
+	}
 	_debug << pre << _cfg.stringNode(node) << " in CFR " << *cfr << endl;
 	visit(node);
 
@@ -123,6 +140,7 @@ CFRFactory::addToConflicts(ListDigraph::Node node, Cache &cache) {
 	if (cfr_node == INVALID) {
 		throw runtime_error("Could not find node in CFR");
 	}
+
 	for (ListDigraph::OutArcIt a(_cfg, node); a != INVALID; ++a) {
 		ListDigraph::Node kid = _cfg.runningNode(a);
 		if (visited(kid)) {
@@ -130,20 +148,20 @@ CFRFactory::addToConflicts(ListDigraph::Node node, Cache &cache) {
 			continue;
 		}
 		if (_initial[kid]) {
-
 			_debug << pre << " skipped node " << _cfg.stringNode(kid) << " is initial" << endl;
 			/* This child begins a conflict free region */
 			xflicts.push_back(kid);
 			continue;
 		}
+
 		/* This child is not a conflict nor an initial instruction, it
 		   belongs to this conflict free region. */
 		ListDigraph::Node cfr_kid = cfr->addNode(kid);
 		cfr->addArc(cfr_node, cfr_kid);
-		_from_cfg_to_cfr[kid] = cfr;
+		
 		_debug << pre << "added " << _cfg.stringNode(kid) << " to CFR " << *cfr << endl;
 
-		list<ListDigraph::Node> mflicts = addToConflicts(kid, cache);
+		list<ListDigraph::Node> mflicts = addToConflicts(cfr_initial, kid, cache);
 		xflicts.insert(xflicts.end(), mflicts.begin(), mflicts.end());
 	}
 
@@ -184,7 +202,6 @@ CFRFactory::addCFR(ListDigraph::Node cfg_node) {
 	new_cfr->setCache(&_cache);
 
 	_cfrs.insert(make_pair(cfg_node, new_cfr));
-	_from_cfg_to_cfr[cfg_node] = new_cfr;
 	return new_cfr;
 }
 

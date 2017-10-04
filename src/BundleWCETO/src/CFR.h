@@ -50,8 +50,7 @@ public:
 	void setInitial(ListDigraph::Node cfr_initial, ListDigraph::Node cfg_initial);
 
 	string stringNode(ListDigraph::Node node) const;
-	friend std::ostream &operator<< (std::ostream &stream,
-					 const CFR& cfr);
+	friend std::ostream &operator<< (std::ostream &stream, const CFR& cfr);
 
 	/* WCETO calculation for *this* CFR */
 	unsigned long int wcet(unsigned int threads);

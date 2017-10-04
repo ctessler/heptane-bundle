@@ -28,9 +28,7 @@ public:
 		_initial(cfg), _visited(cfg) {
 		cfrg = new CFRG(cfg);
 	}
-	~CFRFactory() {
-		delete cfrg;
-	}
+	~CFRFactory();
 	
 	/* Gets the CFR of an instruction */
 	CFR* getCFR(ListDigraph::Node cfg_node);
@@ -40,7 +38,7 @@ public:
 	CFRG *getCFRG() { return cfrg; }
 
 	static bool test();
- private:
+private:
 	CFG &_cfg;
 	Cache &_cache;
 	CFRG *cfrg;
@@ -49,13 +47,13 @@ public:
 	ListDigraph::NodeMap<bool> _visited;
 	/* Initial instruction in the CFG -> CFR */
 	map<ListDigraph::Node, CFR*> _cfrs;
-	map<ListDigraph::Node, CFR*> _from_cfg_to_cfr;
 
 	void markLoops();
 	/* Marks the first exit nodes from this nodes loop as initial
 	 * CFR instructions */
 	void markLoopExits(ListDigraph::Node node);
-	list<ListDigraph::Node> addToConflicts(ListDigraph::Node node, Cache &cache);
+	list<ListDigraph::Node> addToConflicts(ListDigraph::Node cfr_initial,
+	    ListDigraph::Node node, Cache &cache);
 	bool conflicts(ListDigraph::Node node, Cache &cache);
 	
 	void visit(ListDigraph::Node node, bool yes=true);
