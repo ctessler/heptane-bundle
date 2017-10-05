@@ -9,7 +9,8 @@ Cache::Cache(Cache& other) {
 
 	map<int, CacheSet*>::iterator it = other._sets.begin();
 	for (; it != other._sets.end(); it++) {
-		_sets[it->first] = new CacheSet(*(it->second));
+		CacheSet *set = new CacheSet(*(it->second));
+		_sets.insert(make_pair(it->first, set));
 	}
 }
 
@@ -40,15 +41,6 @@ void Cache::insert(iaddr_t addr) {
 }
 
 Cache::~Cache() {
-	/* One policy pointer per policy type is leaked.
-	 * This is because the copy constructor cannot instance the
-	 * derived type. It can be fixed, for the moment the single
-	 * object is leaked.
-	if (_policy) {
-		delete _policy;
-		_policy = NULL;
-	}
-	*/
 	map<int, CacheSet*>::iterator it;
 	for (it = _sets.begin(); it != _sets.end(); it++) {
 		it->second->clear();

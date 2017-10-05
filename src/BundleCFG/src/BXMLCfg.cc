@@ -30,6 +30,8 @@ BXMLCfg::~BXMLCfg() {
 	for (mit=_dat_cache.begin(); mit != _dat_cache.end(); ++mit) {
 		delete mit->second;
 	}
+	_ins_cache.clear();
+	_dat_cache.clear();
 	if (_doc) {
 		xmlFreeDoc(_doc);
 	}
@@ -380,14 +382,24 @@ xmlNodePtr BXMLCfg::getEntryNode() {
 }
 
 
-void BXMLCfg::copyCaches(map<int, Cache *>& iCache, map<int, Cache *>& dCache) {
+void BXMLCfg::copyCaches(map<int, Cache *>& icache_map, map<int, Cache *>& dcache_map) {
 	map<int, Cache *>::iterator it;
-	iCache.clear();
+
+	icache_map.clear();
 	for (it = _ins_cache.begin(); it != _ins_cache.end(); it++) {
-		iCache[it->first] = new Cache(*(it->second));
+		int index = it->first;
+		Cache *cache = it->second;
+		Cache *copy = new Cache(*cache);
+		icache_map.insert(pair<int, Cache*>(index, copy));
+		break;
 	}
-	dCache.clear();
+	
+	dcache_map.clear();
  	for (it = _dat_cache.begin(); it != _dat_cache.end(); it++) {
-		dCache[it->first] = new Cache(*(it->second));
+		int index = it->first;
+		Cache *cache = it->second;
+		Cache *copy = new Cache(*cache);
+		dcache_map.insert(pair<int, Cache*>(index, copy));
+		break;
 	}
 }

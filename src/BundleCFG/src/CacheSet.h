@@ -23,6 +23,10 @@ public:
 	 */
 	CacheSet(CacheSet &other);
 	/**
+	 * Destructor
+	 */
+	~CacheSet();
+	/**
 	 * Returns true if the address is present in the set.
 	 */
 	bool present(iaddr_t addr);

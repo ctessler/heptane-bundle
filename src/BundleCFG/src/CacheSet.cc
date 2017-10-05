@@ -16,6 +16,10 @@ CacheSet::CacheSet(CacheSet &other) : _cache(other._cache) {
 	}
 }
 
+CacheSet::~CacheSet() {
+	clear();
+}
+
 bool CacheSet::present(iaddr_t addr) {
 	map<uint32_t, CacheLine*>::iterator it;
 	for (it = _storage.begin(); it != _storage.end(); it++) {
