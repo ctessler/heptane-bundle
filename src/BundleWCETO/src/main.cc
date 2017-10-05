@@ -9,6 +9,7 @@ using namespace std;
 #include "BXMLCfg.h"
 #include "CFGReadWrite.h"
 #include "CFRFactory.h"
+#include "DOTFactory.h"
 
 int
 run_tests(void) {
@@ -73,7 +74,7 @@ main(int argc, char** argv) {
 		{0, 0, 0, 0}
 	};
 
-	string cfgfile, bcfg_file;
+	string cfgfile, bcfg_file, base;
 	unsigned int n_threads = 0;
 		
 	while (1) {
@@ -161,13 +162,23 @@ main(int argc, char** argv) {
 	CFGReader cfgr(cfg);
 	cfgr.read(bcfg_file);
 
+	base = bcfg_file.substr(0, bcfg_file.find(".cfg"));
+
+	/* Produce images for the Control Flow Graphs */
+	DOTFactory dot(cfg);
+	dot.setPath("test.dot");
+	//	dot.setCache(iCache[1]);
+	dot.produce();
+
 	map<int, Cache*>::iterator mit;
 	for (mit = ins_cache.begin(); mit != ins_cache.end(); ++mit) {
+		stringstream ss;
+
+	  
 		CFRFactory cfr_fact(cfg, *mit->second);
 		map<ListDigraph::Node, CFR*> cfrs = cfr_fact.produce();
 		break;
-	}	
-	
+	}
 
 	/* Cleanup */
 	for (mit = ins_cache.begin(); mit != ins_cache.end(); ++mit) {
