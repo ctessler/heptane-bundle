@@ -10,34 +10,8 @@ using namespace std;
 #include "CFGReadWrite.h"
 #include "CFRFactory.h"
 #include "DOTFactory.h"
-
-int
-run_tests(void) {
-	if (!CFR::test()) {
-		cout << "CFR failed its tests" << endl;
-		return -1;
-	}
-	cout << "CFR passed its tests" << endl;
-	return 0;
-	if (!FunctionCall::test()) {
-		cout << "FunctionCall failed its tests" << endl;
-		return -1;
-	}
-	cout << "FunctionCall passed its tests" << endl;
-	if (!CFG::test()) {
-		cout << "CFG failed its tests" << endl;
-		return -1;
-	}
-	cout << "CFG passed its tests" << endl;
-
-
-	if (!CFRFactory::test()) {
-		cout << "CFRFactory failed its tests" << endl;
-		return -1;
-	}
-	cout << "CFRFactory passed its tests" << endl;
-	return 0;
-}
+#include "JPGFactory.h"
+#include "DOTfromCFR.h"
 
 void
 usage(void) {
@@ -48,7 +22,6 @@ usage(void) {
 	     << "	-m/--threads #	Number of threads to use" << endl
 	     << "	-h/--help	this message" << endl
 	     << "	-t/--trace	enable tracing" << endl
-	     << "	--test		perform tests and exit " << endl
 	     << "	-v/--verbose	enable verbose output" << endl
 	     << endl;
 }
@@ -67,7 +40,6 @@ main(int argc, char** argv) {
 	static struct option long_options[] = {
 		{"CFG", required_argument, NULL, 'c'},
 		{"help", no_argument, &hflag, 1},
-		{"test", no_argument, &teflag, 1},
 		{"threads", required_argument, NULL, 'm'},
 		{"trace", no_argument, &tflag, 1},
 		{"verbose", no_argument, &vflag, 1},
@@ -115,9 +87,6 @@ main(int argc, char** argv) {
 		usage();
 		return -1;
 	}
-	if (teflag) {
-		return run_tests();
-	}
 
 	for (int i=optind; i < argc; i++) {
 		cfgfile = argv[i];
@@ -151,6 +120,9 @@ main(int argc, char** argv) {
 	xmlKeepBlanksDefault(1);
 	xmlXPathInit();
 
+	/* Get a base name */
+	base = bcfg_file.substr(0, bcfg_file.find(".cfg"));
+
 	/* Read the configuration file, setup the caches */
 	BXMLCfg xml_config(cfgfile);
 	map<int, Cache*> ins_cache, dat_cache;
@@ -162,22 +134,56 @@ main(int argc, char** argv) {
 	CFGReader cfgr(cfg);
 	cfgr.read(bcfg_file);
 
-	base = bcfg_file.substr(0, bcfg_file.find(".cfg"));
-
-	/* Produce images for the Control Flow Graphs */
-	DOTFactory dot(cfg);
-	dot.setPath("test.dot");
-	//	dot.setCache(iCache[1]);
-	dot.produce();
-
 	map<int, Cache*>::iterator mit;
 	for (mit = ins_cache.begin(); mit != ins_cache.end(); ++mit) {
 		stringstream ss;
 
-	  
-		CFRFactory cfr_fact(cfg, *mit->second);
+		CFG copy(cfg);
+		Cache *cache = mit->second;
+		
+		ss.str("");
+		ss << base << "-level-" << mit->first << ".dot";
+		DOTFactory dot(copy);
+		dot.setPath(ss.str());
+		dot.setCache(cache);
+		cout << "DOT : " << ss.str() << endl;
+		
+		/* Export CFRs to JPGs */
+		CFRFactory cfr_fact(copy, *cache);
 		map<ListDigraph::Node, CFR*> cfrs = cfr_fact.produce();
-		break;
+		map<ListDigraph::Node, CFR*>::iterator cfrit;
+		for (cfrit = cfrs.begin(); cfrit != cfrs.end(); ++cfrit) {
+			ss.str("");
+			ss << base << "-level-" << mit->first << "-cfr-";
+			CFR* cfr = cfrit->second;
+			ListDigraph::Node cfr_initial = cfr->getInitial();
+			ss << "0x" << hex << cfr->getAddr(cfr_initial) << dec
+			   << ".dot";
+
+			DOTfromCFR cfrdot(*cfr);
+			cfrdot.setPath(ss.str());
+			cfrdot.setCache(cache);
+			cfrdot.produce();
+
+			ListDigraph::Node cfg_initial = cfr->membership(cfr_initial);
+			dot.setColor(cfg_initial, "yellow");
+
+			JPGFactory cfrjpg(cfrdot);
+			cfrjpg.produce();
+		}
+		/* Produce images for the Control Flow Graphs */
+		dot.produce();
+
+		JPGFactory jpg(dot);
+		jpg.produce();
+		cout << "JPG : " << jpg.getPath() << endl;
+
+		/* To Do:
+		 * 2.) Export WCETs
+		 * 3.) Generation IDs
+		 * 4.) Longest Path Calculation
+		 * 5.) WCET Calculation
+		 */
 	}
 
 	/* Cleanup */

@@ -1,69 +1,5 @@
 #include "CFG.h"
 
-/**
- * CFG Class
- */
-bool
-CFG::test() {
-	CFG cfg;
-	ListDigraph::Node node = cfg.addNode();
-
-	cout << "FunctionCall should be unassigned : " << cfg.getFunction(node) << endl;
-	cfg.setFunction(node, FunctionCall("anonymous", 0x4000));
-	cout << "FunctionCall should be anonymous : " << cfg.getFunction(node) << endl;
-	FunctionCall f("rand", 0x4004);
-	cfg.setFunction(node, f);
-	cout << "FunctionCall should be f 0x4004 : " << cfg.getFunction(node) << endl;	
-
-	cout << "CFG has 1 node, no edges, a start of nothing" << endl;
-	cout << cfg << endl;
-
-	cfg.setAddr(node, 0x4008);
-	ListDigraph::Node g = cfg.find(0x4008, f);
-	cout << "g: " << cfg.stringNode(g) << endl;
-
-	node = cfg.addNode();
-	cfg.markHead(node);
-	cfg.setIters(node, 5);
-	cfg.setAddr(node, 0x6000);
-	FunctionCall s("search", 0x6000);
-	cfg.setFunction(node, s);
-
-	g = cfg.addNode();
-	cfg.setFunction(g, s);
-	cfg.setHead(g, node);
-	cfg.setAddr(g, 0x6004);
-	cfg.addArc(node, g);
-
-	cout << "CFG: " << cfg << endl;
-	ListDigraph::NodeIt nit(cfg);
-	for ( ; nit != INVALID; ++nit) {
-		cout << cfg.stringNode(nit) << endl;
-	}
-
-	g = cfg.addNode();
-	cfg.setAddr(g, 0x6000);
-	cfg.setFunction(g, FunctionCall("search", 0x5000));
-
-	list<ListDigraph::Node> nodes = cfg.find(0x6000);
-	list<ListDigraph::Node>::iterator node_it;
-	cout << "Two nodes should follow: " << endl;
-	for ( node_it = nodes.begin(); node_it != nodes.end(); node_it++) {
-		cout << cfg.stringNode(*node_it) << endl;
-	}
-
-	CFG copy(cfg);
-	cout << cfg << endl
-	     << copy << endl;
-
-	cfg.setInitial(g);
-	CFG copytwo(cfg);
-	cout << cfg << endl
-	     << copytwo << endl;
-	
-	return true;
-}
-
 CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this),
 	     _is_loop_head(*this), _loop_iters(*this)
 {
@@ -86,6 +22,7 @@ CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this),
 		ListDigraph::Node tnode = other_to_this[onode];
 
 		ListDigraph::Node ohead = other.getHead(onode);
+		setHead(tnode, INVALID);
 		if (ohead != INVALID) {
 			ListDigraph::Node thead = other_to_this[ohead];
 			setHead(tnode, thead);
@@ -170,7 +107,7 @@ CFG::setFunction(ListDigraph::Node node, FunctionCall const &fcall) {
 FunctionCall
 CFG::getFunction(ListDigraph::Node node) const {
 	if (!valid(node)) {
-		throw runtime_error("Invalid node");
+		throw runtime_error("CFG::getFunction Invalid node");
 	}
 	return _function[node];
 }
@@ -178,7 +115,7 @@ CFG::getFunction(ListDigraph::Node node) const {
 iaddr_t
 CFG::getAddr(ListDigraph::Node node) const {
 	if (!valid(node)) {
-		throw runtime_error("Invalid node");
+		throw runtime_error("CFG::getAddr Invalid node");
 	}
 	return _addr[node];
 }
@@ -188,10 +125,13 @@ CFG::setAddr(ListDigraph::Node node, iaddr_t addr) {
 }
 string
 CFG::stringAddr(ListDigraph::Node node) const {
-	stringstream ss;
+	if (node != INVALID && !valid(node)) {
+		throw runtime_error("CFG::stringAddr Invalid node");
+	}
 	if (node == INVALID) {
 		return "INVALID";
 	}
+	stringstream ss;
 	ss << "0x" << hex << getAddr(node) << dec;
 	return ss.str();
 }
@@ -229,13 +169,20 @@ CFG::find(iaddr_t addr) {
 ListDigraph::Node
 CFG::getHead(ListDigraph::Node node) const {
 	if (!valid(node)) {
-		return INVALID;
+		throw runtime_error("CFG::getHead Invalid head");
 	}
 	return _loop_head[node];
 }
 
 void
 CFG::setHead(ListDigraph::Node node, ListDigraph::Node head) {
+	if (node != INVALID && !valid(node)) {
+		throw runtime_error("CFG::setHead target node is invalid");
+	}
+	if (head != INVALID && !valid(head)) {
+		throw runtime_error("CFG::setHead head node is invalid");
+	}
+		
 	_loop_head[node] = head;
 }
 

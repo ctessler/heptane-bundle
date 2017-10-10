@@ -12,7 +12,7 @@ cfg_srcs+=DOTFactory.cc JPGFactory.cc PolicyLRU.cc
 cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
 cfg_objs=$(patsubst %.cc,../objs/%.o,$(cfg_srcs))
 
-lcl_srcs= main.cc CFRFactory.cc CFRFactory_test.cc CFR.cc CFR_test.cc
+lcl_srcs= main.cc CFRFactory.cc CFRFactory_test.cc CFR.cc
 lcl_srcs+=DOTfromCFR.cc
 lcl_objs=$(patsubst %.cc,../objs/%.o,$(lcl_srcs))
 

@@ -26,7 +26,7 @@ CFRFactoryTest::produceLeak()
 	ListDigraph::Node b = cfg.addNode();
 	cfg.addArc(a, b);
 	cfg.setAddr(b, 0x4004);
-	
+
 	CFRFactory fact(cfg, cache);
 	fact.produce();
 }

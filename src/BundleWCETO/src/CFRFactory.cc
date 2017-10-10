@@ -198,7 +198,7 @@ CFRFactory::addCFR(ListDigraph::Node cfg_node) {
 	}
 	new_cfr = new CFR(_cfg);
 	ListDigraph::Node initial = new_cfr->addNode(cfg_node);
-	new_cfr->setInitial(initial, cfg_node);
+	new_cfr->setInitial(initial);
 	new_cfr->setCache(&_cache);
 
 	_cfrs.insert(make_pair(cfg_node, new_cfr));

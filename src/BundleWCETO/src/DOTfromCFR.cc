@@ -245,8 +245,9 @@ DOTfromCFR::nodeDOTrow(ListDigraph::Node node) {
 		color = "#FFFFFF";
 	}
 
+	CFG *cfg = _cfr.getCFG();
 	string cfrs =
-		_cfr.stringAddr(_cfr.membership(node));
+		cfg->stringAddr(_cfr.membership(node));
 
 	string text = "\t\t<TR><TD BGCOLOR=\""
 		+ color + "\" PORT=\"" + label + "\">"

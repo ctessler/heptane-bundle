@@ -391,7 +391,6 @@ void BXMLCfg::copyCaches(map<int, Cache *>& icache_map, map<int, Cache *>& dcach
 		Cache *cache = it->second;
 		Cache *copy = new Cache(*cache);
 		icache_map.insert(pair<int, Cache*>(index, copy));
-		break;
 	}
 	
 	dcache_map.clear();
@@ -400,6 +399,5 @@ void BXMLCfg::copyCaches(map<int, Cache *>& icache_map, map<int, Cache *>& dcach
 		Cache *cache = it->second;
 		Cache *copy = new Cache(*cache);
 		dcache_map.insert(pair<int, Cache*>(index, copy));
-		break;
 	}
 }

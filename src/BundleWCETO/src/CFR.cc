@@ -4,14 +4,6 @@ ListDigraph::Node
 CFR::addNode(ListDigraph::Node from_cfg) {
 	ListDigraph::Node rv = CFG::addNode();
 
-	ListDigraph::Node cfg_head = _cfg.getHead(from_cfg);
-	FunctionCall call = _cfg.getFunction(from_cfg);
-
-	setAddr(rv, _cfg.getAddr(from_cfg));
-	markHead(rv, _cfg.isHead(from_cfg));
-	setIters(rv, _cfg.getIters(from_cfg));
-	setHead(rv, cfg_head);
-	setFunction(rv, call);
 	_to_cfg[rv] = from_cfg;
 	_from_cfg.insert(make_pair(from_cfg, rv));
 	
@@ -19,60 +11,122 @@ CFR::addNode(ListDigraph::Node from_cfg) {
 }
 
 ListDigraph::Node
-CFR::toCFG(ListDigraph::Node node) {
-	if (valid(node)) {
-		return _to_cfg[node];
+CFR::toCFG(ListDigraph::Node node) const {
+	if (!valid(node)) {
+		throw runtime_error("CFR::toCFG invalid CFR node");
 	}
-	return INVALID;
+	return _to_cfg[node];
 }
 
 ListDigraph::Node
-CFR::fromCFG(ListDigraph::Node node) {
-	if (valid(node)) {
-		map<ListDigraph::Node, ListDigraph::Node>::iterator mit;
-		mit = _from_cfg.find(node);
-		if (mit != _from_cfg.end()) {
-			return mit->second;
-		}
+CFR::fromCFG(ListDigraph::Node cfg_node) {
+	if (cfg_node == INVALID) {
+		return INVALID;
+	}
+	map<ListDigraph::Node, ListDigraph::Node>::iterator mit;
+	mit = _from_cfg.find(cfg_node);
+	if (mit != _from_cfg.end()) {
+		return mit->second;
 	}
 	return INVALID;
 }
 
 void
-CFR::setInitial(ListDigraph::Node cfr_initial, ListDigraph::Node cfg_initial) {
-	_membership = cfg_initial;
-	if (!valid(cfr_initial)) {
-		throw runtime_error("Invalid CFR initial node");
+CFR::setInitial(ListDigraph::Node cfr_initial) {
+	ListDigraph::Node cfg_initial = toCFG(cfr_initial);
+	if (cfr_initial == INVALID) {
+		throw runtime_error("CFR::setInitial invalid initial node in the CFG");
 	}
+	_membership = cfg_initial;
 	CFG::setInitial(cfr_initial);
+}
+
+/* Gets and sets the function associated with the instruction */
+FunctionCall
+CFR::getFunction(ListDigraph::Node node) const {
+	ListDigraph::Node cfg_node = toCFG(node);
+	return _cfg.getFunction(cfg_node);
+}
+
+iaddr_t
+CFR::getAddr(ListDigraph::Node node) const {
+	ListDigraph::Node cfg_node = toCFG(node);
+	return _cfg.getAddr(cfg_node);
+}
+
+string
+CFR::stringAddr(ListDigraph::Node node) const {
+	ListDigraph::Node cfg_node = toCFG(node);
+	return _cfg.stringAddr(cfg_node);
 }
 
 string
 CFR::stringNode(ListDigraph::Node node) const {
-	if (node == INVALID) {
-		return "INVALID";
-	}
-	stringstream ss;
-	ss << stringAddr(node);
-	if (isHead(node)) {
-		ss << "[" << getIters(node) << "]";
-	}
-	ss << "(" << getFunction(node) << ", ";
-
-	ListDigraph::Node head = getHead(node);
-	ss << "head:" << _cfg.stringAddr(head)
-	   << ")";
-	return ss.str();
+	ListDigraph::Node cfg_node = toCFG(node);
+	return _cfg.stringNode(cfg_node);
 }
+
+ListDigraph::Node
+CFR::find(iaddr_t addr, FunctionCall const &fcall) {
+	ListDigraph::Node cfg_node = _cfg.find(addr, fcall);
+	if (cfg_node == INVALID) {
+		return INVALID;
+	}
+	ListDigraph::Node cfr_node = fromCFG(cfg_node);
+	return cfr_node;
+}
+
+list<ListDigraph::Node>
+CFR::find(iaddr_t addr) {
+	list<ListDigraph::Node> cfg_nodes = _cfg.find(addr);
+	list<ListDigraph::Node> cfr_nodes;
+	for (list<ListDigraph::Node>::iterator lit = cfg_nodes.begin();
+	     lit != cfg_nodes.end(); ++lit) {
+		ListDigraph::Node cfr_node = fromCFG(*lit);
+		cfr_nodes.push_back(cfr_node);
+	}
+	return cfr_nodes;
+}
+
+ListDigraph::Node
+CFR::getHead(ListDigraph::Node node) const {
+	map<ListDigraph::Node, ListDigraph::Node>::const_iterator mit;
+	mit = _cfg_head.find(node);
+	if (mit != _cfg_head.end()) {
+		return mit->second;
+	}
+	return INVALID;
+}
+
+void
+CFR::setHead(ListDigraph::Node cfr_node, ListDigraph::Node cfg_node) {
+	_cfg_head.insert(make_pair(cfr_node, cfg_node));
+}
+
+bool
+CFR::isHead(ListDigraph::Node node) const {
+	ListDigraph::Node cfg_node = toCFG(node);
+	return _cfg.isHead(cfg_node);
+}
+
+unsigned int
+CFR::getIters(ListDigraph::Node head) const {
+	ListDigraph::Node cfg_node = toCFG(head);
+	return _cfg.getIters(cfg_node);
+}
+
+
 
 std::ostream&
 operator<< (std::ostream &stream, const CFR& cfr) {
 	ListDigraph::Node initial = cfr.getInitial();
+	ListDigraph::Node cfg_initial = cfr.toCFG(initial);
+
 	stream << "("
 	       << countNodes(cfr) << "v, "
 	       << countArcs(cfr) << "e, "
 	       << (initial == INVALID ?
-		   "INVALID" : cfr.stringNode(initial))
+		   "INVALID" : cfr.getCFG()->stringNode(cfg_initial))
 	       << ")";
 
 	return stream;
