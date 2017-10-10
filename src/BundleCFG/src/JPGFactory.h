@@ -1,25 +1,16 @@
 #ifndef JPGFACTORY_H
 #define JPGFACTORY_H
 
+#include <string>
 #include"DOTFactory.h"
+using namespace std;
 
 class JPGFactory {
 public:
-	JPGFactory(DOTFactory &dot) {
-		_src_path = dot.getPath();
-		setPath(dot.getPath());
-	};
-	/* Gets and sets the path */
-	void setPath(string path) {
-		_path = path;
-		size_t found = _path.rfind(".dot");
-		if (found != string::npos) {
-			_path.replace(found, 4, ".jpg");
-		} else {
-			_path += ".jpg";
-		}
-	}
-	string getPath() { return _path; }
+	JPGFactory(DOTFactory &dot);
+	JPGFactory(string path);
+	void setPath(string path);
+	string getPath();
 	void produce();
 private:
 	string _src_path;

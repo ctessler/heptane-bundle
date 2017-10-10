@@ -12,6 +12,7 @@ using namespace std;
 #include "DOTFactory.h"
 #include "JPGFactory.h"
 #include "DOTfromCFR.h"
+#include "DOTfromCFRG.h"
 
 void
 usage(void) {
@@ -171,6 +172,17 @@ main(int argc, char** argv) {
 			JPGFactory cfrjpg(cfrdot);
 			cfrjpg.produce();
 		}
+		/* Produce the images for the Control Flow Region Graph */
+		DOTfromCFRG cfrg_dot(*(cfr_fact.getCFRG()));
+		ss.str(""); ss << base << "-level-" << mit->first << "-cfrg.dot";
+		cfrg_dot.setPath(ss.str());
+		cfrg_dot.produce(4);
+
+		string path = cfrg_dot.getPath();
+		JPGFactory cfrg_jpg(path);
+		cfrg_jpg.produce();
+
+		
 		/* Produce images for the Control Flow Graphs */
 		dot.produce();
 

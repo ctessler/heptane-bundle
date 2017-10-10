@@ -1,6 +1,8 @@
 #ifndef DOTFROMCFRG_H
 #define DOTFROMCFRG_H
 
+#include "CFRG.h"
+
 class DOTfromCFRG {
 public:
 	DOTfromCFRG(CFRG &cfrg) : _cfrg(cfrg) { }

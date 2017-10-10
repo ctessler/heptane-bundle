@@ -79,30 +79,36 @@ DOTfromCFR::produce() {
 }
 
 void
-DOTfromCFR::loopDOT(ListDigraph::Node head, ofstream &os,
+DOTfromCFR::loopDOT(ListDigraph::Node cfr_head, ofstream &os,
 		    stack<ListDigraph::Node> &calls,
 		    stack<ListDigraph::Node> &subsq) {
 	stack<ListDigraph::Node> kids;
 	stack<string> edges;
 
 	string pre = "loopDOT ";
-	if (visited(head)) {
+	if (visited(cfr_head)) {
 		return;
 	}
-
+	ListDigraph::Node cfg_head = _cfr.toCFG(cfr_head);
+	CFG *cfg = _cfr.getCFG();
+	os << "subgraph cluster_loop_" << cfg->stringAddr(cfg_head) << "{" << endl
+	   << "graph [label =\"loop [" << cfg->getIters(cfg_head) << "]\"];" << endl;
+	
+	#if 0
 	os << "subgraph cluster_loop_" << _cfr.stringAddr(head) << "{" << endl
 	   << "graph [label =\"loop [" << _cfr.getIters(head) << "]\"];" << endl;
+	#endif
 
-	kids.push(head);
+	kids.push(cfr_head);
 	while (!kids.empty()) {
 		ListDigraph::Node u = kids.top(); kids.pop();
 		if (visited(u)) {
 			continue;
 		}
-		_debug << _indent << pre << "loop " << _cfr.stringAddr(head)
+		_debug << _indent << pre << "loop " << _cfr.stringAddr(cfr_head)
 		       << " node " << _cfr.stringNode(u) << endl;
 
-		if (u != head && _cfr.isHead(u)) {
+		if (u != cfr_head && _cfr.isHead(u)) {
 			/*
 			 * Case: An embedded loop starting with u
 			 * If u is a loop header embedded in this
@@ -112,17 +118,19 @@ DOTfromCFR::loopDOT(ListDigraph::Node head, ofstream &os,
 			loopDOT(u, os, calls, subsq);
 			continue;
 		}
-		#if 0
-		ListDigraph::Node inner_head = _cfr.toCFG(_cfr.getHead(u));
-		#endif
-		ListDigraph::Node inner_head = _cfr.getHead(u);
-		if (u != head && inner_head != head) {
-			if (inner_head != INVALID && !visited(inner_head)) {
+		ListDigraph::Node cfg_inner_head = cfg->getHead(cfg_head);
+		ListDigraph::Node cfr_inner_head = INVALID;
+		if (cfg_inner_head != INVALID) {
+			cfr_inner_head = _cfr.fromCFG(cfg_inner_head);
+		}
+
+		if (u != cfr_head && cfr_inner_head != cfr_head) {
+			if (cfr_inner_head != INVALID && !visited(cfr_inner_head)) {
 				/*
 				 * Case: A node with an innermost header that
 				 * is not head. Call recursively with its head.
 				 */
-				loopDOT(inner_head, os, calls, subsq);
+				loopDOT(cfr_inner_head, os, calls, subsq);
 			}
 			if (!visited(u)) {
 				/*
@@ -144,7 +152,7 @@ DOTfromCFR::loopDOT(ListDigraph::Node head, ofstream &os,
 
 		while (!followers.empty()) {
 			ListDigraph::Node bb_next = followers.top(); followers.pop();
-			_debug << _indent << pre << "loop " << _cfr.stringAddr(head)
+			_debug << _indent << pre << "loop " << _cfr.stringAddr(cfr_head)
 			       << " pushing edge " << _cfr.stringNode(u) << " --> "
 			       << _cfr.stringNode(bb_next) << endl;
 			edges.push(edgeDOT(u, bb_last, bb_next, bb_next));

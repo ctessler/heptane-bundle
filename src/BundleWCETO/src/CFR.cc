@@ -90,12 +90,18 @@ CFR::find(iaddr_t addr) {
 
 ListDigraph::Node
 CFR::getHead(ListDigraph::Node node) const {
+	ListDigraph::Node cfg_node = toCFG(node);
+	ListDigraph::Node cfg_head = _cfg.getHead(cfg_node);
+	return cfg_head;
+
+	#if 0
 	map<ListDigraph::Node, ListDigraph::Node>::const_iterator mit;
 	mit = _cfg_head.find(node);
 	if (mit != _cfg_head.end()) {
 		return mit->second;
 	}
 	return INVALID;
+	#endif
 }
 
 void
