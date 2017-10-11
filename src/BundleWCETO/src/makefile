@@ -13,7 +13,7 @@ cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
 cfg_objs=$(patsubst %.cc,../objs/%.o,$(cfg_srcs))
 
 lcl_srcs= main.cc CFRFactory.cc CFR.cc DOTfromCFRG.cc
-lcl_srcs+=DOTfromCFR.cc
+lcl_srcs+=DOTfromCFR.cc WCETOFactory.cc
 lcl_objs=$(patsubst %.cc,../objs/%.o,$(lcl_srcs))
 
 all: $(tgt) ../objs test

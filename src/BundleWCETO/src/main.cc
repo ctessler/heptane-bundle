@@ -13,6 +13,7 @@ using namespace std;
 #include "JPGFactory.h"
 #include "DOTfromCFR.h"
 #include "DOTfromCFRG.h"
+#include "WCETOFactory.h"
 
 void
 usage(void) {
@@ -172,6 +173,12 @@ main(int argc, char** argv) {
 			JPGFactory cfrjpg(cfrdot);
 			cfrjpg.produce();
 		}
+		/* Drop the WCET table per cache level */
+		WCETOFactory wceto(*cfr_fact.getCFRG());
+		ss.str(""); ss << base << "-level-" << mit->first << ".wcet";
+		wceto.setPath(ss.str());
+		wceto.produce();
+		
 		/* Produce the images for the Control Flow Region Graph */
 		DOTfromCFRG cfrg_dot(*(cfr_fact.getCFRG()));
 		ss.str(""); ss << base << "-level-" << mit->first << "-cfrg.dot";
@@ -182,7 +189,6 @@ main(int argc, char** argv) {
 		JPGFactory cfrg_jpg(path);
 		cfrg_jpg.produce();
 
-		
 		/* Produce images for the Control Flow Graphs */
 		dot.produce();
 
@@ -191,7 +197,6 @@ main(int argc, char** argv) {
 		cout << "JPG : " << jpg.getPath() << endl;
 
 		/* To Do:
-		 * 2.) Export WCETs
 		 * 3.) Generation IDs
 		 * 4.) Longest Path Calculation
 		 * 5.) WCET Calculation
@@ -208,3 +213,4 @@ main(int argc, char** argv) {
 	
 	return 0;
 }
+
