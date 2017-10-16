@@ -13,7 +13,7 @@ using namespace std;
 #include "JPGFactory.h"
 #include "DOTfromCFR.h"
 #include "DOTfromCFRG.h"
-#include "WCETOFactory.h"
+#include "EntryFactory.h"
 
 void
 usage(void) {
@@ -144,7 +144,9 @@ main(int argc, char** argv) {
 		Cache *cache = mit->second;
 		
 		ss.str("");
-		ss << base << "-level-" << mit->first << ".dot";
+		ss << base << "-level-" << mit->first;
+		string pre = ss.str();
+		ss.str("");  ss << pre << ".dot";
 		DOTFactory dot(copy);
 		dot.setPath(ss.str());
 		dot.setCache(cache);
@@ -156,7 +158,7 @@ main(int argc, char** argv) {
 		map<ListDigraph::Node, CFR*>::iterator cfrit;
 		for (cfrit = cfrs.begin(); cfrit != cfrs.end(); ++cfrit) {
 			ss.str("");
-			ss << base << "-level-" << mit->first << "-cfr-";
+			ss << pre << "-cfr-";
 			CFR* cfr = cfrit->second;
 			ListDigraph::Node cfr_initial = cfr->getInitial();
 			ss << "0x" << hex << cfr->getAddr(cfr_initial) << dec
@@ -167,23 +169,24 @@ main(int argc, char** argv) {
 			cfrdot.setCache(cache);
 			cfrdot.produce();
 
-			ListDigraph::Node cfg_initial = cfr->membership(cfr_initial);
+			ListDigraph::Node cfg_initial =
+				cfr->membership(cfr_initial);
 			dot.setColor(cfg_initial, "yellow");
 
 			JPGFactory cfrjpg(cfrdot);
 			cfrjpg.produce();
 		}
 		/* Drop the WCET table per cache level */
-		WCETOFactory wceto(*cfr_fact.getCFRG());
-		ss.str(""); ss << base << "-level-" << mit->first << ".wcet";
-		wceto.setPath(ss.str());
-		wceto.produce();
+		EntryFactory entries(*cfr_fact.getCFRG());
+		ss.str(""); ss << pre << ".entry";
+		entries.setPath(ss.str());
+		entries.produce();
 		
 		/* Produce the images for the Control Flow Region Graph */
 		DOTfromCFRG cfrg_dot(*(cfr_fact.getCFRG()));
-		ss.str(""); ss << base << "-level-" << mit->first << "-cfrg.dot";
+		ss.str(""); ss << pre << "-cfrg.dot";
 		cfrg_dot.setPath(ss.str());
-		cfrg_dot.produce(4);
+		cfrg_dot.produce(n_threads);
 
 		string path = cfrg_dot.getPath();
 		JPGFactory cfrg_jpg(path);
@@ -213,4 +216,3 @@ main(int argc, char** argv) {
 	
 	return 0;
 }
-

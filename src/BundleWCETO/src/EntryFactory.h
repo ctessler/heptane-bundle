@@ -1,11 +1,11 @@
-#ifndef WCETO_FACTORY_H
-#define WCETO_FACTORY_H
+#ifndef ENTRY_FACTORY_H
+#define ENTRY_FACTORY_H
 
 #include "CFRG.h"
 
-class WCETOFactory {
+class EntryFactory {
 public:
-	WCETOFactory(CFRG &cfrg) : _cfrg(cfrg) { }
+	EntryFactory(CFRG &cfrg) : _cfrg(cfrg) { }
 	void setPath(string path) {
 		_path = path;
 	}
@@ -18,4 +18,4 @@ private:
 	string _path;
 };
 
-#endif /* WCETO_FACTORY_H */
+#endif /* ENTRY_FACTORY_H */

@@ -1,7 +1,7 @@
-#include "WCETOFactory.h"
+#include "EntryFactory.h"
 
 void
-WCETOFactory::produce() {
+EntryFactory::produce() {
 	ofstream ofile(_path.c_str());
 	ofile << hex;
 	ListDigraph::NodeIt nit(_cfrg);
