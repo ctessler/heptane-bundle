@@ -19,12 +19,14 @@ DOTfromCFR::produce() {
 		FunctionCall call = _cfr.getFunction(entry);
 		_debug << _indent << pre << "new call: " << call << endl;
 		if (visited(entry)) {
-			_debug << _indent << pre << "previously visited: " << call << endl;
+			_debug << _indent << pre << "previously visited: "
+			       << call << endl;
 			/* This function has been seen */
 			continue;
 		}
 		stringstream callstream;
-		callstream << call.getName() << "_0x" << hex << call.getCallSite() << dec;
+		callstream << call.getName() << "_0x" << hex
+			   << call.getCallSite() << dec;
 		string callstr = callstream.str();
 		dot << "subgraph cluster_" << callstr << " {" << endl
 		    << "\tgraph [label = \"" << call << "\"];" << endl;
@@ -44,22 +46,32 @@ DOTfromCFR::produce() {
 			}
 			visit(bb_start, true);
 
-			/* Print this node, and all entries that are in the same BB */
-			_debug << _indent << pre << "calling nodeDOT " << _cfr << endl;
+			/* 
+			 * Print this node, and all entries that are in the 
+			 * same BB
+			 */
+			_debug << _indent << pre << "calling nodeDOT " << _cfr
+			       << endl;
 			ListDigraph::Node bb_last = nodeDOT(dot, bb_start);
 
-			/* Find the instructions immediately following the last one */
+			/* 
+			 * Find the instructions immediately following the last 
+			 * one
+			 */
 			stack<ListDigraph::Node> followers;
 			succ(bb_last, followers);
 
 			while (!followers.empty()) {
-				ListDigraph::Node bb_next = followers.top(); followers.pop();
+				ListDigraph::Node bb_next = followers.top();
+				followers.pop();
 				_debug << _indent << pre << "pushing edge"
 				       << _cfr.stringNode(bb_start) << " --> "
 				       << _cfr.stringNode(bb_next) << endl;
 
-				edges.push(edgeDOT(bb_start, bb_last, bb_next, bb_next));
-				if (_cfr.getFunction(bb_start) != _cfr.getFunction(bb_next)) {
+				edges.push(edgeDOT(bb_start, bb_last, bb_next,
+						   bb_next));
+				if (_cfr.getFunction(bb_start) !=
+				    _cfr.getFunction(bb_next)) {
 					/* next is a function entry point */
 					calls.push(bb_next);
 					continue;
@@ -67,7 +79,8 @@ DOTfromCFR::produce() {
 				subsq.push(bb_next);
 			}
 		}
-		dot << "} // end function cluster_" << callstr << endl; // function cluster is done
+		// function cluster is done		
+		dot << "} // end function cluster_" << callstr << endl;
 	}
 
 	while (!edges.empty()) {
@@ -92,13 +105,9 @@ DOTfromCFR::loopDOT(ListDigraph::Node cfr_head, ofstream &os,
 	ListDigraph::Node cfg_head = _cfr.toCFG(cfr_head);
 	CFG *cfg = _cfr.getCFG();
 	os << "subgraph cluster_loop_" << cfg->stringAddr(cfg_head) << "{" << endl
-	   << "graph [label =\"loop [" << cfg->getIters(cfg_head) << "]\"];" << endl;
+	   << "graph [label =\"loop [" << cfg->getIters(cfg_head) << "]\"];"
+	   << endl;
 	
-	#if 0
-	os << "subgraph cluster_loop_" << _cfr.stringAddr(head) << "{" << endl
-	   << "graph [label =\"loop [" << _cfr.getIters(head) << "]\"];" << endl;
-	#endif
-
 	kids.push(cfr_head);
 	while (!kids.empty()) {
 		ListDigraph::Node u = kids.top(); kids.pop();
@@ -125,7 +134,8 @@ DOTfromCFR::loopDOT(ListDigraph::Node cfr_head, ofstream &os,
 		}
 
 		if (u != cfr_head && cfr_inner_head != cfr_head) {
-			if (cfr_inner_head != INVALID && !visited(cfr_inner_head)) {
+			if (cfr_inner_head != INVALID &&
+			    !visited(cfr_inner_head)) {
 				/*
 				 * Case: A node with an innermost header that
 				 * is not head. Call recursively with its head.
@@ -151,10 +161,12 @@ DOTfromCFR::loopDOT(ListDigraph::Node cfr_head, ofstream &os,
 		succ(bb_last, followers);
 
 		while (!followers.empty()) {
-			ListDigraph::Node bb_next = followers.top(); followers.pop();
-			_debug << _indent << pre << "loop " << _cfr.stringAddr(cfr_head)
-			       << " pushing edge " << _cfr.stringNode(u) << " --> "
-			       << _cfr.stringNode(bb_next) << endl;
+			ListDigraph::Node bb_next = followers.top();
+			followers.pop();
+			_debug << _indent << pre << "loop "
+			       << _cfr.stringAddr(cfr_head)
+			       << " pushing edge " << _cfr.stringNode(u)
+			       << " --> " << _cfr.stringNode(bb_next) << endl;
 			edges.push(edgeDOT(u, bb_last, bb_next, bb_next));
 			if (_cfr.getFunction(u) != _cfr.getFunction(bb_next)) {
 				/* next is a function entry point */
@@ -179,7 +191,8 @@ DOTfromCFR::nodeDOT(ofstream &os, ListDigraph::Node node) {
 	string pre = "nodeDOT ";
 
 	int count = countOutArcs(_cfr, last);
-	_debug << _indent << pre << _cfr.stringNode(node) << " out arcs " << count << endl;
+	_debug << _indent << pre << _cfr.stringNode(node) << " out arcs "
+	       << count << endl;
 	while (countOutArcs(_cfr, last) == 1) {
 		ListDigraph::OutArcIt a(_cfr, last);
 		ListDigraph::Node next = _cfr.runningNode(a);
@@ -198,7 +211,8 @@ DOTfromCFR::nodeDOT(ofstream &os, ListDigraph::Node node) {
 		}
 		if (countInArcs(_cfr, next) > 1) {
 			/* Multiple ingressing egdes */
-			_debug << "preserved next node has an incoming edge" << endl;
+			_debug << "preserved next node has an incoming edge"
+			       << endl;
 			break;
 		}
 		_debug << "contracted" << endl;

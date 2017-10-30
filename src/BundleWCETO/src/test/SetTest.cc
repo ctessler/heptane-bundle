@@ -118,3 +118,23 @@ SetTest::node()
 	print_node_set(basic_set, dists);
 }
 
+
+static void
+addNode(ListDigraph &g, set<ListDigraph::Node> &s) {
+	ListDigraph::NodeIt nit(g);
+	ListDigraph::Node n = nit;
+	s.insert(n);
+}
+
+void
+SetTest::stdSet() {
+	set<ListDigraph::Node> myset;
+
+	ListDigraph g;
+	g.addNode();
+	g.addNode();
+	g.addNode();
+
+	addNode(g, myset);
+	cout << "SetTest::stdSet added a node" << endl;
+}

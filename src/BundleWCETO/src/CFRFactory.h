@@ -10,20 +10,6 @@ using namespace std;
 
 class CFRFactory {
 public:
-	/**
-	 * Converts a CFG (with CFR annotations) into CFRs
-	 *
-	 * The CFRs are themselves subsets of the original CFG, connectivity between 
-	 *
-	 * @param[in] cfg the LemonCFG which has had getCFRmembership() called on it
-	 *
-	 * @return <node -> CFR> where the node's belong to cfg, and
-	 * the CFRs are new LemonCFGs
-	 *
-	 * XXX-ct remove
-	 */
-	static map<ListDigraph::Node, LemonCFG*> separateCFRs(LemonCFG &cfg);
-
 	CFRFactory(CFG &cfg, Cache &cache) : _cfg(cfg), _cache(cache),
 		_initial(cfg), _visited(cfg) {
 		cfrg = new CFRG(cfg);
@@ -36,8 +22,7 @@ public:
 	map<ListDigraph::Node, CFR*> produce();
 	/* Gets the CFRG a product of produce */ 
 	CFRG *getCFRG() { return cfrg; }
-
-	static bool test();
+	bool debugOn = false;
 private:
 	CFG &_cfg;
 	Cache &_cache;

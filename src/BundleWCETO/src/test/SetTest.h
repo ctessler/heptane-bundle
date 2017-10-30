@@ -16,6 +16,7 @@ class SetTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST(basic);
 	CPPUNIT_TEST(reverse);
 	CPPUNIT_TEST(node);
+	CPPUNIT_TEST(stdSet);
 	CPPUNIT_TEST_SUITE_END();
 public:
 	void setUp();
@@ -24,6 +25,7 @@ public:
 	void basic();
 	void reverse();
 	void node();
+	void stdSet();
 };
 
 #endif /* SET_TEST_H */

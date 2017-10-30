@@ -177,13 +177,16 @@ main(int argc, char** argv) {
 			cfrjpg.produce();
 		}
 		/* Drop the WCET table per cache level */
-		EntryFactory entries(*cfr_fact.getCFRG());
+		CFRG *cfrg = cfr_fact.getCFRG();
+		EntryFactory entries(*cfrg);
 		ss.str(""); ss << pre << ".entry";
 		entries.setPath(ss.str());
 		entries.produce();
+
+		cfrg->order();
 		
 		/* Produce the images for the Control Flow Region Graph */
-		DOTfromCFRG cfrg_dot(*(cfr_fact.getCFRG()));
+		DOTfromCFRG cfrg_dot(*cfrg);
 		ss.str(""); ss << pre << "-cfrg.dot";
 		cfrg_dot.setPath(ss.str());
 		cfrg_dot.produce(n_threads);

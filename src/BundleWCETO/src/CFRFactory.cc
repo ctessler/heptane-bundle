@@ -26,15 +26,19 @@ CFRFactory::produce() {
 	next_cfrs.push_front(initial);
 	do {
 		visitClear();
-		ListDigraph::Node cursor = next_cfrs.front(); next_cfrs.pop_front();
+		ListDigraph::Node cursor = next_cfrs.front();
+		next_cfrs.pop_front();
+
 		CFR *cfr = addCFR(cursor);
 		_initial[cursor] = true;
 		starter[cursor] = true;
 		ListDigraph::Node cfr_node = cfrg->addNode(cfr);
 		
 		Cache copy(_cache);
-		list<ListDigraph::Node> xflicts = addToConflicts(cursor, cursor, copy);
-		for (list<ListDigraph::Node>::iterator lit = xflicts.begin(); lit != xflicts.end(); lit++) {
+		list<ListDigraph::Node> xflicts =
+			addToConflicts(cursor, cursor, copy);
+		for (list<ListDigraph::Node>::iterator lit = xflicts.begin();
+		     lit != xflicts.end(); lit++) {
 			CFR *next_cfr = addCFR(*lit);
 			
 			ListDigraph::Node next_cfr_node = cfrg->addNode(next_cfr);
@@ -52,10 +56,8 @@ CFRFactory::produce() {
 	CFR *cfr = getCFR(initial);
 	cfrg->setInitialCFR(cfr);
 
-	try {
+	if (debugOn) {
 		cout << _debug.str();
-	} catch(exception &except) {
-		cout << except.what() << endl;
 	}
 	return _cfrs;
 }
@@ -121,7 +123,8 @@ CFRFactory::addToConflicts(ListDigraph::Node cfr_initial,
 	_debug << pre << _cfg.stringNode(node) << endl;
 
 	if (conflicts(node, cache)) {
-		_debug << pre << _cfg.stringNode(node) << " conflicts, stopping" << endl;
+		_debug << pre << _cfg.stringNode(node) << " conflicts, stopping"
+		       << endl;
 		/* Node is a conflict, time to stop */
 		xflicts.push_back(node);
 		return xflicts;
@@ -136,7 +139,8 @@ CFRFactory::addToConflicts(ListDigraph::Node cfr_initial,
 	_debug << pre << _cfg.stringNode(node) << " in CFR " << *cfr << endl;
 	visit(node);
 
-	ListDigraph::Node cfr_node = cfr->find(_cfg.getAddr(node), _cfg.getFunction(node));
+	ListDigraph::Node cfr_node = cfr->find(_cfg.getAddr(node),
+					       _cfg.getFunction(node));
 	if (cfr_node == INVALID) {
 		throw runtime_error("Could not find node in CFR");
 	}
@@ -144,11 +148,13 @@ CFRFactory::addToConflicts(ListDigraph::Node cfr_initial,
 	for (ListDigraph::OutArcIt a(_cfg, node); a != INVALID; ++a) {
 		ListDigraph::Node kid = _cfg.runningNode(a);
 		if (visited(kid)) {
-			_debug << pre << " skipped node " << _cfg.stringNode(kid) << " already visited" << endl;
+			_debug << pre << " skipped node " << _cfg.stringNode(kid)
+			       << " already visited" << endl;
 			continue;
 		}
 		if (_initial[kid]) {
-			_debug << pre << " skipped node " << _cfg.stringNode(kid) << " is initial" << endl;
+			_debug << pre << " skipped node " << _cfg.stringNode(kid)
+			       << " is initial" << endl;
 			/* This child begins a conflict free region */
 			xflicts.push_back(kid);
 			continue;
@@ -159,13 +165,16 @@ CFRFactory::addToConflicts(ListDigraph::Node cfr_initial,
 		ListDigraph::Node cfr_kid = cfr->addNode(kid);
 		cfr->addArc(cfr_node, cfr_kid);
 		
-		_debug << pre << "added " << _cfg.stringNode(kid) << " to CFR " << *cfr << endl;
+		_debug << pre << "added " << _cfg.stringNode(kid) << " to CFR "
+		       << *cfr << endl;
 
-		list<ListDigraph::Node> mflicts = addToConflicts(cfr_initial, kid, cache);
+		list<ListDigraph::Node> mflicts = addToConflicts(cfr_initial, kid,
+								 cache);
 		xflicts.insert(xflicts.end(), mflicts.begin(), mflicts.end());
 	}
 
-	for (list<ListDigraph::Node>::iterator lit = xflicts.begin(); lit != xflicts.end(); ++lit) {
+	for (list<ListDigraph::Node>::iterator lit = xflicts.begin();
+	     lit != xflicts.end(); ++lit) {
 		_debug << pre << " returning: " << _cfg.stringNode(*lit) << endl;
 	}
 		

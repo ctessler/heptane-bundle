@@ -6,7 +6,7 @@ LDFLAGS=-lemon $(shell xml2-config --libs)
 CXXFLAGS=-DGLIBCXX_FORCE_NEW -O0 -g -std=c++11 $(INCLUDE) $(LDFLAGS)
 
 cod=../../BundleCFG/src
-cfg_srcs= BXMLCfg.cc CFG.cc CFGReadWrite.cc Cache.cc
+cfg_srcs= BXMLCfg.cc CFG.cc CFGReadWrite.cc Cache.cc CFRG.cc
 cfg_srcs+=CacheLine.cc CacheSet.cc FunctionCall.cc
 cfg_srcs+=DOTFactory.cc JPGFactory.cc PolicyLRU.cc
 cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
