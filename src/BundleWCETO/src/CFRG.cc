@@ -30,11 +30,10 @@ CFRG::order() {
 	ListDigraph::Node source = getInitial();
 	ListDigraph::Node target = getTerminal();
 
-	//dijk(source, target, distances, prev);
 	_order(source, target, distances, prev);
 	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
 		ListDigraph::Node node = nit;
-		_gen[node] = distances[node];
+		_gen[node] = -1 * distances[node];
 	}
 }
 
@@ -307,7 +306,7 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 		if (isHead(cfrg_cursor)) {
 			interiorLoopOrder(cfrg_cursor, pqueue, distances, prev);
 		}
-		    
+
 		for (ListDigraph::OutArcIt ait(*this, cfrg_cursor);
 		     ait != INVALID; ++ait) {
 			ListDigraph::Node tgt = ListDigraph::target(ait);
@@ -315,6 +314,15 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 			if (pit == pqueue.end()) {
 				/* This node has been handled */
 				continue; 
+			}
+			CFR *cfr = findCFR(tgt);
+			if (cfr->getHead(cfr->getInitial()) != cfg_head) {
+				cout << _pre << endl << _indent << "    "
+				     << "skipping " << cfr_desc(*this, tgt)
+				     << endl;
+				/* Not in this loop */
+				succ.insert(tgt);
+				continue;
 			}
 			int arc_cost = -1; /* Constant */
 
@@ -325,7 +333,8 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 				distances[tgt] = alt;
 				pqueue.insert(tgt);
 				prev[tgt] = cfrg_cursor;
-				cout << "_order updated node: "
+				cout << _pre << endl << _indent << "    "
+				     << "updated node "
 				     << cfr_desc(*this, tgt) << " dist: "
 				     << distances[tgt] << endl;
 			}
@@ -401,10 +410,8 @@ CFRG::smallestInLoop(ListDigraph::Node cfrg_node, pqueue_t &pqueue) {
 	if (it == pqueue.end()) {
 		cfrg_next_node = INVALID;
 	}
-	#if 0
 	cout << _pre << "returning "
 	     << cfr_desc(*this, cfrg_next_node) << endl;
-	#endif
 	return cfrg_next_node;
 }
 
