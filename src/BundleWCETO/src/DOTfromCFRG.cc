@@ -22,19 +22,6 @@ CFRDOT(CFR &cfr, int generation, unsigned int threads) {
 	ListDigraph::Node cfg_node = cfr.toCFG(cfr_initial);
 
 	stringstream label, node;
-	#if 0
-	label << "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">"
-	      << endl << "\t"
-	      << "<TR><TD COLSPAN=\"2\">CFR</TD></TR>" << endl
-	      << "<TR><TD>" << cfg->stringAddr(cfg_node) << "</TD>"
-	      << "<TD>" << cfg->getFunction(cfg_node) << "</TD></TR>"
-	      << "<TR><TD> Threads:" << threads << "</TD>"
-	      << "<TD>WCET+O: " << cfr.wcet(threads) << "</TD></TR>"
-	      << "<TR><TD>isHead: " << cfr.isHead(cfr_initial) << "</TD>"
-	      << "<TD>Head: " << cfg->stringNode(cfr.getHead(cfr_initial))
-	      << "</TD></TR>"
-	      << "</TABLE>>";
-	#endif
 	label << "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">"
 	      << endl << "\t"
 	      << "<TR><TD COLSPAN=\"2\">CFR: " << cfg->stringAddr(cfg_node)

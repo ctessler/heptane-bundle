@@ -91,8 +91,6 @@ public:
 	void setIters(ListDigraph::Node head, unsigned int iters) {
 		throw runtime_error("CFG::setIters cannot be called on a CFR node");
 	}
-	
-
 
 	string stringNode(ListDigraph::Node node) const;
 	friend std::ostream &operator<< (std::ostream &stream, const CFR& cfr);

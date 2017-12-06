@@ -13,6 +13,7 @@ CFRFactory::~CFRFactory() {
 map<ListDigraph::Node, CFR*>
 CFRFactory::produce() {
 	_debug.str("");
+	string prefix = "CFRFactory::produce ";
 	visitClear();
 	markLoops();
 
@@ -28,11 +29,16 @@ CFRFactory::produce() {
 		visitClear();
 		ListDigraph::Node cursor = next_cfrs.front();
 		next_cfrs.pop_front();
+		_debug << prefix << _cfg.stringNode(cursor) << endl;
 
 		CFR *cfr = addCFR(cursor);
+		_debug << prefix << _cfg.stringNode(cursor) << " has CFR "
+		       << cfr << endl; 
 		_initial[cursor] = true;
 		starter[cursor] = true;
 		ListDigraph::Node cfr_node = cfrg->addNode(cfr);
+		_debug << prefix << _cfg.stringNode(cursor) << " has node "
+		       << cfrg->id(cfr_node) << endl;
 		
 		Cache copy(_cache);
 		list<ListDigraph::Node> xflicts =
@@ -56,9 +62,7 @@ CFRFactory::produce() {
 	CFR *cfr = getCFR(initial);
 	cfrg->setInitialCFR(cfr);
 
-	if (debugOn) {
-		cout << _debug.str();
-	}
+	cout << _debug.str();
 	return _cfrs;
 }
 

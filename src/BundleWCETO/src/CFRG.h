@@ -43,18 +43,7 @@ public:
 	ListDigraph::Node addNode() {
 		throw runtime_error("Cannot add a node to a CFRG without a CFR");
 	}
-	ListDigraph::Node addNode(CFR *cfr) {
-		map<CFR*, ListDigraph::Node>::iterator mit =
-			_from_cfr_to_node.find(cfr);
-		if (mit != _from_cfr_to_node.end()) {
-			return mit->second;
-		}
-		ListDigraph::Node rv = ListDigraph::addNode();
-		_from_cfr_to_node[cfr] = rv;
-		_from_node_to_cfr[rv] = cfr;
-		_gen[rv] = 0;
-		return rv;
-	}
+	ListDigraph::Node addNode(CFR *cfr);
 	ListDigraph::Node findNode(CFR *cfr) {
 		return _from_cfr_to_node[cfr];
 	}
@@ -96,7 +85,30 @@ public:
 		return INVALID;
 	}
 	bool isHead(ListDigraph::Node cfrg_node);
+	/**
+	 * Returns true if node a and node b share the same innermost
+	 * loop head. If a and b have no innermost loop head, the
+	 * result is true.
+	 *
+	 * @return true if a and b share the same innermost loop head.
+	 */
+	bool sameLoopNode(ListDigraph::Node a, ListDigraph::Node b);
+	bool sameLoop(CFR *a, CFR *b);
+	/**
+	 * Returns true if the cfr is in the loop started by the heading cfr
+	 */
+	bool inLoop(CFR* head, CFR* cfr);
+	
 
+	/**
+	 * An expensive operation, this finds the CFR based on the
+	 * node from the *CFG*
+	 *
+	 * @param[in] node the node from the CFG that identifies a CFR
+	 *
+	 * @return the CFR if one exists, NULL otherwise
+	 */
+	CFR *findCFRbyCFGNode(ListDigraph::Node);
 
 	/* Below here could be factored, it's about ordering and generations */
 	void order();
@@ -122,7 +134,9 @@ private:
 	CFG &_cfg;
 	CFR *_initial = NULL;
 	CFR *_terminal = NULL;
+	/* Stores the CFR pointer and the CFRG node with it */
 	map<CFR*, ListDigraph::Node> _from_cfr_to_node;
+	/* Stores the CFRG node to the CFR pointer */
 	map<ListDigraph::Node, CFR*> _from_node_to_cfr;
 	ListDigraph::NodeMap<int> _gen;
 

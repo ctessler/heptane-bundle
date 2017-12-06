@@ -12,7 +12,7 @@ cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
 cfg_objs=$(patsubst %.cc,ext/%.o,$(cfg_srcs))
 
 
-wcet_srcs=CFR.cc CFRFactory.cc
+wcet_srcs=CFR.cc CFRFactory.cc CFRG.cc
 wcet=../
 wcet_srcs_path=$(patsubst %.cc,$(wcet)/%.cc,$(wcet_srcs))
 wcet_objs=$(patsubst %.cc,wcet/%.o,$(wcet_srcs))

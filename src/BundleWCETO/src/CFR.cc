@@ -12,8 +12,12 @@ CFR::addNode(ListDigraph::Node from_cfg) {
 
 ListDigraph::Node
 CFR::toCFG(ListDigraph::Node node) const {
+	string s = "CFR::toCFG invalid CFR node ";
+	if (node == INVALID) {
+		throw runtime_error(s + "INVALID");
+	}
 	if (!valid(node)) {
-		throw runtime_error("CFR::toCFG invalid CFR node");
+		throw runtime_error(s + "bad value");
 	}
 	return _to_cfg[node];
 }
@@ -162,7 +166,7 @@ CFR::wcet(unsigned int threads) {
 	ListDigraph::ArcMap<int> lengthMap(*this);
 	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
 		ListDigraph::Arc a = ait;
-		lengthMap[a] = -1 * brt - exe;
+		lengthMap[a] = -1;
 	}
 	Dijkstra<ListDigraph> dijk_loaded(*this, lengthMap);
 	Dijkstra<ListDigraph>::DistMap dist(*this);
@@ -172,19 +176,28 @@ CFR::wcet(unsigned int threads) {
 	int loaded = dist[getTerminal()] * -1;
 	/* That's a longest path for the 1st thread, we're using all
 	   nodes for the moment */ 
-	loaded = countNodes(*this) * (brt) + dist[getTerminal()] * exe;
+	loaded = countNodes(*this) * (brt) +
+		(-1 * (dist[getTerminal()] - 1) * exe); /* +1 for the source */
 
 	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
 		ListDigraph::Arc a = ait;
-		lengthMap[a] = -1 * exe;
+		lengthMap[a] = -1;
 	}
 	Dijkstra<ListDigraph> dijk_unloaded(*this, lengthMap);
 	dijk_unloaded.distMap(dist);
 	dijk_unloaded.run(getInitial(), getTerminal());
-	int unloaded = dist[getTerminal()] * -1;
+	int unloaded = dist[getTerminal()] * -1 + 1; /* +1 for the source */
 
 	unsigned long int wceto = loaded + (threads -1) * unloaded;
+	cout << _cfg.stringNode(getInitial()) << endl << "\t"
+	     << " nodes: " << countNodes(*this)
+	     << " threads: " << threads
+	     << " brt: " << brt
+	     << " longest path: " << unloaded
+	     << " loaded: " << loaded
+	     << " unloaded: " << unloaded
+	     << " wceto: " << wceto
+	     << endl;
 	return wceto;
-	
 }
 

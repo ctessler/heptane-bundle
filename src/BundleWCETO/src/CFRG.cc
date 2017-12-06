@@ -23,6 +23,21 @@ debug_queue(pqueue_t &pqueue, CFRG &cfrg, ListDigraph::NodeMap<int> &dists) {
 	}
 }
 
+ListDigraph::Node
+CFRG::addNode(CFR *cfr) {
+	cout << "CFRG::addNode " << *cfr << endl;
+	map<CFR*, ListDigraph::Node>::iterator mit =
+		_from_cfr_to_node.find(cfr);
+	if (mit != _from_cfr_to_node.end()) {
+		return mit->second;
+	}
+	ListDigraph::Node rv = ListDigraph::addNode();
+	_from_cfr_to_node[cfr] = rv;
+	_from_node_to_cfr[rv] = cfr;
+	_gen[rv] = 0;
+	return rv;
+}
+
 void
 CFRG::order() {
 	ListDigraph::NodeMap<int> distances(*this);
@@ -42,6 +57,69 @@ CFRG::isHead(ListDigraph::Node cfrg_node) {
 	CFR *cfr = findCFR(cfrg_node);
 	return cfr->isHead(cfr->getInitial());
 }
+
+bool
+CFRG::sameLoopNode(ListDigraph::Node a, ListDigraph::Node b) {
+	return sameLoop(findCFR(a), findCFR(b));
+}
+
+bool
+CFRG::sameLoop(CFR* a, CFR *b) {
+	cout << "CFRG::sameLoop: " << *a << " vs " << endl
+	     << "CFRG::sameLoop: " << *b << endl;
+	ListDigraph::Node init_a, init_b;
+	init_a = a->getInitial();
+	init_b = b->getInitial();
+
+	ListDigraph::Node cfg_a, cfg_b;
+	cfg_a = a->toCFG(init_a);
+	cfg_b = b->toCFG(init_b);
+
+	return _cfg.sameLoop(cfg_a, cfg_b);
+}
+
+bool
+CFRG::inLoop(CFR* head, CFR* cfr) {
+	string prefix = "CFRG::inLoop: ";
+	if (head == cfr) {
+		cout << prefix << "same CFR returning true" << endl;
+		return true;
+	}
+	ListDigraph::Node headi, cfri;
+	headi = head->getInitial();
+	cfri = cfr->getInitial();
+
+	ListDigraph::Node cfgh, cfgc;
+	cfgh = head->toCFG(headi);
+	cfgc = cfr->toCFG(cfri);
+
+	return _cfg.inLoop(cfgh, cfgc);
+}
+
+CFR *
+CFRG::findCFRbyCFGNode(ListDigraph::Node node) {
+	iaddr_t src_addr = _cfg.getAddr(node);
+	FunctionCall src_func = _cfg.getFunction(node);
+	
+	map<CFR*, ListDigraph::Node>::iterator mit = _from_cfr_to_node.begin();
+
+	for ( ; mit != _from_cfr_to_node.end(); ++mit) {
+		CFR *cursor = mit->first;
+		ListDigraph::Node cfri = cursor->getInitial();
+		ListDigraph::Node cfgi = cursor->toCFG(cfri);
+		iaddr_t cur_addr = _cfg.getAddr(cfgi);
+		if (cur_addr != src_addr) {
+			continue;
+		}
+		FunctionCall cur_func = _cfg.getFunction(cfgi);
+		if (cur_func != src_func) {
+			continue;
+		}
+		return cursor;
+	}
+	return NULL;
+}
+
 
 void
 CFRG::doLoopOffsets(ListDigraph::NodeMap<int> &loopOffset) {

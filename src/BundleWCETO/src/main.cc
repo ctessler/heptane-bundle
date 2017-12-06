@@ -14,6 +14,7 @@ using namespace std;
 #include "DOTfromCFR.h"
 #include "DOTfromCFRG.h"
 #include "EntryFactory.h"
+#include "CFRGWCETOFactory.h"
 
 void
 usage(void) {
@@ -183,8 +184,9 @@ main(int argc, char** argv) {
 		entries.setPath(ss.str());
 		entries.produce();
 
+		/* Assigns generation IDs to CFRG nodes */
 		cfrg->order();
-		
+
 		/* Produce the images for the Control Flow Region Graph */
 		DOTfromCFRG cfrg_dot(*cfrg);
 		ss.str(""); ss << pre << "-cfrg.dot";
@@ -207,6 +209,11 @@ main(int argc, char** argv) {
 		 * 4.) Longest Path Calculation
 		 * 5.) WCET Calculation
 		 */
+		CFRGWCETOFactory wceto_fact(*cfrg);
+		wceto_fact.setThreads(n_threads);
+		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
+		wceto_fact.produce();
+		
 	}
 
 	/* Cleanup */
