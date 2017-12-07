@@ -10,6 +10,7 @@
 #include "CFRG.h"
 #include "CFRGDFS.h"
 #include "CFRGLFS.h"
+#include "DBG.h"
 using namespace lemon;
 
 class WCETOMap : public std::map<uint32_t, uint32_t> {
@@ -60,9 +61,10 @@ public:
 		return _nthreads;
 	}
 	void produce();
+	uint32_t value(CFR *cfr);
 	uint32_t CFRWCETO(CFR *cfr);
 	void LoopWCETO(CFR *cfr);
-	CFRTable &cfrable() { return _cfrtable; }
+	CFRTable &cfrtable() { return _cfrtable; }
 	CFRTable &looptable() { return _looptable; }
 	bool useLoopTable(CFR *cfr, CFR *pred);
 	/**
@@ -95,7 +97,7 @@ public:
 	 * @return true upon success, false if an error occurred.
 	 */
 	bool addMaxPreds(WCETOMap &wmap, CFRTable &preds);
-	
+	DBG dbg;
 private:
 	CFRG &_cfrg;
 	uint32_t _nthreads;
@@ -111,8 +113,6 @@ private:
 	 * entire loop as it's WCETO. 
 	 */ 
 	CFRTable _looptable;
-
-	void wceto_precheck(CFR *cfr);
 };
 
 

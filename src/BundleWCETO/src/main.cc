@@ -187,8 +187,14 @@ main(int argc, char** argv) {
 		/* Assigns generation IDs to CFRG nodes */
 		cfrg->order();
 
+		/* Calculate the WCETO for each CFR */
+		CFRGWCETOFactory wceto_fact(*cfrg);
+		wceto_fact.setThreads(n_threads);
+		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
+		wceto_fact.produce();
+		
 		/* Produce the images for the Control Flow Region Graph */
-		DOTfromCFRG cfrg_dot(*cfrg);
+		DOTfromCFRG cfrg_dot(*cfrg, wceto_fact);
 		ss.str(""); ss << pre << "-cfrg.dot";
 		cfrg_dot.setPath(ss.str());
 		cfrg_dot.produce(n_threads);
@@ -199,21 +205,9 @@ main(int argc, char** argv) {
 
 		/* Produce images for the Control Flow Graphs */
 		dot.produce();
-
 		JPGFactory jpg(dot);
 		jpg.produce();
 		cout << "JPG : " << jpg.getPath() << endl;
-
-		/* To Do:
-		 * 3.) Generation IDs
-		 * 4.) Longest Path Calculation
-		 * 5.) WCET Calculation
-		 */
-		CFRGWCETOFactory wceto_fact(*cfrg);
-		wceto_fact.setThreads(n_threads);
-		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
-		wceto_fact.produce();
-		
 	}
 
 	/* Cleanup */

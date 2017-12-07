@@ -16,7 +16,7 @@ CFRDOTid(CFR &cfr) {
 }
 
 static string
-CFRDOT(CFR &cfr, int generation, unsigned int threads) {
+CFRDOT(CFR &cfr, int generation, unsigned int threads, uint32_t wceto) {
 	CFG *cfg = cfr.getCFG();
 	ListDigraph::Node cfr_initial = cfr.getInitial();
 	ListDigraph::Node cfg_node = cfr.toCFG(cfr_initial);
@@ -33,7 +33,7 @@ CFRDOT(CFR &cfr, int generation, unsigned int threads) {
 	      << "<TR><TD>Threads</TD>"
 	      << "<TD>" << threads << "</TD></TR>" << endl
 	      << "<TR><TD>WCET+O</TD>"
-	      << "<TD>" << cfr.wcet(threads) << "</TD></TR>" << endl
+	      << "<TD>" << wceto << "</TD></TR>" << endl
 	      << "<TR><TD>isHead</TD>"
 	      << "<TD>" << cfr.isHead(cfr_initial) << "</TD></TR>" << endl
 	      << "<TR><TD>Head</TD>"
@@ -58,7 +58,8 @@ DOTfromCFRG::produce(unsigned int threads) {
 	for (ListDigraph::NodeIt nit(_cfrg); nit != INVALID; ++nit) {
 		ListDigraph::Node cfr_node = nit;
 		CFR *cfr = _cfrg.findCFR(cfr_node);
-		dot << CFRDOT(*cfr, _cfrg.getGeneration(cfr_node), threads);
+		dot << CFRDOT(*cfr, _cfrg.getGeneration(cfr_node), threads,
+			      _fact.value(cfr));
 	}
 
 	for (ListDigraph::ArcIt ait(_cfrg); ait != INVALID; ++ait) {

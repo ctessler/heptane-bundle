@@ -26,7 +26,8 @@ std::ostream &operator<<(std::ostream& stream, const CFRTable& cfrtable) {
 	for (cit = cfrtable.begin(); cit != cfrtable.end(); ++cit) {
 		CFR *cfr = cit->first;
 		WCETOMap *wmap = cit->second;
-		stream << *cfr << endl << "wmap : " << wmap << " " << *wmap;
+		stream << *cfr << endl << "wmap << " << wmap << " "
+		       << *wmap << endl;
 	}
 	return stream;
 }
@@ -67,6 +68,38 @@ CFRGWCETOFactory::~CFRGWCETOFactory() {
 }
 
 static bool
+produce_test(CFRG &cfrg, CFR *cfr, void *userdata) {
+	CFRGWCETOFactory *fact = (CFRGWCETOFactory *)userdata;
+
+	ListDigraph::Node cfr_node = cfrg.findNode(cfr);
+
+	if (inWMap(cfr, fact->looptable()) ||
+	    inWMap(cfr, fact->cfrtable())) {
+		return true;
+	}
+		  
+	
+	ListDigraph::InArcIt ait(cfrg, cfr_node);
+	for ( ; ait != INVALID; ++ait) {
+		ListDigraph::Node pred_node = cfrg.target(ait);
+		CFR *pred_cfr = cfrg.findCFR(pred_node);
+
+		WCETOMap *pred_map;		
+		if (fact->useLoopTable(cfr, pred_cfr)) {
+			/* The predecessor begins a loop */
+			pred_map = inWMap(pred_cfr, fact->looptable());
+		} else {
+			/* Another CFR in this loop */
+			pred_map = inWMap(pred_cfr, fact->cfrtable());
+		}
+		if (!pred_map) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static bool
 produce_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	string prefix = "produce_work: ";
 	CFRGWCETOFactory *wcetof = (CFRGWCETOFactory*) userdata;
@@ -76,35 +109,57 @@ produce_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	if (cfr->isHead(cfri)) {
 		cout << prefix << *cfr << " is a head" << endl;
 		wcetof->LoopWCETO(cfr);
+	} else if (cfr->getHead(cfr->getInitial()) != INVALID) {
+		cout << prefix << *cfr << " is in a loop, skip" << endl;
 	} else {
 		cout << prefix << *cfr << " is an isolated CFR" << endl;
 		wcetof->CFRWCETO(cfr);
 	}
+	return true;
 }
 
 
 void
 CFRGWCETOFactory::produce() {
+	/*
+	CFRGLFS lfs(_cfrg, NULL, produce_test, produce_work, this);
+	lfs.search(_cfrg.getInitialCFR());
+	*/
 	CFRGDFS dfs(_cfrg);
 	dfs.setUserData(this);
 	dfs.setWork(produce_work);
 	dfs.search(_cfrg.getInitialCFR());
 }
 
-/**
- * Makes sure that this CFR can be used as a predecessor for determining the
- * WCETO of a successor CFR
- *
- * @param[in] cfr the CFR under inspection
- *
- * side effects: updates the _cfrtable with entries for this CFR
- */
-void
-CFRGWCETOFactory::wceto_precheck(CFR *cfr) {
-	WCETOMap *wmap = inWMap(cfr, _cfrtable);
-	if (!wmap) {
-		CFRWCETO(cfr);
+uint32_t
+CFRGWCETOFactory::value(CFR *cfr) {
+	ListDigraph::Node cfrgn = _cfrg.findNode(cfr);
+	CFRTable *table = &_cfrtable;
+	cout << "value(0x" << cfr << "): "<< *cfr << " calculating WCETO" << endl;
+	if (_cfrg.isHead(cfrgn)) {
+		cout << "value: using the loop table, it's a head" << endl;
+		LoopWCETO(cfr);
+		table = &_looptable;
 	}
+	if (cfr->getHead(cfr->getInitial()) != INVALID) {
+		cout << "value: using the loop table, it has a head" << endl;
+		LoopWCETO(cfr);
+		table = &_looptable;
+	}
+
+	WCETOMap *wmap = (*table)[cfr];
+	if (!wmap) {
+		throw runtime_error("value: unable to find WCETOMap for CFR");
+	}
+	cout << "value: initial WCETO map:" << endl
+	     << *wmap << endl;
+	uint32_t wceto=0;
+	for (uint32_t i=1; i <= _nthreads; i++) {
+		wceto += (*wmap)[i];
+	}
+	cout << "value: " << *cfr << " WCETO " << wceto << endl;
+
+	return wceto;
 }
 
 uint32_t
@@ -112,7 +167,12 @@ CFRGWCETOFactory::CFRWCETO(CFR *cfr) {
 	cout << "CFRWCETO: begin " << *cfr << endl;
 	/* Precondition check */
 	WCETOMap *wmap = inWMap(cfr, _cfrtable);
-	if (wmap) return wmap->wceto();
+
+	if (wmap) {
+		cout << "CFRWCETO: " << *cfr << " already has a table, returning"
+		     << endl;
+		return wmap->wceto();
+	}
 
 	/* No previous value, begin calculation */
 	wmap = findWMap(cfr, _cfrtable);
@@ -223,6 +283,7 @@ lfs_filt(CFRG &cfrg, CFR *cfr, void *userdata) {
 		     << *head_cfr << endl;		
 		return false;
 	}
+	cout << prefix << *cfr << " belongs in the loop of " << *head_cfr << endl;
 	return true;
 }
 static bool
@@ -233,6 +294,10 @@ lfs_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	CFRGWCETOFactory *fact = data->lud_this;
 	CFR *head_cfr = data->lud_head_cfr;
 
+
+	if (cfr == head_cfr) {
+		return true;
+	}
 	/*
 	 * Check that all predecessors have had their WCETO's
 	 * calculated before "working" on this CFR
@@ -241,36 +306,44 @@ lfs_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	ListDigraph::InArcIt ait(cfrg, cfr_node);
 	CFRTable *scratch = data->lud_scratch_tbl;
 	for ( ; ait != INVALID; ++ait) {
-		ListDigraph::Node pred_node = cfrg.target(ait);
+		ListDigraph::Node pred_node = cfrg.source(ait);
 		CFR *pred_cfr = cfrg.findCFR(pred_node);
+		cout << prefix << "checking predecessor " << *pred_cfr << endl;
 
 		WCETOMap *pred_map;		
 		if (fact->useLoopTable(cfr, pred_cfr)) {
+			cout << prefix << "should be in the loop table." << endl;
 			/* The predecessor begins a loop */
-			pred_map = findWMap(pred_cfr, fact->looptable());
+			pred_map = inWMap(pred_cfr, fact->looptable());
 		} else {
 			/* Another CFR in this loop */
-			pred_map = findWMap(pred_cfr, *scratch);
+			cout << prefix << "should be in the scratch table."
+			     << endl;
+			pred_map = inWMap(pred_cfr, *scratch);
 		}
 		if (!pred_map) {
+			cout << prefix << "not found." << endl;
 			return false;
 		}
+		cout << prefix << "found." << endl;
 	}
 	return true;
 }
 
 static void
 lfs_work(CFRG &cfrg, CFR *cfr, void *userdata) {
-	string prefix = "lfs_work: ";
 	loop_user_data_t *data = (loop_user_data_t *)userdata;
 	CFRGWCETOFactory *fact = data->lud_this;
+	DBG &dbg = fact->dbg;
 	CFRTable *scratch = data->lud_scratch_tbl;
 	CFR *head_cfr = data->lud_head_cfr;
 
-	cout << prefix << "headcfr: " << *head_cfr << endl
-	     << prefix << "current cfr: " << *cfr << endl;
+	dbg.pfx("lfs_work: ");
+
+	dbg.buf << "headcfr: " << *head_cfr << dbg.cont
+		<< "current cfr: " << *cfr << dbg.cont;
 	if (head_cfr != cfr && cfrg.isHead(cfrg.findNode(cfr))) {
-		cout << prefix << "current cfr belongs to another loop" << endl;
+		dbg.buf << "current cfr belongs to another loop" << endl;
 		/*
 		 * The current CFR is a loop head, so it must have
 		 * its LoopWCETO calculated first.
@@ -286,16 +359,19 @@ lfs_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 		uint32_t wcet = cfr->wcet(i) - cfr->wcet(i - 1);
 		wmap->insert(make_pair(i, wcet));
 	}
-	cout << prefix << *cfr << " individual contribution" << endl
-	     << *wmap << endl;
+	dbg.buf << *cfr << " individual contribution" << dbg.cont
+		<< *wmap << dbg.cont;
 	/* wmap contains the WCETO for the isolated execution of this CFR */
 
 	/* Special case, if this is the head of the loop its value can
 	   only be calculated at the very end. */
 	if (head_cfr == cfr) {
-		cout << prefix << "handled the first CFR of the loop, returning"
-		     << endl;
 		(*scratch)[cfr] = wmap;
+		dbg.buf << "handled the first CFR of the loop, returning"
+			<< dbg.cont
+			<< "stored " << wmap << " with key " << cfr << dbg.cont
+			<< "returning, current table for " << *cfr << endl
+			<< *scratch << endl;
 		return;
 	}
 
@@ -308,9 +384,12 @@ lfs_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	}
 	/* Store the result in the scratch table for the search */
 	(*scratch)[cfr] = wmap;
-
-	cout << prefix << "returning, current table: " << endl
-	     << *scratch << endl;
+	dbg.buf <<  "result after addMaxPreds: " << dbg.cont
+		<< *wmap << dbg.cont
+		<< "stored " << wmap << " with key " << cfr << dbg.cont
+		<< "returning, current table for " << *cfr << dbg.cont
+		<< *scratch << endl;
+	dbg.flush(cout);
 }
 
 /**
@@ -360,7 +439,12 @@ CFRGWCETOFactory::LoopWCETO(CFR *cfr) {
 		WCETOMap *head_map = findWMap(cfr_head, _looptable);
 		WCETOMap *copy = new WCETOMap(*head_map);
 		/* Place the copy based on *this* CFR */
-		_looptable.insert(make_pair(cfr, copy));
+		//_looptable.insert(make_pair(cfr, copy));
+		_looptable[cfr] = copy;
+
+		cout << prefix << *cfr << " (copy of) entry in looptable: "
+		     << endl
+		     << _looptable[cfr] << endl;
 		return;
 	}
 
@@ -375,12 +459,13 @@ CFRGWCETOFactory::LoopWCETO(CFR *cfr) {
 	data.lud_threads = _nthreads;
 	
 	CFRGLFS lfs(_cfrg, lfs_filt, lfs_test, lfs_work, &data);
-	cout << prefix << "LoopWCETO: LFS begin" << endl;
+	cout << prefix << "LFS begin" << endl;
 	lfs.search(cfr);
-	cout << prefix << "LoopWCETO: LFS end" << endl;	
+	cout << prefix << "LFS end" << endl;	
 
-	cout << prefix << "LoopWCETO: CFRTable after looping" << endl
+	cout << prefix << "CFRTable after looping" << endl
 	     << "LoopWCETO: " << cfr_table << endl;
+	cout << prefix << "CFRTable complete" << endl;
 	
 	/* Final result goes to the _looptable */
 	ListDigraph::Node cfrgi = _cfrg.findNode(cfr);
@@ -388,6 +473,12 @@ CFRGWCETOFactory::LoopWCETO(CFR *cfr) {
 	for (ListDigraph::InArcIt ait(_cfrg, cfrgi); ait != INVALID; ++ait) {
 		ListDigraph::Node node = _cfrg.source(ait);
 		CFR *pred_cfr = _cfrg.findCFR(node);
+		CFRTable::iterator cit = cfr_table.find(pred_cfr);
+		if (cit == cfr_table.end()) {
+			continue;
+		}
+		cout << prefix << "Predecessor CFR: " << *pred_cfr << endl;
+		cout << "Adding to pred table: " << *(cfr_table[pred_cfr]) << endl;
 		pred_table[pred_cfr] = cfr_table[pred_cfr];
 	}
 	/*
@@ -397,8 +488,35 @@ CFRGWCETOFactory::LoopWCETO(CFR *cfr) {
 	 *   the worst case cost.
 	 */
 	WCETOMap *wmap = findWMap(cfr, _looptable);
-	for (uint32_t i=0; i <= _nthreads; i++) {
-		(*wmap)[i] = 0;
+	(*wmap)[0] = 0;
+	for (uint32_t i=1; i <= _nthreads; i++) {
+		(*wmap)[i] = cfr->wcet(i) - cfr->wcet(i -1);
+	}
+	addMaxPreds(*wmap, pred_table);
+	ListDigraph::Node cfri = cfr->getInitial();
+	uint32_t iters = cfr->getIters(cfri);
+	for (uint32_t i=1; i <= _nthreads; i++) {
+		(*wmap)[i] *= iters;
+	}
+
+	/*
+	 * The cost for CFRs within the loop have been accounted for, now the
+	 * cost of the CFRs outside of *this* loop need to be included.
+	 */
+	pred_table.clear();
+	for (ListDigraph::InArcIt ait(_cfrg, cfrgi); ait != INVALID; ++ait) {
+		ListDigraph::Node node = _cfrg.source(ait);
+		CFR *pred_cfr = _cfrg.findCFR(node);
+		if (_cfrg.inLoop(cfr, pred_cfr)) {
+			continue;
+		}
+		if (useLoopTable(cfr, pred_cfr)) {
+			LoopWCETO(pred_cfr);
+			pred_table[pred_cfr] = _looptable[pred_cfr];
+		} else {
+			CFRWCETO(pred_cfr);
+			pred_table[pred_cfr] = _cfrtable[pred_cfr];
+		}
 	}
 	addMaxPreds(*wmap, pred_table);
 
@@ -406,6 +524,9 @@ CFRGWCETOFactory::LoopWCETO(CFR *cfr) {
 	for (cit = cfr_table.begin(); cit != cfr_table.end(); ++cit) {
 		delete cit->second;
 	}
+
+	cout << prefix << *cfr << " entry in looptable: " << endl
+	     << *wmap << endl;
 }
 
 
@@ -428,18 +549,13 @@ CFRGWCETOFactory::justPreds(CFR* cfr, CFRTable &singles, CFRTable &loops,
 		} else {
 			cout << prefix << *cfr << " preceded by an individual "
 			     << *pred_cfr << endl;
+			CFRWCETO(pred_cfr);
 			pred_map = findWMap(pred_cfr, singles);
 		}
 		WCETOMap *pred_copy = new WCETOMap(*pred_map);
-		result.insert(make_pair(pred_cfr, pred_copy));
+		result[pred_cfr] = pred_copy;
 	}
 	return true;
-fail:
-	CFRTable::iterator cursor;
-	for (cursor = result.begin(); cursor != result.end(); cursor++) {
-		delete cursor->second;
-	}
-	return false;
 }
 
 bool
