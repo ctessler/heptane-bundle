@@ -142,8 +142,8 @@ operator<< (std::ostream &stream, const CFR& cfr) {
 	return stream;
 }
 
-unsigned long int
-CFR::wcet(unsigned int threads) {
+uint32_t
+CFR::wceto(uint32_t threads) {
 	int exe = 1; // MIPS constant execution time
 	int brt = _cache->latency();
 	if (threads == 0) {
@@ -189,6 +189,7 @@ CFR::wcet(unsigned int threads) {
 	int unloaded = dist[getTerminal()] * -1 + 1; /* +1 for the source */
 
 	unsigned long int wceto = loaded + (threads -1) * unloaded;
+	#if 0
 	cout << _cfg.stringNode(getInitial()) << endl << "\t"
 	     << " nodes: " << countNodes(*this)
 	     << " threads: " << threads
@@ -198,6 +199,7 @@ CFR::wcet(unsigned int threads) {
 	     << " unloaded: " << unloaded
 	     << " wceto: " << wceto
 	     << endl;
+	#endif
 	return wceto;
 }
 

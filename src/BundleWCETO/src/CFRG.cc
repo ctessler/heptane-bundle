@@ -96,6 +96,19 @@ CFRG::inLoop(CFR* head, CFR* cfr) {
 	return _cfg.inLoop(cfgh, cfgc);
 }
 
+bool
+CFRG::isLoopPart(ListDigraph::Node cfrg_node) {
+	CFR *cfr = findCFR(cfrg_node);
+	if (cfr->isHead(cfr->getInitial())) {
+		return true;
+	}
+	ListDigraph::Node cfg_node = cfr->getHead(cfr->getInitial());
+	if (cfg_node != INVALID) {
+		return true;
+	}
+	return false;
+}
+
 CFR *
 CFRG::findCFRbyCFGNode(ListDigraph::Node node) {
 	iaddr_t src_addr = _cfg.getAddr(node);

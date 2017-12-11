@@ -180,7 +180,7 @@ CFRGWCETOFactory::CFRWCETO(CFR *cfr) {
 	uint32_t threads = _nthreads;
 	wmap->insert(make_pair(0, 0));
 	for (uint32_t thread=1; thread <= threads; thread++) {
-		uint32_t wcet = cfr->wcet(thread) - cfr->wcet(thread - 1);
+		uint32_t wcet = cfr->wceto(thread) - cfr->wceto(thread - 1);
 		wmap->insert(make_pair(thread, wcet));
 	}
 	cout << "CRFWCETO: " << *cfr << " individual contribution" << endl
@@ -234,7 +234,7 @@ loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	WCETOMap *wmap = findWMap(cfr, *table);
 	wmap->insert(make_pair(0, 0));
 	for (uint32_t thread=1; thread <= threads; thread++) {
-		uint32_t wcet = cfr->wcet(thread) - cfr->wcet(thread - 1);
+		uint32_t wcet = cfr->wceto(thread) - cfr->wceto(thread - 1);
 		wmap->insert(make_pair(thread, wcet));
 	}
 	table->insert(make_pair(cfr, wmap));
@@ -338,8 +338,7 @@ lfs_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	CFRTable *scratch = data->lud_scratch_tbl;
 	CFR *head_cfr = data->lud_head_cfr;
 
-	dbg.pfx("lfs_work: ");
-
+	dbg.inc("lfs_work: ");
 	dbg.buf << "headcfr: " << *head_cfr << dbg.cont
 		<< "current cfr: " << *cfr << dbg.cont;
 	if (head_cfr != cfr && cfrg.isHead(cfrg.findNode(cfr))) {
@@ -356,7 +355,7 @@ lfs_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	int threads = data->lud_threads;
 	wmap->insert(make_pair(0, 0));
 	for (int i = 1; i <= threads; i++) {
-		uint32_t wcet = cfr->wcet(i) - cfr->wcet(i - 1);
+		uint32_t wcet = cfr->wceto(i) - cfr->wceto(i - 1);
 		wmap->insert(make_pair(i, wcet));
 	}
 	dbg.buf << *cfr << " individual contribution" << dbg.cont
@@ -490,7 +489,7 @@ CFRGWCETOFactory::LoopWCETO(CFR *cfr) {
 	WCETOMap *wmap = findWMap(cfr, _looptable);
 	(*wmap)[0] = 0;
 	for (uint32_t i=1; i <= _nthreads; i++) {
-		(*wmap)[i] = cfr->wcet(i) - cfr->wcet(i -1);
+		(*wmap)[i] = cfr->wceto(i) - cfr->wceto(i -1);
 	}
 	addMaxPreds(*wmap, pred_table);
 	ListDigraph::Node cfri = cfr->getInitial();
@@ -545,12 +544,12 @@ CFRGWCETOFactory::justPreds(CFR* cfr, CFRTable &singles, CFRTable &loops,
 			cout << prefix << *cfr << " preceded by loop "
 			     << *pred_cfr << endl;
 			LoopWCETO(pred_cfr);
-			pred_map = findWMap(pred_cfr, loops);
+			pred_map = inWMap(pred_cfr, loops);
 		} else {
 			cout << prefix << *cfr << " preceded by an individual "
 			     << *pred_cfr << endl;
-			CFRWCETO(pred_cfr);
-			pred_map = findWMap(pred_cfr, singles);
+			
+			pred_map = inWMap(pred_cfr, singles);
 		}
 		WCETOMap *pred_copy = new WCETOMap(*pred_map);
 		result[pred_cfr] = pred_copy;

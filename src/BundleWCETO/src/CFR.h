@@ -96,7 +96,7 @@ public:
 	friend std::ostream &operator<< (std::ostream &stream, const CFR& cfr);
 
 	/* WCETO calculation for *this* CFR */
-	unsigned long int wcet(unsigned int threads);
+	uint32_t wceto(uint32_t threads);
 
 	/* Unit test */
 	static bool test();

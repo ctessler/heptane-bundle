@@ -98,6 +98,10 @@ public:
 	 * Returns true if the cfr is in the loop started by the heading cfr
 	 */
 	bool inLoop(CFR* head, CFR* cfr);
+	/**
+	 * Returns true if the CFR is in any loop
+	 */
+	bool isLoopPart(ListDigraph::Node cfrg_node);
 
 	/**
 	 * An expensive operation, this finds the CFR based on the

@@ -1,40 +1,34 @@
 #ifndef DBG_H
 #define DBG_H
 
-class DBG {
-public:
-	DBG() {}
-	void pfx(string px) {
-		_pfx = px;
-		reset();
-	}
-	void inc(string fill=" ") {
-		_fill = fill;
-		_level++;
-		reset();
-	}
-	void dec() {
-		_level--;
-		reset();
-	}
-	void flush(ostream &stream) {
-		stream << buf.str();
-		buf.str("");
-	}
-	stringstream buf;
-	string cont;
-private:
-	void reset() {
-		_indent = "";
-		for (uint32_t i=0; i<_level; i++) {
-			_indent += _fill;
-		}
-		_indent += _pfx;
+#include<string>
+#include<sstream>
+#include<stack>
+#include<iostream>
+using namespace std;
 
-		cont = "\n" + _indent;
-	}
-	uint32_t _level=0;
-	string _pfx, _indent, _fill=" ";
+class DBG  {
+public:
+	DBG();
+	void inc(string pfx="", string fill=" ");
+	void dec();
+	void flush(ostream &stream);
+	stringstream buf;
+	/* 
+	 * Symbol that can be added to the end of a line to continue a
+	 * debug statement.
+	 */
+	string cont;
+	/*
+	 * Symbol used as the start of a line
+	 */
+	string start;
+private:
+	void update();
+	int _level;
+	stack<string> _indents;
+	stack<string> _pfxs;
+	string _fill=" ";
 };
 
 #endif /* DBG_H */

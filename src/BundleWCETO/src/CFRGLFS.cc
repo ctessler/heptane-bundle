@@ -26,19 +26,24 @@ CFRGLFS::step(list<CFR*> &q, ListDigraph::NodeMap<bool> &visited) {
 
 	ListDigraph::Node cur_node = _cfrg.findNode(current);
 
+	bool passes_filter=true;
 	if (_filt_fn && ! _filt_fn(_cfrg, current, _ud)) {
 		/* Didn't pass the filter, all done, do not requeue */
-		return;
-	}
-	
-	if (_test_fn && ! _test_fn(_cfrg, current, _ud)) {
-		/* Did not pass the test */
-		q.push_back(current);
-		return;
+		passes_filter = false;
 	}
 
-	if (_work_fn) {
-		_work_fn(_cfrg, current, _ud);
+	if (passes_filter) {
+		if (_test_fn && ! _test_fn(_cfrg, current, _ud)) {
+			/* Did not pass the test */
+			q.push_back(current);
+			return;
+		}
+	}
+
+	if (passes_filter) {
+		if (_work_fn) {
+			_work_fn(_cfrg, current, _ud);
+		}
 	}
 	visited[cur_node] = true;
 
