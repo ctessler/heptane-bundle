@@ -24,6 +24,17 @@ ThreadWCETOMap::fill(CFR *cfr, uint32_t threads) {
 		uint32_t wceto = cfr->wceto(i) - cfr->wceto(i -1);
 		insert(pair<uint32_t, uint32_t>(i, wceto));
 	}
+	return true;
+}
+
+bool
+ThreadWCETOMap::fill(ThreadWCETOMap& src) {
+	clear();
+	ThreadWCETOMap::iterator tit;
+	for (tit = src.begin(); tit != src.end(); ++tit) {
+		insert(pair<uint32_t, uint32_t>(tit->first, tit->second));
+	}
+	return true;
 }
 
 string

@@ -32,10 +32,13 @@ CFRDOT(CFR &cfr, int generation, unsigned int threads, uint32_t wceto) {
 	      << "<TD>" << generation << "</TD></TR>" << endl
 	      << "<TR><TD>Threads</TD>"
 	      << "<TD>" << threads << "</TD></TR>" << endl
-	      << "<TR><TD>WCET+O</TD>"
-	      << "<TD>" << wceto << "</TD></TR>" << endl
-	      << "<TR><TD>isHead</TD>"
-	      << "<TD>" << cfr.isHead(cfr_initial) << "</TD></TR>" << endl
+	      << "<TR><TD>WCET+O (self)/(cumm.)</TD>"
+	      << "<TD>(" << cfr.wceto(threads) << ")/(" << wceto
+	                 << ")</TD></TR>" << endl
+	      << "<TR><TD>isHead (iters)</TD>"
+	      << "<TD>" << cfr.isHead(cfr_initial) << "("
+	                << cfr.getIters(cfr_initial) << ")" << "</TD></TR>"
+	                << endl
 	      << "<TR><TD>Head</TD>"
 	      << "<TD>" << cfg->stringNode(cfr.getHead(cfr_initial))
 	      << "</TD></TR>" << endl

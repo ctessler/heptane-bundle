@@ -42,13 +42,21 @@ lfs_top_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	CFRWCETOMap &cfrtbl = fact->cfr_table();
 	CFRWCETOMap &looptbl = fact->loop_table();
 
+	
 	bool rv=true;
 	ListDigraph::Node cfrgi = cfrg.findNode(cfr);
+	if (cfrg.isLoopPart(cfrgi)) {
+		dout << *cfr << " is part of a loop, pre-check is different"
+		     << endl;
+	}
 	for (ListDigraph::InArcIt iat(cfrg, cfrgi); iat != INVALID; ++iat) {
 		ListDigraph::Node pred_node = cfrg.source(iat);
 		CFR *pred_cfr = cfrg.findCFR(pred_node);
 		dout << "preceding CFR " << *pred_cfr << endl;
 		if (cfrg.isLoopPart(pred_node)) {
+			if (cfrg.isLoopPart(cfrgi)) {
+				continue;
+			}
 			/* Use the loop table */
 			dout << *pred_cfr << " is part of a loop." << endl;
 			CFR *outer = fact->outermostCFR(pred_cfr);
@@ -259,6 +267,25 @@ lfs_loop_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 }
 
 /**
+ * Assistant function to lfs_loop_test and lfs_loop_work
+ *
+ * For a given cfr, and currently processing loop (head_cfr) if the
+ * cfr is part of a loop embedded within the head_cfr's loop, find the
+ * closest head to the head_cfr that contains the given cfr. 
+ *
+ * @param[in] cfrg the CFRG containing the CFRs
+ * @param[in] head_cfr the bounding loop CFR
+ * @param[in] cfr a cfr within a loop which is contained within the
+ *   loop of the head_cfr
+ *
+ * @return the head of the loop closest to the head_cfr.
+ */
+static CFR*
+leading_cfr(CFRG &cfrg, CFR* head_cfr, CFR* cfr) {
+	
+}
+
+/**
  * List First Search Test Function
  *
  * Returning true indicates that the CFR can be passed to the working
@@ -363,7 +390,6 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 		fact->dbg.flush(cout); fact->dbg.dec();
 		return;
 	}
-	
 
 	PredList pmaps;
 	ListDigraph::Node cfr_node = cfrg.findNode(cfr);
@@ -381,6 +407,13 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	}
 
 	ThreadWCETOMap *cur_map = scratch->request(cfr);
+	if (cfrg.isHead(cfr_node)) {
+		dout << *cfr << " is an embedded loop, recursing" << endl;
+		ThreadWCETOMap *loop_map = fact->loopWCETO(cfr);
+		ThreadWCETOMap::iterator tit;
+	} else {
+		cur_map->fill(cfr, fact->getThreads());
+	}
 	fact->addPreds(cur_map, pmaps);
 
 	for (PredList::iterator pit = pmaps.begin(); pit != pmaps.end(); ++pit) {
