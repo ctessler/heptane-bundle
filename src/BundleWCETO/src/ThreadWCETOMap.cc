@@ -32,7 +32,7 @@ ThreadWCETOMap::fill(ThreadWCETOMap& src) {
 	clear();
 	ThreadWCETOMap::iterator tit;
 	for (tit = src.begin(); tit != src.end(); ++tit) {
-		insert(pair<uint32_t, uint32_t>(tit->first, tit->second));
+		insert(make_pair(tit->first, tit->second));
 	}
 	return true;
 }

@@ -16,7 +16,7 @@ void
 CFRFactoryTest::produceLeak()
 {
 	PolicyLRU lru;
-	Cache cache(32, 2, 32, 10, &lru);
+	Cache cache(32, 2, 32, 10, 100, &lru);
 	CFG cfg;
 
 	ListDigraph::Node a = cfg.addNode();

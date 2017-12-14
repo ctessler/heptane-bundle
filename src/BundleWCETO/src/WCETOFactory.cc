@@ -119,9 +119,16 @@ lfs_top_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 
 void
 WCETOFactory::produce() {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("WCETOFactory::produce ");
+	dout << "BEGIN" << endl;
+	
 	CFRGLFS lfs(_cfrg, lfs_top_filter, lfs_top_test, lfs_top_work,
 		    (void*) this);
 	lfs.search(_cfrg.getInitialCFR());
+	dout << "END" << endl;
+	dbg.dec();
+	#undef dout
 }
 
 uint32_t
@@ -397,12 +404,14 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 		ListDigraph::Node prev_node = cfrg.source(iat);
 		CFR *prev_cfr = cfrg.findCFR(prev_node);
 
+		dout << *cfr << " is preceded by " << *prev_cfr << endl;
 		ThreadWCETOMap *prev_map = scratch->present(prev_cfr);
 		if (!prev_map) {
 			throw runtime_error("Missing TWMap");
 		}
-			       
 		ThreadWCETOMap *copy = new ThreadWCETOMap(prev_map);
+		dout << *prev_cfr << " has a predecessor map: " << endl
+		     << copy->str(fact->dbg.start) << endl;
 		pmaps.push_back(copy);
 	}
 
@@ -410,10 +419,15 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	if (cfrg.isHead(cfr_node)) {
 		dout << *cfr << " is an embedded loop, recursing" << endl;
 		ThreadWCETOMap *loop_map = fact->loopWCETO(cfr);
-		ThreadWCETOMap::iterator tit;
+		cur_map->fill(*loop_map);
 	} else {
+		dout << *cfr << " is a stand alone, filling" << endl;
 		cur_map->fill(cfr, fact->getThreads());
+		cfr->calcECBs();
 	}
+	
+	dout << *cfr << " adding predecessors: " << endl
+	     << cur_map->str(fact->dbg.start) << endl;
 	fact->addPreds(cur_map, pmaps);
 
 	for (PredList::iterator pit = pmaps.begin(); pit != pmaps.end(); ++pit) {
@@ -421,7 +435,7 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	}
 	pmaps.clear();
 
-	dout << *cfr << " finished, result: " << endl
+	dout << *cfr << " finished, result: " << cur_map << endl
 	     << cur_map->str(fact->dbg.start) << endl;
 		
 	fact->dbg.flush(cout);
@@ -452,9 +466,10 @@ WCETOFactory::loopWCETO(CFR *cfr) {
 	}
 
 	rval = _loop_table.request(cfr);
-	dout << *cfr << " has a loop table " << rval << endl
+	dout << *cfr << " new loop table " << rval << endl
 	     << _loop_table.present(cfr)->str(dbg.start) << endl;
 	rval->fill(cfr, _threads);
+	cfr->calcECBs();
 	dout << *cfr << " independent WCETO (without iterations)" << endl
 	     << rval->str(dbg.start) << endl;
 
@@ -469,8 +484,8 @@ WCETOFactory::loopWCETO(CFR *cfr) {
 	lfs.search(cfr);
 
 	/* Scratch is the data for *this* loop */
-	dbg.inc();
-	dout << "search complete, result is " << endl
+	dbg.inc("loopWCETO: ");
+	dout << *cfr << " search complete, result is " << endl
 	     << scratch->str(dbg.start) << endl;
 	dbg.dec();
 
@@ -484,15 +499,28 @@ WCETOFactory::loopWCETO(CFR *cfr) {
 		dout << twmap->str(dbg.start) << endl;
 	}
 	addPreds(rval, preds);
-	preds.clear();
 
-	ThreadWCETOMap::iterator twit;
 	uint32_t iters = cfr->getIters(cfr->getInitial());
-	for (twit = rval->begin(); twit != rval->end(); ++twit) {
-		twit->second = twit->second * iters;
+	if (preds.size() == 0) {
+		/* the entire loop is contained in the CFR, this will
+		 * only execute once, therefore the BRT is only paid
+		 * only once
+		 */
+		dout << *cfr << " is a fully contained loop" << endl;
+		rval->at(1) = cfr->loadCost() + cfr->exeCost() * iters;
+		for (uint32_t i=2; i <= _threads; i++) {
+			rval->at(i) = cfr->exeCost() * iters;
+		}
+	} else {
+		ThreadWCETOMap::iterator twit;
+		for (twit = rval->begin(); twit != rval->end(); ++twit) {
+			twit->second = twit->second * iters;
+		}
 	}
+	preds.clear();
 	dout << "Map updated with iterations" << endl
 	     << rval->str(dbg.start) << endl;
+	
 
 	/* Consider the predecessors that are not within the loop */
 	findPreds(cfr, _cfr_table, preds);
@@ -510,7 +538,7 @@ WCETOFactory::loopWCETO(CFR *cfr) {
 	preds.clear();
 	
 	addPreds(rval, destroyme);
-	dout << *cfr << " Final table: " << endl
+	dout << *cfr << " Final table: " << rval << endl
 	     << rval->str(dbg.start) << endl;
 	for (pit = destroyme.begin(); pit != destroyme.end(); ++pit) {
 		delete (*pit);
@@ -541,10 +569,12 @@ WCETOFactory::addPreds(ThreadWCETOMap *twmap, PredList& preds) {
 		PredList::iterator pit;
 		for (pit = preds.begin(); pit != preds.end(); ++pit) {
 			ThreadWCETOMap *cmap = (*pit);
-			dbg.inc();
-			dout << "considering " << endl << *cmap << endl;
+			dbg.inc("addPreds: ");
+			dout << "considering " << endl << cmap->str(dbg.start)
+			     << endl;
 			uint32_t cidx;
 			uint32_t wcet = APmaxWCETO(*cmap, cidx);
+			dout << "wcet and cidx: " << wcet << " " << cidx << endl;
 			if (wcet > max_wceto) {
 				max_wceto = wcet;
 				max_map = cmap;
@@ -636,4 +666,42 @@ WCETOFactory::outermostCFR(CFR *inloop) {
 	dbg.dec();
 	#undef dout
 	return top;
+}
+
+class ECBLoopData {
+public:
+	ECBLoopData (WCETOFactory *f, CFR *head, list<uint32_t>& ECBs)
+		: fact(f), cfr_head(head), ecbs(ECBs) {
+	}
+	WCETOFactory *fact;
+	CFR *cfr_head;
+	list<uint32_t> &ecbs;
+};
+ 
+static bool
+lfs_ecb_filter(CFRG &, CFR *cfr, void *userdata) {
+	ECBLoopData *data = (ECBLoopData *) userdata;
+	
+	return true;
+}
+static bool
+lfs_ecb_test(CFRG &, CFR *cfr, void *userdata) {
+	ECBLoopData *data = (ECBLoopData *) userdata;
+	
+	return true;
+}
+static void
+lfs_ecb_work(CFRG &, CFR *cfr, void *userdata) {
+	ECBLoopData *data = (ECBLoopData *) userdata;	
+
+}
+ 
+list<uint32_t> *
+WCETOFactory::loopECBs(CFR *loop_head) {
+	list<uint32_t> *rval = new list<uint32_t>();
+
+	ECBLoopData *data = new ECBLoopData(this, loop_head, *rval);
+
+	delete data;
+	return rval;
 }

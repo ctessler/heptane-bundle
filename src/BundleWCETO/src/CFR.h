@@ -2,6 +2,7 @@
 #define CFR_H
 
 #include "CFG.h"
+#include "DBG.h"
 #include <lemon/dijkstra.h>
 
 class CFR : public CFG {
@@ -94,15 +95,28 @@ public:
 
 	string stringNode(ListDigraph::Node node) const;
 	friend std::ostream &operator<< (std::ostream &stream, const CFR& cfr);
+	string str() const;
 
 	/* WCETO calculation for *this* CFR */
 	uint32_t wceto(uint32_t threads);
+	/* Finds the maximum execution cost of one thread */
+	uint32_t exeCost();
+	/* Finds the cost for loading the cache with all instructions */
+	uint32_t loadCost();
+
+	/*
+	 * ECB calculation and retrieval
+	 *
+	 * Caller of ECBs() must delete the list.
+	 */
+	uint32_t calcECBs();
+	list<uint32_t>* ECBs();
 
 	/* Unit test */
 	static bool test();
 private:
 	CFG &_cfg;
-
+	DBG dbg;
 	/*
 	 * Nodes in the CFR hold no information, they are place holders for
 	 * nodes in the CFG.
@@ -120,7 +134,8 @@ private:
 	map<ListDigraph::Node, ListDigraph::Node> _from_cfg;
 	/* CFR node -> CFG node (that is the head) */
 	map<ListDigraph::Node, ListDigraph::Node> _cfg_head;	
-	
+
+	list<uint32_t> _ecbs;
 	/*
 	 * A note about loop heads of nodes, the CFR stores the CFG node as the
 	 * loop head. This is because the loop head may not be contained within
@@ -129,6 +144,8 @@ private:
 
 	/* A CFR cannot exist without a cache */
 	Cache *_cache;
+
+	uint32_t maxLoads();
 };
 
 #endif /* CFR_H */

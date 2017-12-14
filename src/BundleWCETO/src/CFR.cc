@@ -129,27 +129,32 @@ CFR::getIters(ListDigraph::Node head) const {
 
 std::ostream&
 operator<< (std::ostream &stream, const CFR& cfr) {
-	ListDigraph::Node initial = cfr.getInitial();
-	ListDigraph::Node cfg_initial = cfr.toCFG(initial);
+	stream << cfr.str();
+	return stream;
+}
+
+string
+CFR::str() const {
+	stringstream stream;
+
+	ListDigraph::Node initial = getInitial();
+	ListDigraph::Node cfg_initial = toCFG(initial);
 
 	stream << "("
-	       << countNodes(cfr) << "v, "
-	       << countArcs(cfr) << "e, "
+	       << countNodes(*this) << "v, "
+	       << countArcs(*this) << "e, "
 	       << (initial == INVALID ?
-		   "INVALID" : cfr.getCFG()->stringNode(cfg_initial))
+		   "INVALID" : getCFG()->stringNode(cfg_initial))
 	       << ")";
-
-	return stream;
+	return stream.str();
 }
 
 uint32_t
 CFR::wceto(uint32_t threads) {
-	int exe = 1; // MIPS constant execution time
-	int brt = _cache->latency();
-	if (threads == 0) {
-		return 0;
-	}
+	#define dout dbg.buf << dbg.start
+	dbg.inc("wceto: ");
 	
+	if (threads == 0) { return 0; }
 	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
 		ListDigraph::Node terminal = nit;
 		if (countOutArcs(*this, terminal) > 0) {
@@ -158,11 +163,21 @@ CFR::wceto(uint32_t threads) {
 		setTerminal(terminal);
 	}
 
-	/*
-	 * Going with a simplistic version of costs:
-	 *   Loaded: 1st thread loads all possible values
-	 *   Unloaded: no BRT for any thread;
-	 */
+	uint32_t loadcost = loadCost();
+	uint32_t exe = exeCost();
+
+	uint32_t wceto = loadcost + threads * exeCost();
+	dout << *this << " wcet: " << wceto << endl;
+	dbg.flush(cout);
+	dbg.dec();
+	return wceto;
+}
+
+uint32_t
+CFR::exeCost() {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("exeCost: ");
+
 	ListDigraph::ArcMap<int> lengthMap(*this);
 	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
 		ListDigraph::Arc a = ait;
@@ -173,33 +188,99 @@ CFR::wceto(uint32_t threads) {
 	dijk_loaded.distMap(dist);
 	dijk_loaded.run(getInitial());
 
-	int loaded = dist[getTerminal()] * -1;
-	/* That's a longest path for the 1st thread, we're using all
-	   nodes for the moment */ 
-	loaded = countNodes(*this) * (brt) +
-		(-1 * (dist[getTerminal()] - 1) * exe); /* +1 for the source */
+	int longest_path = dist[getTerminal()] * - 1 + 1;
+	dout << *this << " longest path length: " << longest_path;
+	uint32_t exe = longest_path * _cache->latency();
+	dout << *this << " execution cost (per thread): " << exe << endl;
 
-	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
-		ListDigraph::Arc a = ait;
-		lengthMap[a] = -1;
-	}
-	Dijkstra<ListDigraph> dijk_unloaded(*this, lengthMap);
-	dijk_unloaded.distMap(dist);
-	dijk_unloaded.run(getInitial(), getTerminal());
-	int unloaded = dist[getTerminal()] * -1 + 1; /* +1 for the source */
-
-	unsigned long int wceto = loaded + (threads -1) * unloaded;
-	#if 0
-	cout << _cfg.stringNode(getInitial()) << endl << "\t"
-	     << " nodes: " << countNodes(*this)
-	     << " threads: " << threads
-	     << " brt: " << brt
-	     << " longest path: " << unloaded
-	     << " loaded: " << loaded
-	     << " unloaded: " << unloaded
-	     << " wceto: " << wceto
-	     << endl;
-	#endif
-	return wceto;
+	dbg.dec();
+	return exe;
+	#undef dout
 }
 
+/**
+ * Returns the maximum load cost
+ */
+uint32_t
+CFR::loadCost() {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("loadCost: ");
+
+	uint32_t loads = maxLoads();
+
+	dbg.dec();
+	return loads * _cache->memLatency();
+	#undef dout
+}
+
+uint32_t
+CFR::maxLoads() {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("maxLoads: ");
+
+	/**
+	 * This function depends on all instructions mapping to unique
+	 * cache lines. 
+	 */
+	Cache scratch(_cache->getSets(), _cache->getWays(),
+		      _cache->getLineSize(), _cache->latency(),
+		      _cache->memLatency(),  _cache->getPolicy());
+	uint32_t loads=0;
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		iaddr_t addr = getAddr(node);
+		if (!scratch.present(addr)) {
+			loads++;
+		}
+		scratch.insert(addr);
+	}
+	dout << *this << " maximum loads: " << loads << endl;
+	dbg.dec();
+	#undef dbg
+	return loads;
+}
+
+uint32_t
+CFR::calcECBs() {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("CFR::calcECBs: ");
+	if (_ecbs.size() != 0) {
+		dout << " already calculated" << endl;
+		return _ecbs.size();
+	}
+	_ecbs.clear();
+	Cache scratch(_cache->getSets(), _cache->getWays(),
+		      _cache->getLineSize(), _cache->latency(),
+		      _cache->memLatency(),  _cache->getPolicy());
+	dout << *this << " adding ECBS:";
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		iaddr_t addr = getAddr(node);
+		if (!scratch.present(addr)) {
+			uint32_t index = scratch.setIndex(addr);
+			dbg.buf << " " << index;
+			_ecbs.push_back(index);
+		}
+		scratch.insert(addr);
+	}
+	dbg.buf << endl;
+
+	list<uint32_t>::iterator it;
+	_ecbs.sort();
+	dout << *this << " ECBS:";
+	for (it = _ecbs.begin(); it != _ecbs.end(); ++it) {
+		dbg.buf << " " << *it;
+	}
+	dbg.buf << endl;
+	
+	dbg.dec();
+	#undef dout
+ 	return _ecbs.size();
+}
+
+list<uint32_t>*
+CFR::ECBs() {
+	list<uint32_t> *rval = new list<uint32_t>(_ecbs);
+
+	return rval;
+}

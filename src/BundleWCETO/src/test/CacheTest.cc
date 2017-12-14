@@ -6,6 +6,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION(CacheTest);
 #define NSETS 32
 #define NWAYS 2
 #define LATENCY 10
+#define MEM_LATENCY 100
 
 void
 CacheTest::setUp()
@@ -22,7 +23,7 @@ CacheTest::destructor()
 {
 	return;
 	PolicyLRU lru;
-	Cache original(NSETS, NWAYS, LINE_SIZE, LATENCY, &lru);
+	Cache original(NSETS, NWAYS, LINE_SIZE, LATENCY, MEM_LATENCY, &lru);
 
 	original.insert(0x4000);
 }
@@ -46,7 +47,7 @@ CacheTest::setInsert()
 	}
 	
 	PolicyLRU lru;
-	Cache original(NSETS, NWAYS, LINE_SIZE, LATENCY, &lru);
+	Cache original(NSETS, NWAYS, LINE_SIZE, LATENCY, MEM_LATENCY, &lru);
 	CacheSet set(&original);
 
 	set.insert(0x4000);
@@ -66,7 +67,7 @@ void
 CacheTest::copySet()
 {
 	PolicyLRU lru;
-	Cache original(NSETS, NWAYS, LINE_SIZE, LATENCY, &lru);
+	Cache original(NSETS, NWAYS, LINE_SIZE, LATENCY, MEM_LATENCY, &lru);
 	CacheSet *set = new CacheSet(&original);
 	set->insert(0x4000);
 	set->insert(0x4004);
@@ -93,7 +94,7 @@ CacheTest::cacheCopy()
 	map<int, Cache*> omap;
 	map<int, Cache*>::iterator mit;
 	for (int i = 0; i < 3; i++) {
-		Cache *c = new Cache(NSETS, NWAYS, LINE_SIZE, LATENCY, &lru);
+		Cache *c = new Cache(NSETS, NWAYS, LINE_SIZE, LATENCY, MEM_LATENCY, &lru);
 		omap.insert(make_pair(i, c));
 	}
 

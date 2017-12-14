@@ -71,6 +71,11 @@ public:
 	 */
 	uint32_t findPreds(CFR* cfr, CFRWCETOMap& cwmap, PredList& preds);
 	CFR *outermostCFR(CFR *inloop);
+
+	/**
+	 * Returns the list of ECBs contained within the loop
+	 */
+	list<uint32_t>* loopECBs(CFR* cfr);
 private:
 	uint32_t _threads;
 	CFRG &_cfrg;

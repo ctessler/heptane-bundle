@@ -130,6 +130,7 @@ main(int argc, char** argv) {
 	BXMLCfg xml_config(cfgfile);
 	map<int, Cache*> ins_cache, dat_cache;
 	xml_config.copyCaches(ins_cache, dat_cache);
+	int mem_load_latency = xml_config.getLoadLatency();
 	xmlCleanupParser();
 
 	/* Read the Control Flow Graph from BundleCFG */

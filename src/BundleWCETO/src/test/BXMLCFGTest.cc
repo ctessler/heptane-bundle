@@ -18,7 +18,7 @@ BXMLCFGTest::read()
 	/* Test the method first */
 	PolicyLRU *lru = new PolicyLRU;
 
-	Cache cache(32, 2, 32, 10);
+	Cache cache(32, 2, 32, 10, 100);
 	cache.setPolicy(lru);
 	Cache copy(cache);
 	delete lru;
