@@ -516,6 +516,18 @@ WCETOFactory::loopWCETO(CFR *cfr) {
 		for (twit = rval->begin(); twit != rval->end(); ++twit) {
 			twit->second = twit->second * iters;
 		}
+		list<uint32_t> *ecbs = loopECBs(cfr);
+		ecbs->sort();
+		list<uint32_t>::iterator it;
+		dout << *cfr << " ECBs: ";
+		for (it = ecbs->begin(); it != ecbs->end(); it++) {
+			dbg.buf << *it << " ";
+		}
+		dbg.buf << endl;
+		dout << *cfr << " per iteration loads: " << loopLoadCount(*ecbs)
+		     << endl;
+		
+		delete ecbs;
 	}
 	preds.clear();
 	dout << "Map updated with iterations" << endl
@@ -679,21 +691,51 @@ public:
 };
  
 static bool
-lfs_ecb_filter(CFRG &, CFR *cfr, void *userdata) {
+lfs_ecb_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 	ECBLoopData *data = (ECBLoopData *) userdata;
-	
-	return true;
+	CFR *head = data->cfr_head;
+	WCETOFactory *fact = data->fact;
+
+	#define dout fact->dbg.buf << fact->dbg.start
+	fact->dbg.inc("lfs_ecb_filter: ");
+
+	bool rv=true;
+	dout << *cfr << " is ";
+	if (!cfrg.inLoop(head, cfr)) {
+		fact->dbg.buf << "not ";
+		rv = false;
+	}
+	fact->dbg.buf << "in " << endl 
+		      << fact->dbg.start << "the loop of " << *head << endl;
+
+	#undef dout
+	fact->dbg.dec();
+	return rv;
 }
 static bool
 lfs_ecb_test(CFRG &, CFR *cfr, void *userdata) {
 	ECBLoopData *data = (ECBLoopData *) userdata;
+	CFR *head = data->cfr_head;
+	WCETOFactory *fact = data->fact;
+
+	#define dout fact->dbg.buf << fact->dbg.start
+	fact->dbg.inc("lfs_ecb_test: ");
+
+	dout << *cfr << " accepted, simlpy adding the ecbs" << endl;
 	
+	#undef dout
+	fact->dbg.dec();
 	return true;
 }
 static void
 lfs_ecb_work(CFRG &, CFR *cfr, void *userdata) {
-	ECBLoopData *data = (ECBLoopData *) userdata;	
+	ECBLoopData *data = (ECBLoopData *) userdata;
+	list<uint32_t> &ecbs = data->ecbs;
 
+	cfr->calcECBs();
+	list<uint32_t> *local = cfr->ECBs(); // Sorted
+	ecbs.insert(ecbs.begin(), local->begin(), local->end());
+	delete local;
 }
  
 list<uint32_t> *
@@ -702,6 +744,31 @@ WCETOFactory::loopECBs(CFR *loop_head) {
 
 	ECBLoopData *data = new ECBLoopData(this, loop_head, *rval);
 
+	CFRGLFS lfs(_cfrg, lfs_ecb_filter, lfs_ecb_test, lfs_ecb_work,
+		    data);
+	lfs.search(loop_head);
+
 	delete data;
 	return rval;
+}
+
+uint32_t
+WCETOFactory::loopLoadCount(list<uint32_t> &ecbs) {
+	list<uint32_t>::iterator lit = ecbs.begin();
+	uint32_t total=0, current=1, cursor = (*lit);
+	for (lit++; lit != ecbs.end(); ++lit) {
+		if (cursor != (*lit)) {
+			// new element
+			if (current > 1) {
+				total += current;
+			}
+			current = 1;
+			cursor = (*lit);
+			continue;
+		}
+		/* Same element repeated */
+		current++;
+	}
+	total += current;
+	return total;
 }

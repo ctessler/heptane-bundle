@@ -37,6 +37,16 @@ ThreadWCETOMap::fill(ThreadWCETOMap& src) {
 	return true;
 }
 
+bool
+ThreadWCETOMap::fillExe(CFR *cfr, uint32_t threads) {
+	clear();
+	insert(pair<uint32_t, uint32_t>(0, 0));
+	for (uint32_t i=1; i <= threads; i++) {
+		insert(pair<uint32_t, uint32_t>(i, cfr->exeCost()));
+	}
+	return true;
+}
+
 string
 ThreadWCETOMap::str(string pfx) const {
 	stringstream ss;

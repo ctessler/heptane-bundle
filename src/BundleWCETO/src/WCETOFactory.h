@@ -5,6 +5,7 @@
 #include "DBG.h"
 #include "CFRGLFS.h"
 #include "CFRWCETOMap.h"
+#include "CFRDemandMap.h"
 
 typedef list<ThreadWCETOMap*> PredList;
 
@@ -76,6 +77,7 @@ public:
 	 * Returns the list of ECBs contained within the loop
 	 */
 	list<uint32_t>* loopECBs(CFR* cfr);
+	uint32_t loopLoadCount(list<uint32_t> &ecbs);
 private:
 	uint32_t _threads;
 	CFRG &_cfrg;

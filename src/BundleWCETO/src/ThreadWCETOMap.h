@@ -42,6 +42,7 @@ public:
 	uint32_t wceto(uint32_t thread);
 	bool fill(CFR *cfr, uint32_t threads);
 	bool fill(ThreadWCETOMap &src);
+	bool fillExe(CFR *cfr, uint32_t threads);
 	string str(string pfx="") const;
 };
 
