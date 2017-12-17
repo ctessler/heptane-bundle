@@ -29,6 +29,7 @@ private:
 };
 
 typedef multiset<ListDigraph::Node, CFRGNodeComp> pqueue_t;
+typedef list<CFR*> CFRList;
 
 class CFRG : public ListDigraph {
 public:
@@ -102,6 +103,26 @@ public:
 	 * Returns true if the CFR is in any loop
 	 */
 	bool isLoopPart(ListDigraph::Node cfrg_node);
+	bool isLoopPartCFR(CFR* cfr);
+	/**
+	 * Returns the head of the given CFR that is top most, ie the
+	 * head that is not a part of any other loop besides the one
+	 * it starts.
+	 */
+	CFR* crown(CFR* cfr);
+	/**
+	 * Returns true if the CFR begins a loop
+	 */
+	bool isLoopHead(CFR* cfr);
+
+	/**
+	 * Returns a list of CFRs that immediately precede the given
+	 * CFR in the CFRG
+	 *
+	 * Caller must delete the returned list
+	 */
+	CFRList* preds(CFR* cfr);
+	
 
 	/**
 	 * An expensive operation, this finds the CFR based on the

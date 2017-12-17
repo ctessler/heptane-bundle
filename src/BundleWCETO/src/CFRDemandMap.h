@@ -32,16 +32,19 @@ public:
 	CFRDemand(CFR& cfr);
 	CFRDemand(CFRDemand &src);
 	~CFRDemand();
-	ThreadWCETOMap* getWCETOMap();
+	ThreadWCETOMap& getWCETOMap();
 	ThreadWCETOMap* copyWCETOMap();
+	uint32_t& getEXE();
 	uint32_t copyEXE();
-	uint32_t* getEXE();
-	ECBs* getECBs();
+	uint32_t& getLoad();
+	uint32_t copyLoad();
+	ECBs& getECBs();
 	ECBs* copyECBs();
 
 	string str(string pfx="") const;
 private:
 	ThreadWCETOMap *_twmap;
+	uint32_t _load_cycles;
 	uint32_t _exe_cycles;
 	ECBs *_ecbs;
 	CFR &_cfr;

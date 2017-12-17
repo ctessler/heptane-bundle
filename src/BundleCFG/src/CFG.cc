@@ -4,6 +4,7 @@ CFG::CFG() : ListDigraph(), _function(*this), _addr(*this), _loop_head(*this),
 	     _is_loop_head(*this), _loop_iters(*this)
 {
 	_initial = INVALID;
+	_terminal = INVALID;
 }
 
 CFG::CFG(CFG &other) : ListDigraph(), _function(*this), _addr(*this),
@@ -97,6 +98,21 @@ CFG::getTerminal() const {
 void
 CFG::setTerminal(ListDigraph::Node node) {
 	_terminal = node;
+}
+
+ListDigraph::Node
+CFG::calcTerminal() {
+	if (_terminal != INVALID) {
+		return _terminal;
+	}
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		ListDigraph::Node terminal = nit;
+		if (countOutArcs(*this, terminal) > 0) {
+			continue;
+		}
+		setTerminal(terminal);
+	}
+	return _terminal;
 }
 
 void
@@ -204,6 +220,47 @@ CFG::getIters(ListDigraph::Node head) const {
 void
 CFG::setIters(ListDigraph::Node head, unsigned int iters) {
 	_loop_iters[head] = iters;
+}
+
+bool
+CFG::sameLoop(ListDigraph::Node a, ListDigraph::Node b) {
+	string prefix = "CFG::sameLoop: ";
+	ListDigraph::Node a_head, b_head;
+	a_head = getHead(a);
+	b_head = getHead(b);
+
+	cout << prefix << stringNode(a) << " and" << endl
+	     << prefix << stringNode(b) << " are ";
+		
+	if (a_head == b_head) {
+		cout << "in the same loop (have the same head)" << endl;
+		return true;
+	}
+	if (a == b_head && isHead(a)) {
+		cout << "in the same loop a is b's head" << endl;
+		return true;
+	}
+
+	if (b == a_head && isHead(b)) {
+		cout << "in the same loop b is a's head" << endl;
+		return true;
+	}
+
+	cout << "not in the same loop" << endl;
+	return false;
+}
+
+bool
+CFG::inLoop(ListDigraph::Node head, ListDigraph::Node node) {
+	if (head == node) {
+		return true;
+	}
+	ListDigraph::Node node_head = getHead(node);
+
+	if (node_head == head) {
+		return true;
+	}
+	return false;
 }
 
 void

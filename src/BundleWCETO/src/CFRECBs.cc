@@ -13,12 +13,15 @@ ECBs::str(string pfx) const {
 	ss << pfx << "(";
 	for (it = begin(); it != end(); ++it) {
 		ss << (*it);
-		if (it != begin() && it != end()) {
+		if (it != (--end())) {
 			ss << ", ";
 		}
 	}
 	ss << ")";
 	return ss.str();
+}
+
+ECBs::ECBs() {
 }
 
 ECBs::ECBs(ECBs &src) {
@@ -28,3 +31,4 @@ ECBs::ECBs(ECBs &src) {
 ECBs::ECBs(ECBs *src) {
 	insert(begin(), src->begin(), src->end());
 }
+

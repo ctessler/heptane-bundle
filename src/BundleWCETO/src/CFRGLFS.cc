@@ -25,6 +25,9 @@ CFRGLFS::step(list<CFR*> &q, ListDigraph::NodeMap<bool> &visited) {
 	q.pop_front();
 
 	ListDigraph::Node cur_node = _cfrg.findNode(current);
+	if (visited[cur_node]) {
+		return;
+	}
 
 	bool passes_filter=true;
 	if (_filt_fn && ! _filt_fn(_cfrg, current, _ud)) {

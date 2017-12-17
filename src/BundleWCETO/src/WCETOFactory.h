@@ -4,7 +4,6 @@
 #include "CFRG.h"
 #include "DBG.h"
 #include "CFRGLFS.h"
-#include "CFRWCETOMap.h"
 #include "CFRDemandMap.h"
 
 typedef list<ThreadWCETOMap*> PredList;
@@ -40,51 +39,60 @@ public:
 	 * @return the number of cycles the bounding the WECTO of the CFR.
 	 */
 	uint32_t value(CFR *cfr);
-	/**
-	 * Calculates the WCETO for a single CFR that is not a member of a loop
-	 * (in the CFRG)
-	 *
-	 * @param[in] cfr the CFR having it's WCETO table calculated
-	 */
-	ThreadWCETOMap *isolatedWCETO(CFR *cfr);
-	ThreadWCETOMap *loopWCETO(CFR *cfr);
 
+	/**
+	 * References to internal structures, used by the searching
+	 * mechanisms.
+	 */
 	CFRG& cfrg() { return _cfrg; }
-	CFRWCETOMap& cfr_table() { return _cfr_table; }
-	CFRWCETOMap& loop_table() { return _loop_table; }
-	CFRWCETOMap& scratch_table() { return _scratch_table; }
+	CFRDemandMap& cfr_table() { return _cfrt; }
+	CFRDemandMap& loop_table() { return _loopt; }
+	CFRDemandMap& scratch_table() { return _scratcht; }
 
+	/**
+	 * Calculates the demand for a single CFR not contained within
+	 * a loop.
+	 */
+	CFRDemand* inDemand(CFR* cfr);
+	/**
+	 * Calculates the demand for a loop begining with the given
+	 * CFR
+	 */
+	CFRDemand* loopDemand(CFR* cfr);
+
+	/**
+	 * Returns the number of times duplicate entries are in the
+	 * list. 
+	 *
+	 * Examples:
+	 * (1, 2) -- dupeCount returns 0
+	 * (1, 1) -- returns 2
+	 * (1, 1, 2, 2, 2) -- returns 5
+	 */
+	uint32_t dupeCount(ECBs &ecbs);
+	/**
+	 * Debug object
+	 */
 	DBG dbg;
-	/**
-	 * Incorporates the WCETO values from the preceding CFRs
-	 *
-	 * @param[in|out] twmap ThreadWCETO map for the CFR
-	 * @param[in|out] preds list of WCETO maps for predecessors, ruined upon
-	 * return.
-	 */
-	bool addPreds(ThreadWCETOMap *twmap, PredList& preds);
-	/**
-	 * Finds the immediate predecessors of *this* cfr 
-	 *
-	 * @param[in] cfr the CFR being asked about
-	 * @param[in] cwmap the map to find the thread tables of the predecessors
-	 * @param[out] preds the list of the immediate successors.
-	 */
-	uint32_t findPreds(CFR* cfr, CFRWCETOMap& cwmap, PredList& preds);
-	CFR *outermostCFR(CFR *inloop);
-
-	/**
-	 * Returns the list of ECBs contained within the loop
-	 */
-	list<uint32_t>* loopECBs(CFR* cfr);
-	uint32_t loopLoadCount(list<uint32_t> &ecbs);
+	void dumpCFRs();
 private:
 	uint32_t _threads;
 	CFRG &_cfrg;
-	CFRWCETOMap _cfr_table, _loop_table, _scratch_table;
+	CFRDemandMap _cfrt, _loopt, _scratcht;
 
-	/** Helper for addPreds */
-	uint32_t APmaxWCETO(ThreadWCETOMap &twmap, uint32_t &max_idx);
+
+	/**
+	 * Merges the execution (and maybe cache loads) into the given
+	 * demand map.
+	 *
+	 * @param[in|out] dem the demand being updated
+	 * @param[in|out] map of demands being merged into dem,
+	 *   ruined after calling
+	 * @param[in] includeLoad when false only execution values are
+	 *     considered. When true, cache loads are also considered.
+	 */
+	void maxMerge(CFRDemand &dem, CFRDemandMap &map, bool includeLoad);
+	uint32_t maxEle(ThreadWCETOMap &dem, uint32_t &idx);
 };
 
 #endif /* WCETOFACTORY_H */

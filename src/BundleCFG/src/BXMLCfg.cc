@@ -48,8 +48,8 @@ void BXMLCfg::read(string XMLFile) {
 	//xmlNodePtr node = xmlDocGetRootElement(_doc);
 	xmlNodePtr archNode = getArchNode();
 	xmlNodePtr targetNode = getTargetNode();
-	xmlNodePtr cacheNodes = getCacheNodes();
 	xmlNodePtr memoryNode = getMemoryNode();
+	xmlNodePtr cacheNodes = getCacheNodes();
 	xmlNodePtr dirNode = getDirNode();
 	xmlNodePtr entryNode = getEntryNode();
 	
@@ -176,6 +176,8 @@ xmlNodePtr BXMLCfg::getTargetNode() {
 /**
  * Gets the XML node list of all the CACHE tags
  *
+ * Must be called *after* getMemoryNodes
+ *
  * @return the list of cache nodes
  */
 xmlNodePtr BXMLCfg::getCacheNodes() {
@@ -264,7 +266,7 @@ BXMLCfg::addCacheLevel(xmlNodePtr node) {
 	free(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "type");
-	Cache *new_cache = new Cache(nsets, nways, linesize, latency);
+	Cache *new_cache = new Cache(nsets, nways, linesize, latency, _load_latency);
 	if (string ("icache") == buff) {
 		if (_ins_cache.find(level) != _ins_cache.end()) {
 			delete new_cache;

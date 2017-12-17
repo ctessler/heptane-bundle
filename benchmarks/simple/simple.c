@@ -1,10 +1,9 @@
 
 void main() {
-
-  int i,j,k;
-
-  j = j*10 + k -1;
-  i = 0;
-  k ++;
-  j--;
+	int i=2;
+	i+=3;
+	i+=4;
+	i+=5;
+	i=0;
+	return;
 }

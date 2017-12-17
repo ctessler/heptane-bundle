@@ -7,10 +7,31 @@
  */
 static bool
 lfs_top_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
+	WCETOFactory *fact = (WCETOFactory *) userdata;
+	bool rv = true;
+	#define dout fact->dbg.buf << fact->dbg.start
+	fact->dbg.inc("WCETOFactory::lfs_top_filter ");
+	dout << *cfr << " does ";
 	/**
-	 * Since this is the top level LFS, all nodes pass. 
+	 * Since this is the top level LFS, only top level loop heads
+	 * and independant nodes
 	 */
-	return true;
+	ListDigraph::Node cfri = cfr->getInitial();
+	ListDigraph::Node cfgi = cfr->toCFG(cfri);
+	CFG *cfg = cfr->getCFG();
+	if (cfg->getHead(cfgi) != INVALID) {
+		/*
+		 * Only those nodes that are loop heads, or do not
+		 * participate in a loop pass the filter
+		 */
+		fact->dbg.buf << "not ";
+		rv = false;
+	}
+	fact->dbg.buf << "pass the filter." << endl;
+	fact->dbg.flush(cout);
+	fact->dbg.dec();
+	#undef dout
+	return rv;
 }
 
 /**
@@ -22,7 +43,7 @@ lfs_top_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
  * list, to be processed again later.
  *
  * This test function guarantees that all predecessors of this CFR have had
- * their WCETO values calculated, so it is safe for the work function to
+ * their Demand values calculated, so it is safe for the work function to
  * proceed. 
  * 
  * @param[in] cfrg the CFRG which the CFR comes from
@@ -34,33 +55,31 @@ lfs_top_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 static bool
 lfs_top_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	WCETOFactory *fact = (WCETOFactory *) userdata;
-	fact->dbg.inc("lfs_top_test: ");
-	fact->dbg.buf << fact->dbg.start << "testing CFR " << *cfr << endl;
-	fact->dbg.inc("lfs_top_test: ");	
 	#define dout fact->dbg.buf << fact->dbg.start
+	fact->dbg.inc("WCETOFactory::lfs_top_test ");
 
-	CFRWCETOMap &cfrtbl = fact->cfr_table();
-	CFRWCETOMap &looptbl = fact->loop_table();
-
-	
-	bool rv=true;
 	ListDigraph::Node cfrgi = cfrg.findNode(cfr);
-	if (cfrg.isLoopPart(cfrgi)) {
-		dout << *cfr << " is part of a loop, pre-check is different"
-		     << endl;
-	}
+	CFRDemandMap &loopt = fact->loop_table();
+	CFRDemandMap &cfrt = fact->cfr_table();
+	bool rv = true;
+
 	for (ListDigraph::InArcIt iat(cfrg, cfrgi); iat != INVALID; ++iat) {
 		ListDigraph::Node pred_node = cfrg.source(iat);
 		CFR *pred_cfr = cfrg.findCFR(pred_node);
 		dout << "preceding CFR " << *pred_cfr << endl;
 		if (cfrg.isLoopPart(pred_node)) {
-			if (cfrg.isLoopPart(cfrgi)) {
+			/* Preceding node is part of a loop */
+			if (cfrg.inLoop(cfr, pred_cfr)) {
+				/* Members of this loop (cfr) are not
+				   expected to be calculated */
 				continue;
 			}
-			/* Use the loop table */
+			/* 
+			 * Use the loop table
+			 */
 			dout << *pred_cfr << " is part of a loop." << endl;
-			CFR *outer = fact->outermostCFR(pred_cfr);
-			if (!looptbl.present(outer)) {
+			CFR *outer = cfrg.crown(pred_cfr);
+			if (!loopt.present(outer)) {
 				dout << *outer << " has not been computed, "
 				    << "skipping." << endl;
 				rv = false; break;
@@ -69,51 +88,43 @@ lfs_top_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 		}
 		/* Otherwise it's time to check the singular CFRs */
 		dout << *pred_cfr << " is an isolated CFR" << endl;
-		if (!cfrtbl.present(pred_cfr)) {
+		if (!cfrt.present(pred_cfr)) {
 			dout << *pred_cfr 
 			     << " has not been computed, skipping." << endl;
 			rv = false; break;
 		}
 	}
 	
-	dout << *cfr << " checked, precedessors are ";
-	if (!rv) {
-		fact->dbg.buf << "not ";
-	}
-	fact->dbg.buf << "completed" << endl;
 	fact->dbg.flush(cout);
 	fact->dbg.dec();
-	fact->dbg.dec();
-
-	/* change to rv when loop wceto has finished*/
+	#undef dout
+	/* change to return rv after the work portion has been
+	   completed */
 	return rv;
 }
 
 /**
  * List First Work Function
  *
- * Performs the WCETO calculation for *this* CFR, if the CF
+ * Performs the Demand calculation for *this* CFR, if the CF
  *
  */
 static void
 lfs_top_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	WCETOFactory *fact = (WCETOFactory *) userdata;
 	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("lfs_top_work: ");
-	dout << "working CFR " << *cfr << endl;
+	fact->dbg.inc("WCETOFactory::lfs_top_work ");
 
-	ListDigraph::Node cfrg_node = cfrg.findNode(cfr);
-	if (cfrg.isHead(cfrg_node)) {
-		dout << *cfr << " is a loop starter" << endl;
-		fact->loopWCETO(cfr);
+	ListDigraph::Node cfrgi = cfrg.findNode(cfr);
+	if (cfrg.isHead(cfrgi)) {
+		dout << *cfr << " is a loop head" << endl;
+		fact->loopDemand(cfr);
 	} else {
-		dout << *cfr << " is an isolated CFR" << endl;
-		fact->isolatedWCETO(cfr);
+		dout << *cfr << " is an independent CFR" << endl;
+		fact->inDemand(cfr);
 	}
-	
-	dout << *cfr << " work completed" << endl;
 	fact->dbg.flush(cout);
-	fact->dbg.dec();	
+	fact->dbg.dec();
 	#undef dout
 }
 
@@ -121,12 +132,10 @@ void
 WCETOFactory::produce() {
 	#define dout dbg.buf << dbg.start
 	dbg.inc("WCETOFactory::produce ");
-	dout << "BEGIN" << endl;
 	
 	CFRGLFS lfs(_cfrg, lfs_top_filter, lfs_top_test, lfs_top_work,
 		    (void*) this);
 	lfs.search(_cfrg.getInitialCFR());
-	dout << "END" << endl;
 	dbg.dec();
 	#undef dout
 }
@@ -134,106 +143,85 @@ WCETOFactory::produce() {
 uint32_t
 WCETOFactory::value(CFR *cfr) {
 	#define dout dbg.buf << dbg.start
-	dbg.inc("value: ");
-
+	dbg.inc("WCETOFactory::value ");
 	uint32_t wceto=0;
-	ThreadWCETOMap *twmap = NULL;
-	if (_cfrg.isLoopPart(_cfrg.findNode(cfr))) {
-		dout << *cfr << " using the loop table" << endl;
-		twmap = _loop_table.present(cfr);
-		if (!twmap) {
-			/* have to use the head instead */
-			ListDigraph::Node cfg_node =
-			    cfr->getHead(cfr->getInitial());
-			cfr = _cfrg.findCFRbyCFGNode(cfg_node);
-			twmap = _loop_table.present(cfr);
-		}
+
+	CFRDemand *dmnd;
+	if (_cfrg.isLoopPartCFR(cfr)) {
+		CFR *head = _cfrg.crown(cfr);
+		dmnd = _loopt.present(head);
 	} else {
-		twmap = _cfr_table.present(cfr);
-		dout << *cfr << " using the cfr table " << endl
-		     << twmap->str(dbg.start) << endl;		
+		dmnd = _cfrt.present(cfr);
 	}
-	if (!twmap) {
-		dbg.flush(cout);
-		throw runtime_error("value: Unable to find thread map");
-	}
-	wceto = twmap->wceto(_threads);
-	dout << *cfr << " has wceto: " << wceto << endl;
-	dbg.dec();
+	wceto = dmnd->getWCETOMap().wceto(_threads);
+
 	dbg.flush(cout);
+	dbg.dec(); 
 	#undef dout
 	return wceto;
 }
 
-/**
- * Necessary pre-condition, all predecessors have had their WCETO values
- * calculated. 
- */
-ThreadWCETOMap*
-WCETOFactory::isolatedWCETO(CFR *cfr) {
+CFRDemand *
+WCETOFactory::inDemand(CFR* cfr) {
 	#define dout dbg.buf << dbg.start
-	dbg.inc("isolatedWCETO: ");
-	dout << *cfr << " begin." << endl;
-
-	ListDigraph::Node cfrg_node;
-	ThreadWCETOMap *rval = _cfr_table.present(cfr);
-	PredList pmaps; pmaps.clear();
-
-	if (rval) {
-		dout << *cfr << " already calculated." << endl;
-		goto done;
+	dbg.inc("inDemand: ");
+	CFRDemand *cfrd = _cfrt.present(cfr);
+	if (cfrd) {
+		dout << *cfr << " is present" << endl;
+		return cfrd;
 	}
-	rval = _cfr_table.request(cfr);
-	rval->fill(cfr, _threads);
-	dout << *cfr << " independent WCETO values" << endl;
-	dbg.buf << rval->str(dbg.start) << endl;
-	
-	/* Now the predecessors */
-	cfrg_node = _cfrg.findNode(cfr);
-	for (ListDigraph::InArcIt iat(_cfrg, cfrg_node); iat != INVALID; ++iat) {
-		ListDigraph::Node prev_node = _cfrg.source(iat);
-		CFR *pred_cfr = _cfrg.findCFR(prev_node);
-		dout << *cfr << dbg.cont << "preceded by " << *pred_cfr << endl;
-		ThreadWCETOMap *twmap = NULL;
-		if (_cfrg.isLoopPart(prev_node)) {
-			/* use the loop table */
-			CFR *outer = outermostCFR(pred_cfr);
-			dout << "using loop table of " << *outer << endl;
-			twmap = new ThreadWCETOMap(_loop_table.request(outer));
+	cfrd = _cfrt.request(cfr);
+
+	ThreadWCETOMap &twmap = cfrd->getWCETOMap();
+	twmap.fillExe(cfr, _threads);
+	twmap[1] += cfr->loadCost();
+
+	dout << *cfr << " base demandmap: " << endl
+	     << cfrd->str(dbg.start) << endl;
+
+	/* Consider predecessors */
+	CFRList *preds = _cfrg.preds(cfr);
+	CFRDemandMap scratch;
+	CFRList::iterator it;
+	dbg.inc("inDemand-preds: ");
+	for (it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred_cfr = *it;
+		dout << *cfr << " preceded by " << endl
+		     << dbg.start << "    " << *pred_cfr << endl;
+		CFRDemand *pred_dmnd = NULL;
+		if (_cfrg.isLoopPartCFR(pred_cfr)) {
+			/* Must exist in the loop table */
+			CFR *head = _cfrg.crown(pred_cfr);
+			pred_dmnd = _loopt.present(head);
 		} else {
-			dout << "using cfr table" << endl;			
-			twmap = new ThreadWCETOMap(_cfr_table.request(pred_cfr));
+			/* Must exist in the cfr table */
+			pred_dmnd = _cfrt.present(pred_cfr);
 		}
-		if (!twmap) {
-			throw runtime_error("No predecessor calculation.");
-		}
-		pmaps.push_back(twmap);
+		scratch.insert(
+		    pair<CFR*, CFRDemand*>(pred_cfr, new CFRDemand(*pred_dmnd)));
 	}
-	addPreds(rval, pmaps);
-
-done:
-	for (PredList::iterator pit = pmaps.begin(); pit != pmaps.end(); ++pit) {
-		delete (*pit);
-	}
-	pmaps.clear();
-	
-	dbg.buf << rval->str(dbg.start) << endl;
-	dout << *cfr << " end." << endl;
 	dbg.dec();
+
+	maxMerge(*cfrd, scratch, true);
+
+	dout << *cfr << " demand after merging: " << endl
+	     << cfrd->str(dbg.start) << endl;
+
+	delete preds;
+	dbg.flush(cout);	
+	dbg.dec(); 
 	#undef dout
-
-	return rval;
+	return cfrd;
 }
-
 
 class LoopData {
 public:
-	LoopData(WCETOFactory *f, CFR *c, CFRWCETOMap *m) {
-		ld_fact = f; ld_cfr_head = c; ld_scratch = m;
+	LoopData(WCETOFactory& f, CFR* h, CFRDemandMap& s) :
+		fact(f), scratch(s), head(h) {
 	}
-	WCETOFactory *ld_fact;
-	CFR *ld_cfr_head;
-	CFRWCETOMap *ld_scratch;
+	WCETOFactory& fact;
+	CFRDemandMap& scratch;
+	CFR* head;
 };
 
 /**
@@ -243,53 +231,35 @@ public:
  */
 static bool
 lfs_loop_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
-	LoopData *ldata = (LoopData *)userdata;
-	WCETOFactory *fact = ldata->ld_fact;
-	CFR *head_cfr = ldata->ld_cfr_head;
+	LoopData *data = (LoopData *)userdata;
+	WCETOFactory &fact = data->fact;
+	CFR *head = data->head;
 
-	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("lfs_loop_filter: ");
+	#define dout fact.dbg.buf << fact.dbg.start
+	fact.dbg.inc("lfs_loop_filter: ");
 
-	if (head_cfr == cfr) {
+	if (head == cfr) {
 		dout << *cfr << " skip the head in test, not filter" << endl;
-		fact->dbg.flush(cout); fact->dbg.dec();
+		fact.dbg.flush(cout);
+		fact.dbg.dec();
 		return true;
 	}
 	/**
 	 * Prevent processing of CFRs outside of the loop
 	 */
 	bool rv = false;
-	if (cfrg.inLoop(head_cfr, cfr)) {
-		dout << "accepted CFR " << *cfr << fact->dbg.cont
-		     << "head is " << *head_cfr << endl;
+	if (cfrg.inLoop(head, cfr)) {
+		dout << "accepted CFR " << *cfr << fact.dbg.cont
+		     << "head is " << *head << endl;
 		rv = true;
 	} else {
-		dout << "rejected CFR " << *cfr << fact->dbg.cont
-		     << "head is not " << *head_cfr << endl;
+		dout << "rejected CFR " << *cfr << fact.dbg.cont
+		     << "head is not " << *head << endl;
 	}
-
-	fact->dbg.dec();
+	fact.dbg.flush(cout);
+	fact.dbg.dec();
 	#undef dout
 	return rv;
-}
-
-/**
- * Assistant function to lfs_loop_test and lfs_loop_work
- *
- * For a given cfr, and currently processing loop (head_cfr) if the
- * cfr is part of a loop embedded within the head_cfr's loop, find the
- * closest head to the head_cfr that contains the given cfr. 
- *
- * @param[in] cfrg the CFRG containing the CFRs
- * @param[in] head_cfr the bounding loop CFR
- * @param[in] cfr a cfr within a loop which is contained within the
- *   loop of the head_cfr
- *
- * @return the head of the loop closest to the head_cfr.
- */
-static CFR*
-leading_cfr(CFRG &cfrg, CFR* head_cfr, CFR* cfr) {
-	
 }
 
 /**
@@ -306,469 +276,355 @@ leading_cfr(CFRG &cfrg, CFR* head_cfr, CFR* cfr) {
  * 
  * @param[in] cfrg the CFRG which the CFR comes from
  * @param[in] cfr the CFR being worked on
- * @param[in|out] userdata, should be a pointer to the WCETOFactory
+ * @param[in|out] userdata, an instance of LoopData
  *
  * @return true if the CFR may be processed by the work function
  */
 static bool
 lfs_loop_test(CFRG &cfrg, CFR *cfr, void *userdata) {
-	LoopData *ldata = (LoopData *)userdata;
-	WCETOFactory *fact = ldata->ld_fact;
-	CFRWCETOMap *scratch = ldata->ld_scratch;
-	CFR *head_cfr = ldata->ld_cfr_head;
-	
-	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("lfs_loop_test: ");
-	dout << "loop " << *head_cfr << endl;
+	LoopData *data = (LoopData *)userdata;
+	WCETOFactory &fact = data->fact;
+	CFR *head = data->head;
+	CFRDemandMap &scratch = data->scratch;
+
+	#define dout fact.dbg.buf << fact.dbg.start
+	fact.dbg.inc("lfs_loop_test: ");
+	dout << "loop " << *head << endl;
 	dout << "CFR " << *cfr << endl;
 
-	if (head_cfr == cfr) {
-		dout << "head element, all done" << endl;
-		fact->dbg.flush(cout); fact->dbg.dec();
-		return true;
-	}
-		
-	PredList pmaps;
-	/* Now the predecessors */
-	ListDigraph::Node cfrg_node = cfrg.findNode(cfr);
 	bool rv = true;
-	for (ListDigraph::InArcIt iat(cfrg, cfrg_node); iat != INVALID; ++iat) {
-		ListDigraph::Node prev_node = cfrg.source(iat);
-		CFR *pred_cfr = cfrg.findCFR(prev_node);
-		dout << *cfr << fact->dbg.cont << "preceded by " << *pred_cfr
-		     << endl;
-
+	if (head == cfr) {
+		dout << "head element, all done" << endl;
+		fact.dbg.flush(cout);
+		fact.dbg.dec();
+		return rv;
+	}
+	CFRList *preds = cfrg.preds(cfr);
+	CFRList::iterator it;
+	for (it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		dout << *cfr << " preceded by" << endl;
+		dout << "    "  << *pred << endl;
 		/* Check if the predecessor is in the loop */
-		if (!cfrg.inLoop(head_cfr, pred_cfr)) {
-			dout << *pred_cfr << " not in the same loop as "
-			     << fact->dbg.cont << *cfr << endl;
+		if (!cfrg.inLoop(head, pred)) {
+			dout << *pred << " not in the same loop as " << endl;
+			dout << "    " << *cfr << endl;
 			/* It's not, don't consider it */
 			continue;
 		}
-		dout << *pred_cfr << " in the same loop as " << endl
-		     << fact->dbg.cont << *cfr << endl;
-		if (scratch->present(pred_cfr)) {
-			dout << *pred_cfr << " is present in the scratch table"
+		dout << *pred << " in the same loop as " << endl;
+		dout << "    " << *cfr << endl;
+		if (scratch.present(pred)) {
+			dout << *pred << " is present in the scratch table"
 			     << endl;
 			continue;
 		}
-		if (cfrg.isHead(cfrg.findNode(pred_cfr))) {
-			dout << *pred_cfr << " is a loop head" << endl;
-			ThreadWCETOMap *pred_map = fact->loopWCETO(pred_cfr);
-			ThreadWCETOMap *copy = new ThreadWCETOMap(pred_map);
-			dout << "inserting " << *copy << " into scratch" << endl;
-			scratch->insert(
-			    pair<CFR*,ThreadWCETOMap*>(pred_cfr, copy));
+		if (pred == head) {
+			/* loop head will be handled by loopDemand */
 			continue;
 		}
-		dout << *pred_cfr << " not in the scratch table, and not a "
-		     << "loop head." << fact->dbg.cont
-		     << *cfr << " is not ready." << endl;
+		if (cfrg.isHead(cfrg.findNode(pred))) {
+			dout << *pred << " is a loop head" << endl;
+			CFRDemand *pred_dmnd = fact.loopDemand(pred);
+			CFRDemand *copy = new CFRDemand(*pred_dmnd);
+			dout << "inserting into scratch" << endl
+			     << copy->str(fact.dbg.start) << endl;
+			scratch.insert(pair<CFR*, CFRDemand*>(pred, copy));
+			continue;
+		}
+		dout << *pred << " not in the scratch table, and not a loop head"
+		     << endl;
+		dout << *cfr << " is not ready." << endl;
 		rv = false;
 		break;
+			
 	}
 
-	dout << *cfr << " accepted, passing to work" << endl;
-	fact->dbg.flush(cout);
-	fact->dbg.dec();
+	delete preds;
+	fact.dbg.flush(cout);	
+	fact.dbg.dec();
 	#undef dout
-	return true;
+	return rv;
 }
 
 static void
 lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
-	/* 
-	 * Things to remember.
-	 *  All predecessors in the scratch table
-	 *  All entries are in the loop, may be the head_cfr of another CFR.
-	 */
-	LoopData *ldata = (LoopData *)userdata;
-	WCETOFactory *fact = ldata->ld_fact;
-	CFRWCETOMap *scratch = ldata->ld_scratch;
-	CFR *head_cfr = ldata->ld_cfr_head;
-	
-	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("lfs_loop_work: ");
-	dout << "loop " << *head_cfr << endl;
+	LoopData *data = (LoopData *)userdata;
+	WCETOFactory &fact = data->fact;
+	CFR *head = data->head;
+	CFRDemandMap &scratch = data->scratch;
+
+	#define dout fact.dbg.buf << fact.dbg.start
+	fact.dbg.inc("lfs_loop_work: ");
+	dout << "loop " << *head << endl;
 	dout << "CFR " << *cfr << endl;
 
-	if (head_cfr == cfr) {
+	if (head == cfr) {
 		dout << "head element, all done" << endl;
-		fact->dbg.flush(cout); fact->dbg.dec();
+		fact.dbg.flush(cout);
+		fact.dbg.dec();
 		return;
 	}
-
-	PredList pmaps;
-	ListDigraph::Node cfr_node = cfrg.findNode(cfr);
-	for (ListDigraph::InArcIt iat(cfrg, cfr_node); iat != INVALID; ++iat) {
-		ListDigraph::Node prev_node = cfrg.source(iat);
-		CFR *prev_cfr = cfrg.findCFR(prev_node);
-
-		dout << *cfr << " is preceded by " << *prev_cfr << endl;
-		ThreadWCETOMap *prev_map = scratch->present(prev_cfr);
-		if (!prev_map) {
-			throw runtime_error("Missing TWMap");
-		}
-		ThreadWCETOMap *copy = new ThreadWCETOMap(prev_map);
-		dout << *prev_cfr << " has a predecessor map: " << endl
-		     << copy->str(fact->dbg.start) << endl;
-		pmaps.push_back(copy);
-	}
-
-	ThreadWCETOMap *cur_map = scratch->request(cfr);
-	if (cfrg.isHead(cfr_node)) {
+	CFRDemand *dmnd = scratch.request(cfr);
+	dmnd->getWCETOMap().fillExe(cfr, fact.getThreads());
+	if (cfrg.isHead(cfrg.findNode(cfr))) {
 		dout << *cfr << " is an embedded loop, recursing" << endl;
-		ThreadWCETOMap *loop_map = fact->loopWCETO(cfr);
-		cur_map->fill(*loop_map);
-	} else {
-		dout << *cfr << " is a stand alone, filling" << endl;
-		cur_map->fill(cfr, fact->getThreads());
-		cfr->calcECBs();
+		CFRDemand *ldmnd = fact.loopDemand(cfr);
+		dmnd->getEXE() =
+		    ldmnd->getEXE() * cfr->getIters(cfr->getInitial());
 	}
-	
-	dout << *cfr << " adding predecessors: " << endl
-	     << cur_map->str(fact->dbg.start) << endl;
-	fact->addPreds(cur_map, pmaps);
 
-	for (PredList::iterator pit = pmaps.begin(); pit != pmaps.end(); ++pit) {
-		delete (*pit);
+	dout << "(Work) Initial demand: " << endl
+	     << dmnd->str(fact.dbg.start) << endl;
+	/* ECBs (for this CFR) are stored in the scratch table */
+
+	uint32_t wceto=0;
+	/* Perform the worst case execution time merger */
+	CFRList *preds = cfrg.preds(cfr);
+	for (CFRList::iterator it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		if (pred == head) {
+			continue;
+		}
+		CFRDemand *pdmnd = scratch.present(pred);
+		if (pdmnd->getEXE() > wceto) {
+			wceto = pdmnd->getEXE();
+		}
 	}
-	pmaps.clear();
+	delete preds;
+	dmnd->getEXE() += wceto;
 
-	dout << *cfr << " finished, result: " << cur_map << endl
-	     << cur_map->str(fact->dbg.start) << endl;
-		
-	fact->dbg.flush(cout);
-	fact->dbg.dec();
+	dout << "(work) Demand after merging predecessors: " << endl
+	     << dmnd->str(fact.dbg.start) << endl;
+	fact.dbg.flush(cout);
+	fact.dbg.dec();
 	#undef dout
-	return;
 }
 
-/**
- * Necessary pre-condition, the individual CFRs preceding this loop head must be
- * computed. 
- */
-ThreadWCETOMap *
-WCETOFactory::loopWCETO(CFR *cfr) {
-	#define dout dbg.buf << dbg.start
-	dbg.inc("loopWCETO: ");
 
-	ListDigraph::Node cfrg_node;
-	ThreadWCETOMap *rval = _loop_table.present(cfr);
-	if (rval) {
-		cout << "loopWCETO: address of rval: " << rval << endl;
-		dout << *cfr << " already calculated." << endl
-		     << rval->str(dbg.start) << endl;
+CFRDemand*
+WCETOFactory::loopDemand(CFR *cfr) {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("loopDemand: ");
+	dout << "begin " << *cfr << endl;
+	CFRDemand *cfrd = _loopt.present(cfr);
+	if (cfrd) {
+		dout << *cfr << " is present, returning" << endl;
 		dbg.flush(cout);
 		dbg.dec();
-		cout << "loopWCETO: returning safely" << endl;
-		return rval;
+		return cfrd;
 	}
+	cfrd = _loopt.request(cfr);
+	cfrd->getWCETOMap().fillExe(cfr, _threads);
+	dout << *cfr << " Initial demand" << endl
+	     << cfrd->str(dbg.start) << endl;
+	dout << "beginning search" << endl;
 
-	rval = _loop_table.request(cfr);
-	dout << *cfr << " new loop table " << rval << endl
-	     << _loop_table.present(cfr)->str(dbg.start) << endl;
-	rval->fill(cfr, _threads);
-	cfr->calcECBs();
-	dout << *cfr << " independent WCETO (without iterations)" << endl
-	     << rval->str(dbg.start) << endl;
-
-	CFRWCETOMap *scratch = new CFRWCETOMap();
-	ThreadWCETOMap *copy = new ThreadWCETOMap(rval);
-	scratch->insert(pair<CFR*, ThreadWCETOMap*>(cfr, copy));
-
-	LoopData *ldata = new LoopData(this, cfr, scratch);
-	
+	CFRDemandMap scratch;
+	LoopData *data = new LoopData(*this, cfr, scratch);
 	CFRGLFS lfs(_cfrg, lfs_loop_filter, lfs_loop_test, lfs_loop_work,
-		    ldata);
+		    data);
 	lfs.search(cfr);
+	dout << *cfr << " search complete" << endl;
 
-	/* Scratch is the data for *this* loop */
-	dbg.inc("loopWCETO: ");
-	dout << *cfr << " search complete, result is " << endl
-	     << scratch->str(dbg.start) << endl;
-	dbg.dec();
-
-	/* Now bring this data into the loop table entry */
-	PredList preds; /* Do not free the entries in here */
-	findPreds(cfr, *scratch, preds);
-
-	dout << "In loop predecessors to consider: " << preds.size() << endl;
-	for (PredList::iterator pit=preds.begin(); pit != preds.end(); pit++) {
-		ThreadWCETOMap *twmap = (*pit);
-		dout << twmap->str(dbg.start) << endl;
+	/*
+	 * At the end of processing the CFRDemand for a loop head will
+	 * contain values with different meanings than those of
+	 * independent CFRs.
+	 *
+	 * loopt[loop_head].getExe() - the WCET of a single thread
+	 * loopt[loop_head].getECBs() - the ECBs of all CRFs within
+	 * the loop
+	 * loopt[loop_head].getWCETOMap() - the cumulative map for the
+	 * entire loop, used when the loop is treated as a single CFR
+	 */
+	for (CFRDemandMap::iterator it = scratch.begin(); it != scratch.end();
+	     ++it) {
+		cfrd->getECBs().merge(it->second->getECBs());
 	}
-	addPreds(rval, preds);
-
-	uint32_t iters = cfr->getIters(cfr->getInitial());
-	if (preds.size() == 0) {
-		/* the entire loop is contained in the CFR, this will
-		 * only execute once, therefore the BRT is only paid
-		 * only once
-		 */
-		dout << *cfr << " is a fully contained loop" << endl;
-		rval->at(1) = cfr->loadCost() + cfr->exeCost() * iters;
-		for (uint32_t i=2; i <= _threads; i++) {
-			rval->at(i) = cfr->exeCost() * iters;
-		}
-	} else {
-		ThreadWCETOMap::iterator twit;
-		for (twit = rval->begin(); twit != rval->end(); ++twit) {
-			twit->second = twit->second * iters;
-		}
-		list<uint32_t> *ecbs = loopECBs(cfr);
-		ecbs->sort();
-		list<uint32_t>::iterator it;
-		dout << *cfr << " ECBs: ";
-		for (it = ecbs->begin(); it != ecbs->end(); it++) {
-			dbg.buf << *it << " ";
-		}
-		dbg.buf << endl;
-		dout << *cfr << " per iteration loads: " << loopLoadCount(*ecbs)
-		     << endl;
-		
-		delete ecbs;
-	}
-	preds.clear();
-	dout << "Map updated with iterations" << endl
-	     << rval->str(dbg.start) << endl;
 	
-
-	/* Consider the predecessors that are not within the loop */
-	findPreds(cfr, _cfr_table, preds);
-	dout << "Out of loop individual CFRs to consider: "
-	     << preds.size() << endl;
-	findPreds(cfr, _loop_table, preds);
-	dout << "Adding out of loop loop head CFRS: "
-	     << preds.size() << endl;
-
-	PredList destroyme;
-	PredList::iterator pit;
-	for (pit = preds.begin(); pit != preds.end(); ++pit) {
-		destroyme.push_back(new ThreadWCETOMap(*pit));
+	uint32_t wceto=0;
+	CFRList *preds = _cfrg.preds(cfr);
+	for (CFRList::iterator it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		if (!_cfrg.inLoop(cfr, pred)) {
+			continue;
+		}
+		CFRDemand *pdmnd = scratch.present(pred);
+		dbg.inc("loopDemand pred: ");
+		dout << pdmnd->str(dbg.start) << endl;
+		/* Find the max WCET value */
+		if (pdmnd->getEXE() > wceto) {
+			wceto = pdmnd->getEXE();
+		}
+		dbg.dec();
 	}
-	preds.clear();
-	
-	addPreds(rval, destroyme);
-	dout << *cfr << " Final table: " << rval << endl
-	     << rval->str(dbg.start) << endl;
-	for (pit = destroyme.begin(); pit != destroyme.end(); ++pit) {
-		delete (*pit);
-	}
-	destroyme.clear();
+	delete preds;				    
+	cfrd->getEXE() += wceto;
 
-	delete scratch;
-	delete ldata;
+	/* Worst case execution time for each thread */
+	ThreadWCETOMap &map = cfrd->getWCETOMap();
+	for (uint32_t i = 1; i <= _threads; i++) {
+		map[i] = cfrd->getEXE() * cfr->getIters(cfr->getInitial());
+	}
+
+	/* Handle the cache loads */
+	/* All ECBs are loaded at least once, in the first thread */
+	map[1] += cfrd->getECBs().size() * cfr->getCache()->memLatency();
+	/* 2nd -> nth thread only load the duplicates */
+	uint32_t dcount = dupeCount(cfrd->getECBs());
+	for (uint32_t i = 2 ; i <= _threads; i++) {
+		map[i] += dcount * cfr->getCache()->memLatency();
+	}
+	dout << cfrd->getECBs()
+	     << " ECB dupe count: " << dcount << endl;
+	dout << "Demand after incorporating ECB loads initial/periter "
+	     << cfrd->getECBs().size() * cfr->getCache()->memLatency() << "/"
+	     << dcount * cfr->getCache()->memLatency() << endl
+	     << cfrd->str(dbg.start) << endl;
+
+	/* Values preserved in the loop table at this point
+	 *   EXE worst case execution time for a single thread
+	 *   ECBs the total ECBs accessed in the loop */
+
+	/* Now it's time to use the predecessors to update our costs */
+	scratch.empty();
+	preds = _cfrg.preds(cfr);
+	for (CFRList::iterator it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		if (_cfrg.inLoop(cfr, pred)) {
+			continue;
+		}
+		CFRDemand* pdmnd = NULL;
+		if (_cfrg.isLoopPartCFR(pred)) {
+			/* Must exist in the loop table */
+			CFR *head = _cfrg.crown(pred);
+			pdmnd = _loopt.present(head);
+		} else {
+			/* Must exist in the cfr table */
+			pdmnd = _cfrt.present(pred);
+		}
+		scratch.insert(
+		    pair<CFR*, CFRDemand*>(pred, new CFRDemand(*pdmnd)));
+	}
+	delete preds;
+
+	maxMerge(*cfrd, scratch, true);
+	dout << "Demand after adding predecessors" << endl
+	     << cfrd->str(dbg.start) << endl;
 	
+	delete data;
+	dout << "end " << *cfr << endl;
 	dbg.flush(cout);
 	dbg.dec();
 	#undef dout
+	return cfrd;
+}
+
+uint32_t
+WCETOFactory::dupeCount(ECBs &ecbs) {
+	uint32_t rval = 0;
+	ECBs u(ecbs);
+
+	ecbs.sort();
+	u.unique();
+	u.sort();
+	ECBs::iterator eit = ecbs.begin();
+	for (ECBs::iterator uit = u.begin(); uit != u.end(); ++uit) {
+		uint32_t value = *uit;
+		uint32_t count = 0;
+		while (eit != ecbs.end() && value == *eit) {
+			count++;
+			eit++;
+		}
+		if (count > 1) {
+			rval += count;
+		}
+	}
 	return rval;
 }
 
-bool
-WCETOFactory::addPreds(ThreadWCETOMap *twmap, PredList& preds) {
+void
+WCETOFactory::maxMerge(CFRDemand &dem, CFRDemandMap &map, bool includeLoad) {
 	#define dout dbg.buf << dbg.start
-	dbg.inc("addPreds: ");
-	dout << "# of predecessors: " << preds.size() << endl;
-	if (preds.size() == 0) {
+	string pfx = "maxMerge (";
+	if (includeLoad) {
+		pfx += "exe+load): ";
+	} else {
+		pfx += "exe): ";
+	}
+	dbg.inc(pfx);
+	dout << "Merging " << map.size() << " sets of demands" << endl;
+	if (map.size() == 0) {
+		dbg.flush(cout);
 		dbg.dec();
-		return true;
+		return;
 	}
-	for (uint32_t thread=1; thread <= _threads; thread++) {
-		uint32_t max_wceto=0, max_idx=0;
-		ThreadWCETOMap *max_map = NULL;
-		PredList::iterator pit;
-		for (pit = preds.begin(); pit != preds.end(); ++pit) {
-			ThreadWCETOMap *cmap = (*pit);
-			dbg.inc("addPreds: ");
-			dout << "considering " << endl << cmap->str(dbg.start)
-			     << endl;
-			uint32_t cidx;
-			uint32_t wcet = APmaxWCETO(*cmap, cidx);
-			dout << "wcet and cidx: " << wcet << " " << cidx << endl;
-			if (wcet > max_wceto) {
-				max_wceto = wcet;
-				max_map = cmap;
-				max_idx = cidx;
+
+	ThreadWCETOMap &twmap = dem.getWCETOMap();
+	for (uint32_t i = 1; i <= _threads; i++) {
+		CFRDemandMap::iterator it;
+		uint32_t max_idx=0, max_wceto=0;
+		ThreadWCETOMap *max_twmap=NULL;
+		for (it = map.begin(); it != map.end(); ++it) {
+			uint32_t t_idx=0, t_wceto=0;
+			ThreadWCETOMap &twmap = it->second->getWCETOMap();
+			t_wceto = maxEle(twmap, t_idx);
+			if (t_wceto > max_wceto) {
+				max_wceto = t_wceto;
+				max_idx = t_idx;
+				max_twmap = &twmap;
 			}
-			dbg.dec();
 		}
-		(*twmap)[thread] += max_wceto;
-		if (!max_map) {
-			dbg.flush(cout);
-			throw runtime_error("WCETOFactory::addPreds "
-			    "unable to find a maximum entry");
-		}
-		(*max_map)[max_idx] = 0;
+		(*max_twmap)[max_idx] = 0;
+		dem.getWCETOMap()[i] += max_wceto;
 	}
-
-	dbg.dec();
+	dbg.flush(cout);	
+	dbg.dec(); 
 	#undef dout
-	return true;
 }
 
 uint32_t
-WCETOFactory::APmaxWCETO(ThreadWCETOMap &twmap, uint32_t &max_idx) {
-	uint32_t max_wceto = 0;
-	for (uint32_t idx=1; idx < twmap.size(); idx++) {
-		if (twmap[idx - 1] != 0) {
-			/*
-			 * Zero value indicates that the thread before was
-			 * selected
-			 */
-			return max_wceto;
-		}
-		if (twmap[idx] > max_wceto) {
-			max_idx = idx;
-			max_wceto = twmap[idx];
-		}
-	}
-	return max_wceto;
-}
-
-uint32_t
-WCETOFactory::findPreds(CFR* cfr, CFRWCETOMap& cwmap, PredList& preds) {
+WCETOFactory::maxEle(ThreadWCETOMap &twmap, uint32_t &idx) {
 	#define dout dbg.buf << dbg.start
-	dbg.inc("findPreds: ");
+	dbg.inc("maxEle: ");
 	
-	uint32_t count=0;
-	ListDigraph::Node cfrg_node =_cfrg.findNode(cfr);
-	for (ListDigraph::InArcIt iat(_cfrg, cfrg_node); iat != INVALID; ++iat) {
-		ListDigraph::Node prev_node = _cfrg.source(iat);
-		CFR *prev_cfr = _cfrg.findCFR(prev_node);
-
-		ThreadWCETOMap *twmap = cwmap.present(prev_cfr);
-		if (twmap) {
-			dout << *cfr << " found predecessor " << *prev_cfr << endl;
-			dout << "adding map " << twmap->str(dbg.start) << endl;
-			preds.push_back(twmap);
-			count++;
-		}
-	}
-	dbg.dec();
-	#undef dout
-	return count;
-}
-
-CFR*
-WCETOFactory::outermostCFR(CFR *inloop) {
-	#define dout dbg.buf << dbg.start
-	dbg.inc("outermostCFR: ");
-
-	dout << *inloop << " starting CFR" << endl;
-	dbg.inc("outermostCFR: ");
-	CFR *top = inloop;
-	ListDigraph::Node cfrg_node = _cfrg.findNode(inloop);
-	while (_cfrg.isLoopPart(cfrg_node)) {
-		CFR *cfr = _cfrg.findCFR(cfrg_node);
-		dout << *cfr << " next head" << endl;
-		ListDigraph::Node cfg_node = cfr->getHead(cfr->getInitial());
-		if (cfg_node != INVALID) {
-			CFR *head = _cfrg.findCFRbyCFGNode(cfg_node);
-			top = head;
-			cfrg_node = _cfrg.findNode(head);
-		} else {
+	uint32_t wceto=0;
+	for (idx = 1; idx <= _threads; idx++) {
+		wceto=twmap[idx];
+		if (twmap[idx] != 0) {
 			break;
 		}
 	}
 
-	dbg.dec();
-	dout << *top << " top most CFR" << endl;
-	dbg.dec();
+	dbg.flush(cout);
+	dbg.dec(); 
 	#undef dout
-	return top;
+	return wceto;
 }
 
-class ECBLoopData {
-public:
-	ECBLoopData (WCETOFactory *f, CFR *head, list<uint32_t>& ECBs)
-		: fact(f), cfr_head(head), ecbs(ECBs) {
-	}
-	WCETOFactory *fact;
-	CFR *cfr_head;
-	list<uint32_t> &ecbs;
-};
- 
-static bool
-lfs_ecb_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
-	ECBLoopData *data = (ECBLoopData *) userdata;
-	CFR *head = data->cfr_head;
-	WCETOFactory *fact = data->fact;
+void
+WCETOFactory::dumpCFRs() {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("dumpCFRs: ");
 
-	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("lfs_ecb_filter: ");
+	for (ListDigraph::NodeIt nit(_cfrg); nit != INVALID; ++nit) {
+		CFR *cfr = _cfrg.findCFR(nit);
 
-	bool rv=true;
-	dout << *cfr << " is ";
-	if (!cfrg.inLoop(head, cfr)) {
-		fact->dbg.buf << "not ";
-		rv = false;
-	}
-	fact->dbg.buf << "in " << endl 
-		      << fact->dbg.start << "the loop of " << *head << endl;
-
-	#undef dout
-	fact->dbg.dec();
-	return rv;
-}
-static bool
-lfs_ecb_test(CFRG &, CFR *cfr, void *userdata) {
-	ECBLoopData *data = (ECBLoopData *) userdata;
-	CFR *head = data->cfr_head;
-	WCETOFactory *fact = data->fact;
-
-	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("lfs_ecb_test: ");
-
-	dout << *cfr << " accepted, simlpy adding the ecbs" << endl;
-	
-	#undef dout
-	fact->dbg.dec();
-	return true;
-}
-static void
-lfs_ecb_work(CFRG &, CFR *cfr, void *userdata) {
-	ECBLoopData *data = (ECBLoopData *) userdata;
-	list<uint32_t> &ecbs = data->ecbs;
-
-	cfr->calcECBs();
-	list<uint32_t> *local = cfr->ECBs(); // Sorted
-	ecbs.insert(ecbs.begin(), local->begin(), local->end());
-	delete local;
-}
- 
-list<uint32_t> *
-WCETOFactory::loopECBs(CFR *loop_head) {
-	list<uint32_t> *rval = new list<uint32_t>();
-
-	ECBLoopData *data = new ECBLoopData(this, loop_head, *rval);
-
-	CFRGLFS lfs(_cfrg, lfs_ecb_filter, lfs_ecb_test, lfs_ecb_work,
-		    data);
-	lfs.search(loop_head);
-
-	delete data;
-	return rval;
-}
-
-uint32_t
-WCETOFactory::loopLoadCount(list<uint32_t> &ecbs) {
-	list<uint32_t>::iterator lit = ecbs.begin();
-	uint32_t total=0, current=1, cursor = (*lit);
-	for (lit++; lit != ecbs.end(); ++lit) {
-		if (cursor != (*lit)) {
-			// new element
-			if (current > 1) {
-				total += current;
-			}
-			current = 1;
-			cursor = (*lit);
-			continue;
+		dout << *cfr << endl;
+		dbg.inc("dumpCFRS --: ");
+		CFRDemand *d = NULL;
+		if (_cfrg.isLoopPartCFR(cfr)) {
+			CFR *head = _cfrg.crown(cfr);
+			d = _loopt.present(head);
+		} else {
+			d = _cfrt.present(cfr);
 		}
-		/* Same element repeated */
-		current++;
+		dbg.buf << d->str(dbg.start) << endl;
+		dbg.dec();
 	}
-	total += current;
-	return total;
+
+	dbg.flush(cout);
+	dbg.dec(); 
+	#undef dout
 }

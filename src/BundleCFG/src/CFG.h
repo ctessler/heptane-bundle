@@ -42,6 +42,8 @@ public:
 	/* Gets and sets the terminal node of the CFG */
 	ListDigraph::Node getTerminal() const;
 	void setTerminal(ListDigraph::Node node);
+	/* Determines what the terminal is based on the graph structure */
+	ListDigraph::Node calcTerminal();
 
 	/* Gets and sets the function associated with the instruction */
 	FunctionCall getFunction(ListDigraph::Node node) const;
@@ -68,9 +70,13 @@ public:
 	   instruction */
 	unsigned int getIters(ListDigraph::Node head) const;
 	void setIters(ListDigraph::Node head, unsigned int iters);
-	
-	static bool test();
 
+	/* Determines if two nodes are part of the same loop */
+	bool sameLoop(ListDigraph::Node a, ListDigraph::Node b);
+
+	/* Determines if the node's closest loop head is head */
+	bool inLoop(ListDigraph::Node head, ListDigraph::Node node);
+	
 	void dump(string path);
 
 	/* To allow polymorphism */

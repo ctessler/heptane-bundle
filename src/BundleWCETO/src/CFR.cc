@@ -155,13 +155,7 @@ CFR::wceto(uint32_t threads) {
 	dbg.inc("wceto: ");
 	
 	if (threads == 0) { return 0; }
-	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
-		ListDigraph::Node terminal = nit;
-		if (countOutArcs(*this, terminal) > 0) {
-			continue;
-		}
-		setTerminal(terminal);
-	}
+	calcTerminal();
 
 	uint32_t loadcost = loadCost();
 	uint32_t exe = exeCost();
@@ -175,9 +169,7 @@ CFR::wceto(uint32_t threads) {
 
 uint32_t
 CFR::exeCost() {
-	#define dout dbg.buf << dbg.start
-	dbg.inc("exeCost: ");
-
+	calcTerminal();
 	ListDigraph::ArcMap<int> lengthMap(*this);
 	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
 		ListDigraph::Arc a = ait;
@@ -189,13 +181,9 @@ CFR::exeCost() {
 	dijk_loaded.run(getInitial());
 
 	int longest_path = dist[getTerminal()] * - 1 + 1;
-	dout << *this << " longest path length: " << longest_path;
 	uint32_t exe = longest_path * _cache->latency();
-	dout << *this << " execution cost (per thread): " << exe << endl;
 
-	dbg.dec();
 	return exe;
-	#undef dout
 }
 
 /**
@@ -203,84 +191,40 @@ CFR::exeCost() {
  */
 uint32_t
 CFR::loadCost() {
-	#define dout dbg.buf << dbg.start
-	dbg.inc("loadCost: ");
-
 	uint32_t loads = maxLoads();
-
-	dbg.dec();
 	return loads * _cache->memLatency();
-	#undef dout
 }
 
 uint32_t
 CFR::maxLoads() {
-	#define dout dbg.buf << dbg.start
-	dbg.inc("maxLoads: ");
-
-	/**
-	 * This function depends on all instructions mapping to unique
-	 * cache lines. 
-	 */
-	Cache scratch(_cache->getSets(), _cache->getWays(),
-		      _cache->getLineSize(), _cache->latency(),
-		      _cache->memLatency(),  _cache->getPolicy());
-	uint32_t loads=0;
-	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
-		ListDigraph::Node node = nit;
-		iaddr_t addr = getAddr(node);
-		if (!scratch.present(addr)) {
-			loads++;
-		}
-		scratch.insert(addr);
-	}
-	dout << *this << " maximum loads: " << loads << endl;
-	dbg.dec();
-	#undef dbg
-	return loads;
+	return calcECBs();
 }
 
 uint32_t
 CFR::calcECBs() {
-	#define dout dbg.buf << dbg.start
-	dbg.inc("CFR::calcECBs: ");
 	if (_ecbs.size() != 0) {
-		dout << " already calculated" << endl;
 		return _ecbs.size();
 	}
 	_ecbs.clear();
 	Cache scratch(_cache->getSets(), _cache->getWays(),
 		      _cache->getLineSize(), _cache->latency(),
 		      _cache->memLatency(),  _cache->getPolicy());
-	dout << *this << " adding ECBS:";
 	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
 		ListDigraph::Node node = nit;
 		iaddr_t addr = getAddr(node);
 		if (!scratch.present(addr)) {
 			uint32_t index = scratch.setIndex(addr);
-			dbg.buf << " " << index;
 			_ecbs.push_back(index);
 		}
 		scratch.insert(addr);
 	}
-	dbg.buf << endl;
 
-	list<uint32_t>::iterator it;
 	_ecbs.sort();
-	dout << *this << " ECBS:";
-	for (it = _ecbs.begin(); it != _ecbs.end(); ++it) {
-		dbg.buf << " " << *it;
-	}
-	dbg.buf << endl;
-	
-	dbg.dec();
-	#undef dout
  	return _ecbs.size();
 }
 
-list<uint32_t>*
-CFR::ECBs() {
-	list<uint32_t> *rval = new list<uint32_t>(_ecbs);
-
-	return rval;
+ECBs*
+CFR::getECBs() {
+	ECBs *ecbs = new ECBs(_ecbs);
+	return ecbs;
 }

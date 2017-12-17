@@ -13,6 +13,7 @@ using namespace std;
 class ECBs : public list<uint32_t> {
 public:
 	friend std::ostream &operator<<(std::ostream&, const ECBs&);
+	ECBs ();
 	ECBs (ECBs &src);
 	ECBs (ECBs *src);
 

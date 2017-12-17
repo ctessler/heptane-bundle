@@ -108,9 +108,48 @@ CFRG::isLoopPart(ListDigraph::Node cfrg_node) {
 	}
 	return false;
 }
+bool
+CFRG::isLoopPartCFR(CFR* cfr) {
+	ListDigraph::Node node = findNode(cfr);
+	return isLoopPart(node);
+}
+
+CFR*
+CFRG::crown(CFR *cfr) {
+	CFR *rval = NULL;
+	if (cfr->isHead(cfr->getInitial())) {
+		rval = cfr;
+	}
+	ListDigraph::Node cfg_head = cfr->getHead(cfr->getInitial());
+	while (cfg_head != INVALID) {
+		rval = findCFRbyCFGNode(cfg_head);
+		cfg_head = rval->getHead(rval->getInitial());
+	}
+	return rval;
+}
+
+bool
+CFRG::isLoopHead(CFR *cfr) {
+	return cfr->isHead(cfr->getInitial());
+}
+
+CFRList*
+CFRG::preds(CFR *cfr) {
+	CFRList *list = new CFRList();
+	ListDigraph::Node cfrg_node = findNode(cfr);
+	for (ListDigraph::InArcIt iat(*this, cfrg_node); iat != INVALID; ++iat) {
+		ListDigraph::Node pred_node = source(iat);
+		CFR *pred_cfr = findCFR(pred_node);
+		list->push_back(pred_cfr);
+	}
+	return list;
+}
 
 CFR *
 CFRG::findCFRbyCFGNode(ListDigraph::Node node) {
+	if (node == INVALID) {
+		return NULL;
+	}
 	iaddr_t src_addr = _cfg.getAddr(node);
 	FunctionCall src_func = _cfg.getFunction(node);
 	

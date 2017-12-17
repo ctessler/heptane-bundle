@@ -209,6 +209,8 @@ main(int argc, char** argv) {
 		JPGFactory jpg(dot);
 		jpg.produce();
 		cout << "JPG : " << jpg.getPath() << endl;
+
+		wceto_fact.dumpCFRs();
 	}
 
 	/* Cleanup */

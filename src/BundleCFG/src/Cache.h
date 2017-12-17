@@ -26,12 +26,14 @@ class ReplacementPolicy;
  */
 class Cache {
 public:
-	Cache(int nSets, int nWays, int lineSize, int latency, ReplacementPolicy *p = NULL) {
+	Cache(int nSets, int nWays, int lineSize, int latency,
+	      uint32_t mem_latency, ReplacementPolicy *p = NULL) {
 		_policy = p;
 		_nsets = nSets;
 		_ways = nWays;
 		_linesize = lineSize;
 		_latency = latency;
+		_mem_latency = mem_latency;
 	};  
 	~Cache();
 	/**
@@ -82,9 +84,14 @@ public:
 	 */
 	void insert(iaddr_t addr);
 	/**
-	 * Returns the latency (block reload time)
+	 * Returns the latency (the amount of time it takes to move a
+	 * block from this cache level down one.) 
 	 */
 	uint32_t latency() { return _latency; }
+	/**
+	 * Returns the memory load/store latency.
+	 */
+	uint32_t memLatency() { return _mem_latency; }
 private:
 	map <int, CacheSet *> _sets;
 	ReplacementPolicy *_policy;
@@ -92,6 +99,7 @@ private:
 	uint32_t _ways;
 	uint32_t _linesize; /** Size of each cache line in bytes */
 	uint32_t _latency; /** The access time of this cache */
+	uint32_t _mem_latency; /** Topmost latency, from memory -> cache */
 };
 
 #include "CacheSet.h"

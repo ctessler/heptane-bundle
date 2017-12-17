@@ -1,6 +1,7 @@
 #ifndef CFR_H
 #define CFR_H
 
+#include "CFRECBs.h"
 #include "CFG.h"
 #include "DBG.h"
 #include <lemon/dijkstra.h>
@@ -110,10 +111,7 @@ public:
 	 * Caller of ECBs() must delete the list.
 	 */
 	uint32_t calcECBs();
-	list<uint32_t>* ECBs();
-
-	/* Unit test */
-	static bool test();
+	ECBs* getECBs();
 private:
 	CFG &_cfg;
 	DBG dbg;
@@ -135,7 +133,7 @@ private:
 	/* CFR node -> CFG node (that is the head) */
 	map<ListDigraph::Node, ListDigraph::Node> _cfg_head;	
 
-	list<uint32_t> _ecbs;
+	ECBs _ecbs;
 	/*
 	 * A note about loop heads of nodes, the CFR stores the CFG node as the
 	 * loop head. This is because the loop head may not be contained within
