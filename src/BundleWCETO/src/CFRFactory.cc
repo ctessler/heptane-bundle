@@ -13,7 +13,8 @@ CFRFactory::~CFRFactory() {
 map<ListDigraph::Node, CFR*>
 CFRFactory::produce() {
 	_debug.str("");
-	string prefix = "CFRFactory::produce ";
+	string prefix = _indent + "CFRFactory::produce ";
+	string indent_save = _indent; _indent += " ";
 	visitClear();
 	markLoops();
 
@@ -63,6 +64,7 @@ CFRFactory::produce() {
 	cfrg->setInitialCFR(cfr);
 
 	cout << _debug.str();
+	_indent = indent_save;
 	return _cfrs;
 }
 
@@ -163,7 +165,6 @@ CFRFactory::addToConflicts(ListDigraph::Node cfr_initial,
 			xflicts.push_back(kid);
 			continue;
 		}
-
 		/* This child is not a conflict nor an initial instruction, it
 		   belongs to this conflict free region. */
 		ListDigraph::Node cfr_kid = cfr->addNode(kid);
