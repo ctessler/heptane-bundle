@@ -61,6 +61,14 @@ public:
 	CFRDemand* loopDemand(CFR* cfr);
 
 	/**
+	 * Gets the demand for a given CFR, requires produce() has
+	 * been called beforehand.
+	 *
+	 * Do not modify or free the returned Demand.
+	 */
+	CFRDemand* getDemand(CFR *cfr);
+	
+	/**
 	 * Returns the number of times duplicate entries are in the
 	 * list. 
 	 *

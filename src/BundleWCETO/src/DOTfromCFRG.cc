@@ -16,7 +16,7 @@ CFRDOTid(CFR &cfr) {
 }
 
 static string
-CFRDOT(CFR &cfr, int generation, unsigned int threads, uint32_t wceto) {
+CFRDOT(CFR &cfr, WCETOFactory &fact, int generation, unsigned int threads) {
 	CFG *cfg = cfr.getCFG();
 	ListDigraph::Node cfr_initial = cfr.getInitial();
 	ListDigraph::Node cfg_node = cfr.toCFG(cfr_initial);
@@ -26,15 +26,10 @@ CFRDOT(CFR &cfr, int generation, unsigned int threads, uint32_t wceto) {
 	      << endl << "\t"
 	      << "<TR><TD COLSPAN=\"2\">CFR: " << cfg->stringAddr(cfg_node)
 	      << "</TD></TR>" << endl
-	      << "<TR><TD>Stack Top</TD>"
-	      << "<TD>" << cfg->getFunction(cfg_node) << "</TD></TR>" << endl
 	      << "<TR><TD>Gen.</TD>"
 	      << "<TD>" << generation << "</TD></TR>" << endl
-	      << "<TR><TD>Threads</TD>"
-	      << "<TD>" << threads << "</TD></TR>" << endl
-	      << "<TR><TD>WCET+O (self)/(cumm.)</TD>"
-	      << "<TD>(" << cfr.wceto(threads) << ")/(" << wceto
-	                 << ")</TD></TR>" << endl
+	      << "<TR><TD>Stack Top</TD>"
+	      << "<TD>" << cfg->getFunction(cfg_node) << "</TD></TR>" << endl
 	      << "<TR><TD>isHead (iters)</TD>"
 	      << "<TD>" << cfr.isHead(cfr_initial) << "("
 	                << cfr.getIters(cfr_initial) << ")" << "</TD></TR>"
@@ -42,9 +37,20 @@ CFRDOT(CFR &cfr, int generation, unsigned int threads, uint32_t wceto) {
 	      << "<TR><TD>Head</TD>"
 	      << "<TD>" << cfg->stringNode(cfr.getHead(cfr_initial))
 	      << "</TD></TR>" << endl
+	      << "<TR><TD>(Threads) WCET+O</TD><TD>" << "("
+	      << fact.getThreads() << ") " << fact.value(&cfr)
+	      << "</TD></TR>" << endl;
+	CFRDemand *dmnd = fact.getDemand(&cfr);
+	ECBs *ecbs = cfr.getECBs();
+	label << "<TR><TD>Single WCET</TD><TD>" << dmnd->getEXE()
+	      << "</TD></TR>" << endl
+	      << "<TR><TD>Load Cost</TD><TD>" << dmnd->getLoad()
+	      << "</TD></TR>" << endl
+	      << "<TR><TD>Demand ECBs</TD><TD>" << dmnd->getECBs()
+	      << "</TD></TR>" << endl
+	      << "<TR><TD>Local ECBs</TD><TD>" << *ecbs << "</TD></TR>" << endl
 	      << "</TABLE>>";
-
-	
+	delete ecbs;
 				    
 	node << CFRDOTid(cfr) << "[shape=plaintext]" << endl
 	     << CFRDOTid(cfr) << "[ label=" << label.str() << " ];" << endl;
@@ -61,8 +67,8 @@ DOTfromCFRG::produce(unsigned int threads) {
 	for (ListDigraph::NodeIt nit(_cfrg); nit != INVALID; ++nit) {
 		ListDigraph::Node cfr_node = nit;
 		CFR *cfr = _cfrg.findCFR(cfr_node);
-		dot << CFRDOT(*cfr, _cfrg.getGeneration(cfr_node), threads,
-			      _fact.value(cfr));
+		dot << CFRDOT(*cfr, _fact, _cfrg.getGeneration(cfr_node),
+		    threads);
 	}
 
 	for (ListDigraph::ArcIt ait(_cfrg); ait != INVALID; ++ait) {
