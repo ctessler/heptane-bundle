@@ -20,12 +20,14 @@ DOTFactory::produce() {
 		FunctionCall call = _cfg.getFunction(entry);
 		_debug << _indent << pre << "new call: " << call << endl;
 		if (visited[entry]) {
-			_debug << _indent << pre << "previously visited: " << call << endl;
+			_debug << _indent << pre << "previously visited: "
+			       << call << endl;
 			/* This function has been seen */
 			continue;
 		}
 		stringstream callstream;
-		callstream << call.getName() << "_0x" << hex << call.getCallSite() << dec;
+		callstream << call.getName() << "_0x" << hex
+			   << call.getCallSite() << dec;
 		string callstr = callstream.str();
 		dot << "subgraph cluster_" << callstr << " {" << endl
 		    << "\tgraph [label = \"" << call << "\"];" << endl;
@@ -45,22 +47,32 @@ DOTFactory::produce() {
 			}
 			visited[bb_start] = true;
 
-			/* Print this node, and all entries that are in the same BB */
-			_debug << _indent << pre << "calling nodeDOT " << _cfg << endl;
+			/* 
+			 * Print this node, and all entries that are in the same 
+			 * BB
+			 */
+			_debug << _indent << pre << "calling nodeDOT " << _cfg
+			       << endl;
 			ListDigraph::Node bb_last = nodeDOT(dot, bb_start);
 
-			/* Find the instructions immediately following the last one */
+			/* 
+			 * Find the instructions immediately following the last
+			 * one
+			 */
 			stack<ListDigraph::Node> followers;
 			succ(bb_last, followers);
 
 			while (!followers.empty()) {
-				ListDigraph::Node bb_next = followers.top(); followers.pop();
+				ListDigraph::Node bb_next = followers.top();
+				followers.pop();
 				_debug << _indent << pre << "pushing edge"
 				       << _cfg.stringNode(bb_start) << " --> "
 				       << _cfg.stringNode(bb_next) << endl;
 
-				edges.push(edgeDOT(bb_start, bb_last, bb_next, bb_next));
-				if (_cfg.getFunction(bb_start) != _cfg.getFunction(bb_next)) {
+				edges.push(edgeDOT(bb_start, bb_last, bb_next,
+						   bb_next));
+				if (_cfg.getFunction(bb_start) !=
+				    _cfg.getFunction(bb_next)) {
 					/* next is a function entry point */
 					calls.push(bb_next);
 					continue;
@@ -68,7 +80,8 @@ DOTFactory::produce() {
 				subsq.push(bb_next);
 			}
 		}
-		dot << "} // end function cluster_" << callstr << endl; // function cluster is done
+		// function cluster is done		
+		dot << "} // end function cluster_" << callstr << endl;
 	}
 
 	while (!edges.empty()) {
@@ -77,6 +90,7 @@ DOTFactory::produce() {
 	}
 	dot << "}" << endl;
 	dot.close();
+	cout << _debug.str();
 }
 
 void

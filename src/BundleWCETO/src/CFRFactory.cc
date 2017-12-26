@@ -376,13 +376,15 @@ CFRFactory::buildCFR(CFR *cfr) {
 			ListDigraph::Node cfr_kid = cfr->addNode(cfg_kid);
 			cfr_node = cfr->find(_cfg.getAddr(cfg_node),
 					     _cfg.getFunction(cfg_node));
-			dout << "Adding arc " << cfr->stringNode(cfr_node)
+			dout << *cfr << " adding arc "
+			     << cfr->stringNode(cfr_node)
 			     << " --> " << cfr->stringNode(cfr_kid) << endl;
 			cfr->addArc(cfr_node, cfr_kid);
 			cfg_nodes.push_back(cfg_kid);
 		}
 	} while (!cfg_nodes.empty());
 
+	dbg.dec();
 	return cfr_nexts;
 	#undef dout
 }
