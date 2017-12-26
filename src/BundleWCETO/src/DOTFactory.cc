@@ -296,7 +296,8 @@ DOTFactory::nodeLabel(ListDigraph::Node node) {
 
 void
 DOTFactory::labelNodesCFR(CFR *cfr) {
-	string label = cfr->stringAddr(cfr->membership(node));
+	ListDigraph::Node initial = cfr->getInitial();
+	string label = cfr->stringAddr(initial);
 	for (ListDigraph::NodeIt nit(*cfr); nit != INVALID; ++nit) {
 		ListDigraph::Node cfr_node = nit;
 		ListDigraph::Node cfg_node = cfr->toCFG(cfr_node);

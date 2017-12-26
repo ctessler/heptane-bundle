@@ -332,6 +332,10 @@ CFRFactory::assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
 			xflicts.push_back(kid);
 			continue;
 		}
+		if (!_cfg.sameLoop(kid, cursor)) {
+			xflicts.push_back(kid);
+			continue;
+		}
 		dbg.buf << " candidate for " << *cfr << endl;
 		NodeList mflicts = assignToConflicts(cfr, kid, cache);
 		xflicts.insert(xflicts.end(), mflicts.begin(), mflicts.end());
