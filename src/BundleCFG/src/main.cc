@@ -20,8 +20,6 @@
 #include "CFG.h"
 #include "CFGFactory.h"
 #include "CFGReadWrite.h"
-#include "DOTFactory.h"
-#include "JPGFactory.h"
 using namespace std;
 using namespace cfglib;
 
@@ -174,108 +172,6 @@ int main(int argc, char** argv) {
 	
 	return 0;
 }
-#if 0
-	DOTFactory dot(*cfg);
-	dot.setPath("test.dot");
-	dot.setCache(iCache[1]);
-	dot.produce();
-
-	JPGFactory jpg(dot);
-	jpg.produce();
-
-	CFRFactory cfr_fact(*cfg, *iCache[1]);
-	map<ListDigraph::Node, CFR*> cfrs = cfr_fact.produce();
-	return 0;
-	
-	map<ListDigraph::Node, CFR*>::iterator cfrit;
-	cout << "CFR Identification: " << endl;
-	int count = 0;
-	for (cfrit = cfrs.begin(); cfrit != cfrs.end(); ++cfrit) {
-		DOTfromCFR cfrDOT(*cfrit->second);
-		stringstream name;
-		name << "cfr-" << ++count << ".dot";
-		cfrDOT.setPath(name.str());
-		cfrDOT.setCache(iCache[1]);
-		cfrDOT.produce();
-		JPGFactory cfrJPG(cfrDOT);
-		cfrJPG.produce();
-		name.str("");
-		name << "cfr-" << count << ".dat";
-		(*cfrit->second).dump(name.str());
-		cout << "  " << cfg->stringNode(cfrit->first) << endl
-		     << "    --> " << *cfrit->second
-		     << name.str() << endl;
-		
-	}
-	CFRG *cfrg = cfr_fact.getCFRG();
-
-	DOTfromCFRG dot_cfrg_fact(*cfrg);
-	dot_cfrg_fact.setPath("cfrg.dot");
-	dot_cfrg_fact.produce(4);
-	
-	JPGFactory cfrg_jpg(dot_cfrg_fact);
-	cfrg_jpg.produce();
-	
-	return 0;
-
-	/* Convert to Control Flow Graph that can be analyzed */
-	LemonCFG *cvtd = LemonFactory::convert(prog);
-
-	/* Display the LemonCFG for each level of the cache */
-	for (map<int, Cache*>::iterator it = iCache.begin();
-	     it != iCache.end(); ++it) {
-		LemonCFG lcfg(*cvtd);
-		int level = it->first;
-		stringstream jpg_name, dot_name, dat_name, cfr_name;
-		jpg_name << base << "-level-" << level << ".jpg";
-		dot_name << base << "-level-" << level << ".dot";
-		dat_name << base << "-level-" << level << ".dat";
-		cfr_name << base << "-level-" << level << ".cfr";
-
-		cout << "Working on Cache level " << level << endl;
-
-		/* Perform the cache assignment */
-		lcfg.cacheAssign(it->second);
-		/* Assign CFR Membership */
-		lcfg.getCFRMembership(it->second);
-
-		lcfg.toCFR(cfr_name.str());
-		lcfg.toFile(dat_name.str());
-		lcfg.toJPG(jpg_name.str());
-		lcfg.toDOT(dot_name.str());
-
-		/* Let's look at the CFRs */
-		map<ListDigraph::Node, LemonCFG*> cfrm = CFRFactory::separateCFRs(lcfg);
-		map<ListDigraph::Node, LemonCFG*>::iterator cfrit;
-		for (cfrit = cfrm.begin(); cfrit != cfrm.end(); cfrit++) {
-			cout << "CFR [" << lcfg.getStartString(cfrit->first) << "] has nodes: " << endl;
-			LemonCFG *cfr = cfrit->second;
-			for (ListDigraph::NodeIt nit(*cfr); nit != INVALID; ++nit) {
-				ListDigraph::Node cursor = nit;
-				cout << "\t" << cfr->getStartString(cursor) << endl;
-			}
-		}
-		for (cfrit = cfrm.begin(); cfrit != cfrm.end(); cfrit++) {
-			LemonCFG *cfr = cfrit->second;
-			cout << "CFR [" << cfr->getStartString(cfr->getRoot()) 
-			     << "] WCET : " << cfr->CFRWCET(cfr->getRoot(), 5, *it->second)
-			     << endl;
-		}
-		for (cfrit = cfrm.begin(); cfrit != cfrm.end(); cfrit++) {
-			delete cfrit->second;
-		}
-
-		LemonCFG cfg_copy(*cvtd);
-		CFRGFactory fact(cfg_copy, *it->second);
-		LemonCFRG *cfrg = fact.run();
-		cfrg->dump();
-		
-	}
-
-
-	return 0;
-}
-#endif
 
 int run_tests() {
 	return 0;
