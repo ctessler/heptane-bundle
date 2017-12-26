@@ -65,7 +65,7 @@ main(void)
 	printf("     - Number of elements sorted is %d\n", NUMELEMS);
 	printf("     - Total time sorting is %3.3f seconds\n\n", TotalTime);
 #endif
-	Initialize();
+	//	Initialize();
 	return 0;
 }
 
