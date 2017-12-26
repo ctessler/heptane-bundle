@@ -2,6 +2,7 @@
 #define DOTFACTORY_H
 
 #include "CFG.h"
+#include "CFR.h"
 #include<fstream>
 using namespace std;
 
@@ -10,7 +11,7 @@ using namespace std;
  */
 class DOTFactory {
 public:
-	DOTFactory(CFG &cfg) : _cfg(cfg), _color(cfg) { }
+ 	DOTFactory(CFG &cfg) : _cfg(cfg), _color(cfg), _cfr(cfg) { }
   
 	/* Gets and sets the path of the DOT file */
 	string getPath() { return _path; }
@@ -24,10 +25,12 @@ public:
 
 	void produce();
 	void succ(ListDigraph::Node node, stack<ListDigraph::Node> &followers);
+	void labelNodesCFR(CFR *cfr);
 private:
 	CFG const &_cfg;
 	Cache *_cache = NULL;
 	ListDigraph::NodeMap<string> _color;
+	ListDigraph::NodeMap<string> _cfr;
 	stringstream _debug;
 	string _path, _indent;
 

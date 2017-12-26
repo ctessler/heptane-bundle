@@ -275,19 +275,11 @@ DOTFactory::nodeDOTrow(ListDigraph::Node node) {
 		color = "#FFFFFF";
 	}
 
-	string cfrs = "nil";
-	#if 0
-	CFR const* cfr = dynamic_cast<CFR const*>(&_cfg);
-	if (cfr != NULL) {
-		cfrs = cfr->stringAddr(cfr->membership(node));
-	}
-	#endif
-
 	string text = "\t\t<TR><TD BGCOLOR=\""
 		+ color + "\" PORT=\"" + label + "\">"
 		+ _cfg.stringAddr(node) + "</TD>"
 		+ "<TD>" + ss.str() + "</TD>"
-		+ "<TD>" + cfrs + "</TD>"
+		+ "<TD>" + _cfr[node] + "</TD>"
 		+ "</TR>";
 
 	return text;
@@ -300,4 +292,14 @@ DOTFactory::nodeLabel(ListDigraph::Node node) {
 	      << _cfg.getFunction(node).getCallSite()
 	      << "_" << _cfg.stringAddr(node);
 	return label.str();
+}
+
+void
+DOTFactory::labelNodesCFR(CFR *cfr) {
+	string label = cfr->stringAddr(cfr->membership(node));
+	for (ListDigraph::NodeIt nit(*cfr); nit != INVALID; ++nit) {
+		ListDigraph::Node cfr_node = nit;
+		ListDigraph::Node cfg_node = cfr->toCFG(cfr_node);
+		_cfr[cfg_node] = label;
+	}
 }
