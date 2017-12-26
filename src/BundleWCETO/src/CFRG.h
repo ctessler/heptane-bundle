@@ -45,9 +45,7 @@ public:
 		throw runtime_error("Cannot add a node to a CFRG without a CFR");
 	}
 	ListDigraph::Node addNode(CFR *cfr);
-	ListDigraph::Node findNode(CFR *cfr) {
-		return _from_cfr_to_node[cfr];
-	}
+	ListDigraph::Node findNode(CFR *cfr);
 	int getGeneration(ListDigraph::Node node) {
 		return _gen[node];
 	}
@@ -63,9 +61,7 @@ public:
 		return NULL;
 	}
 	/* Gets and sets the inital CFR of the CFRG */
-	void setInitialCFR(CFR *cfr) {
-		_initial = cfr;
-	}
+	void setInitialCFR(CFR *cfr);
 	CFR *getInitialCFR() {
 		return _initial;
 	}

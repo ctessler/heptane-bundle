@@ -162,6 +162,8 @@ main(int argc, char** argv) {
 			ss.str("");
 			ss << pre << "-cfr-";
 			CFR* cfr = cfrit->second;
+			cout << "CFRLIST " << mit->first << " CFR "
+			     << *cfr << endl; 
 			ListDigraph::Node cfr_initial = cfr->getInitial();
 			ss << "0x" << hex << cfr->getAddr(cfr_initial) << dec
 			   << ".dot";
@@ -174,6 +176,7 @@ main(int argc, char** argv) {
 			ListDigraph::Node cfg_initial =
 				cfr->membership(cfr_initial);
 			dot.setColor(cfg_initial, "yellow");
+			dot.labelNodesCFR(cfr);
 
 			JPGFactory cfrjpg(cfrdot);
 			cfrjpg.produce();

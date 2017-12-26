@@ -135,7 +135,8 @@ WCETOFactory::produce() {
 	
 	CFRGLFS lfs(_cfrg, lfs_top_filter, lfs_top_test, lfs_top_work,
 		    (void*) this);
-	lfs.search(_cfrg.getInitialCFR());
+	CFR *initial = _cfrg.getInitialCFR();
+	lfs.search(initial);
 	dbg.dec();
 	#undef dout
 }
@@ -146,13 +147,7 @@ WCETOFactory::value(CFR *cfr) {
 	dbg.inc("WCETOFactory::value ");
 	uint32_t wceto=0;
 
-	CFRDemand *dmnd;
-	if (_cfrg.isLoopPartCFR(cfr)) {
-		CFR *head = _cfrg.crown(cfr);
-		dmnd = _loopt.present(head);
-	} else {
-		dmnd = _cfrt.present(cfr);
-	}
+	CFRDemand *dmnd = getDemand(cfr);
 	wceto = dmnd->getWCETOMap().wceto(_threads);
 
 	dbg.flush(cout);
@@ -239,7 +234,7 @@ lfs_loop_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 	fact.dbg.inc("lfs_loop_filter: ");
 
 	if (head == cfr) {
-		dout << *cfr << " skip the head in test, not filter" << endl;
+		dout << *cfr << " head is not filtered" << endl;
 		fact.dbg.flush(cout);
 		fact.dbg.dec();
 		return true;
@@ -386,6 +381,13 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 		if (pred == head) {
 			continue;
 		}
+		/* Check if the predecessor is in the loop */
+		if (!cfrg.inLoop(head, pred)) {
+			dout << *pred << " not in the same loop as " << endl;
+			dout << "    " << *cfr << endl;
+			/* It's not, don't consider it */
+			continue;
+		}
 		CFRDemand *pdmnd = scratch.present(pred);
 		if (pdmnd->getEXE() > wceto) {
 			wceto = pdmnd->getEXE();
@@ -519,6 +521,18 @@ WCETOFactory::loopDemand(CFR *cfr) {
 	dbg.dec();
 	#undef dout
 	return cfrd;
+}
+
+CFRDemand *
+WCETOFactory::getDemand(CFR *cfr) {
+	CFRDemand *dmnd;
+	if (_cfrg.isLoopPartCFR(cfr)) {
+		CFR *head = _cfrg.crown(cfr);
+		dmnd = _loopt.present(head);
+	} else {
+		dmnd = _cfrt.present(cfr);
+	}
+	return dmnd;
 }
 
 uint32_t

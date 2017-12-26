@@ -38,6 +38,17 @@ CFRG::addNode(CFR *cfr) {
 	return rv;
 }
 
+ListDigraph::Node
+CFRG::findNode(CFR *cfr) {
+	map<CFR*, ListDigraph::Node>::iterator mit =
+		_from_cfr_to_node.find(cfr);
+	if (mit == _from_cfr_to_node.end()) {
+		return INVALID;
+	}
+	return mit->second;
+}
+
+
 void
 CFRG::order() {
 	ListDigraph::NodeMap<int> distances(*this);
@@ -51,6 +62,16 @@ CFRG::order() {
 		_gen[node] = -1 * distances[node];
 	}
 }
+
+void
+CFRG::setInitialCFR(CFR *cfr) {
+	_initial = cfr;
+	ListDigraph::Node node = findNode(cfr);
+	if (node == INVALID) {
+		throw runtime_error("setInitialCFR Invalid CFR");
+	}
+}
+
 
 bool
 CFRG::isHead(ListDigraph::Node cfrg_node) {

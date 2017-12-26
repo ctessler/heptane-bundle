@@ -5,8 +5,17 @@
 #include "CFG.h"
 #include "CFR.h"
 #include "CFRG.h"
+#include "DBG.h"
 #include <map>
 using namespace std;
+
+class NodeList : public list<ListDigraph::Node> {
+};
+
+class NodeCFRMap : public map<ListDigraph::Node, CFR*> {
+public:
+	void replace(ListDigraph::Node, CFR*);
+};
 
 class CFRFactory {
 public:
@@ -20,6 +29,7 @@ public:
 	CFR* getCFR(ListDigraph::Node cfg_node);
 
 	map<ListDigraph::Node, CFR*> produce();
+	map<ListDigraph::Node, CFR*> old_produce();	
 	/* Gets the CFRG a product of produce */ 
 	CFRG *getCFRG() { return cfrg; }
 	bool debugOn = false;
@@ -32,6 +42,8 @@ private:
 	ListDigraph::NodeMap<bool> _visited;
 	/* Initial instruction in the CFG -> CFR */
 	map<ListDigraph::Node, CFR*> _cfrs;
+	/* Any instruction in CFG -> CFR */
+	NodeCFRMap _cfg_to_cfr;
 
 	void markLoops();
 	/* Marks the first exit nodes from this nodes loop as initial
@@ -40,6 +52,11 @@ private:
 	list<ListDigraph::Node> addToConflicts(ListDigraph::Node cfr_initial,
 	    ListDigraph::Node node, Cache &cache);
 	bool conflicts(ListDigraph::Node node, Cache &cache);
+
+	NodeList assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
+	    Cache &cache);
+	CFRList buildCFR(CFR *cfr);
+	void ensureArc(CFR* source, CFR* target);
 	
 	void visit(ListDigraph::Node node, bool yes=true);
 	bool visited(ListDigraph::Node node);
@@ -50,6 +67,9 @@ private:
 
 	stringstream _debug;
 	string _path, _indent;
+
+	DBG dbg;
+	bool newCFRTest(ListDigraph::Node node);
 };
 
 #endif /* CFR_FACTORY */
