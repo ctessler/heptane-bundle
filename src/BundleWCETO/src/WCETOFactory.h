@@ -59,7 +59,6 @@ public:
 	 * CFR
 	 */
 	CFRDemand* loopDemand(CFR* cfr);
-	CFRDemand* old_loopDemand(CFR* cfr);	
 
 	/**
 	 * Gets the demand for a given CFR, requires produce() has

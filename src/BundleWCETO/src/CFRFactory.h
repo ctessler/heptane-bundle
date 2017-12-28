@@ -29,7 +29,6 @@ public:
 	CFR* getCFR(ListDigraph::Node cfg_node);
 
 	map<ListDigraph::Node, CFR*> produce();
-	map<ListDigraph::Node, CFR*> old_produce();	
 	/* Gets the CFRG a product of produce */ 
 	CFRG *getCFRG() { return cfrg; }
 	bool debugOn = false;

@@ -122,63 +122,6 @@ CFRFactory::newCFRTest(ListDigraph::Node node) {
 	return true;
 }
 
-map<ListDigraph::Node, CFR*>
-CFRFactory::old_produce() {
-	_debug.str("");
-	string prefix = _indent + "CFRFactory::produce ";
-	string indent_save = _indent; _indent += " ";
-	visitClear();
-	markLoops();
-
-	ListDigraph::NodeMap<bool> starter(_cfg);
-	list<ListDigraph::Node> next_cfrs;
-	
-	ListDigraph::Node initial = _cfg.getInitial();
-	if (initial == INVALID) {
-		return _cfrs;
-	}
-	next_cfrs.push_front(initial);
-	do {
-		visitClear();
-		ListDigraph::Node cursor = next_cfrs.front();
-		next_cfrs.pop_front();
-		_debug << prefix << _cfg.stringNode(cursor) << endl;
-
-		CFR *cfr = addCFR(cursor);
-		_debug << prefix << _cfg.stringNode(cursor) << " has CFR "
-		       << cfr << endl; 
-		_initial[cursor] = true;
-		starter[cursor] = true;
-		ListDigraph::Node cfr_node = cfrg->addNode(cfr);
-		_debug << prefix << _cfg.stringNode(cursor) << " has node "
-		       << cfrg->id(cfr_node) << endl;
-		
-		Cache copy(_cache);
-		list<ListDigraph::Node> xflicts =
-			addToConflicts(cursor, cursor, copy);
-		for (list<ListDigraph::Node>::iterator lit = xflicts.begin();
-		     lit != xflicts.end(); lit++) {
-			CFR *next_cfr = addCFR(*lit);
-			
-			ListDigraph::Node next_cfr_node = cfrg->addNode(next_cfr);
-			if (cfr_node != next_cfr_node) {
-				cfrg->addArc(cfr_node, next_cfr_node);
-			}
-			if (starter[*lit]) {
-				/* Already handled */
-				continue;
-			}
-			next_cfrs.push_back(*lit);
-			starter[*lit] = true;
-		}
-	} while (!next_cfrs.empty());
-	CFR *cfr = getCFR(initial);
-	cfrg->setInitialCFR(cfr);
-
-	cout << _debug.str();
-	_indent = indent_save;
-	return _cfrs;
-}
 
 void
 CFRFactory::markLoops() {
