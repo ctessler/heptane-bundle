@@ -34,11 +34,11 @@ public:
 	~CFRDemand();
 	ThreadWCETOMap& getWCETOMap();
 	ThreadWCETOMap* copyWCETOMap();
-	uint32_t& getEXE();
+	uint32_t& getEXE(); /* WCET for 1 Thread */
 	uint32_t copyEXE();
-	uint32_t& getLoad();
+	uint32_t& getLoad(); /* Load cost for entire CFR */
 	uint32_t copyLoad();
-	ECBs& getECBs();
+	ECBs& getECBs(); /* ECBs of *this* CFR */
 	ECBs* copyECBs();
 
 	string str(string pfx="") const;

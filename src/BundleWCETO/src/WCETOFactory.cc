@@ -403,7 +403,6 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	#undef dout
 }
 
-
 CFRDemand*
 WCETOFactory::loopDemand(CFR *cfr) {
 	#define dout dbg.buf << dbg.start
@@ -469,6 +468,130 @@ WCETOFactory::loopDemand(CFR *cfr) {
 	for (uint32_t i = 1; i <= _threads; i++) {
 		map[i] = cfrd->getEXE() * cfr->getIters(cfr->getInitial());
 	}
+	dout << *cfr << " after iteration adjustment" << endl
+	     << cfrd->str(dbg.start) << endl;
+
+	/* Handle the cache loads */
+	/* All ECBs are loaded at least once, in the first thread */
+	map[1] += cfrd->getECBs().size() * cfr->getCache()->memLatency();
+	/* 2nd -> nth thread only load the duplicates */
+	uint32_t dcount = dupeCount(cfrd->getECBs());
+	for (uint32_t i = 2 ; i <= _threads; i++) {
+		map[i] += dcount * cfr->getCache()->memLatency();
+	}
+	dout << cfrd->getECBs()
+	     << " ECB dupe count: " << dcount << endl;
+	dout << "Demand after incorporating ECB loads initial/periter "
+	     << cfrd->getECBs().size() * cfr->getCache()->memLatency() << "/"
+	     << dcount * cfr->getCache()->memLatency() << endl
+	     << cfrd->str(dbg.start) << endl;
+
+	/* Values preserved in the loop table at this point
+	 *   EXE worst case execution time for a single thread
+	 *   ECBs the total ECBs accessed in the loop */
+
+	/* Now it's time to use the predecessors to update our costs */
+	scratch.empty();
+	preds = _cfrg.preds(cfr);
+	for (CFRList::iterator it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		if (_cfrg.inLoop(cfr, pred)) {
+			continue;
+		}
+		CFRDemand* pdmnd = NULL;
+		if (_cfrg.isLoopPartCFR(pred)) {
+			/* Must exist in the loop table */
+			CFR *head = _cfrg.crown(pred);
+			pdmnd = _loopt.present(head);
+		} else {
+			/* Must exist in the cfr table */
+			pdmnd = _cfrt.present(pred);
+		}
+		scratch.insert(
+		    pair<CFR*, CFRDemand*>(pred, new CFRDemand(*pdmnd)));
+	}
+	delete preds;
+
+	maxMerge(*cfrd, scratch, true);
+	dout << "Demand after adding predecessors" << endl
+	     << cfrd->str(dbg.start) << endl;
+	
+	delete data;
+	dout << "end " << *cfr << endl;
+	dbg.flush(cout);
+	dbg.dec();
+	#undef dout
+	return cfrd;
+}
+
+
+CFRDemand*
+WCETOFactory::old_loopDemand(CFR *cfr) {
+	#define dout dbg.buf << dbg.start
+	dbg.inc("loopDemand: ");
+	dout << "begin " << *cfr << endl;
+	CFRDemand *cfrd = _loopt.present(cfr);
+	if (cfrd) {
+		dout << *cfr << " is present, returning" << endl;
+		dbg.flush(cout);
+		dbg.dec();
+		return cfrd;
+	}
+	cfrd = _loopt.request(cfr);
+	cfrd->getWCETOMap().fillExe(cfr, _threads);
+	dout << *cfr << " Initial demand" << endl
+	     << cfrd->str(dbg.start) << endl;
+	dout << "beginning search" << endl;
+
+	CFRDemandMap scratch;
+	LoopData *data = new LoopData(*this, cfr, scratch);
+	CFRGLFS lfs(_cfrg, lfs_loop_filter, lfs_loop_test, lfs_loop_work,
+		    data);
+	lfs.search(cfr);
+	dout << *cfr << " search complete" << endl;
+
+	/*
+	 * At the end of processing the CFRDemand for a loop head will
+	 * contain values with different meanings than those of
+	 * independent CFRs.
+	 *
+	 * loopt[loop_head].getExe() - the WCET of a single thread
+	 * loopt[loop_head].getECBs() - the ECBs of all CRFs within
+	 * the loop
+	 * loopt[loop_head].getWCETOMap() - the cumulative map for the
+	 * entire loop, used when the loop is treated as a single CFR
+	 */
+	for (CFRDemandMap::iterator it = scratch.begin(); it != scratch.end();
+	     ++it) {
+		cfrd->getECBs().merge(it->second->getECBs());
+	}
+	
+	uint32_t wceto=0;
+	CFRList *preds = _cfrg.preds(cfr);
+	for (CFRList::iterator it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		if (!_cfrg.inLoop(cfr, pred)) {
+			continue;
+		}
+		CFRDemand *pdmnd = scratch.present(pred);
+		dbg.inc("loopDemand pred: ");
+		dout << pdmnd->str(dbg.start) << endl;
+		/* Find the max WCET value */
+		if (pdmnd->getEXE() > wceto) {
+			wceto = pdmnd->getEXE();
+		}
+		dbg.dec();
+	}
+	delete preds;				    
+	cfrd->getEXE() += wceto;
+
+	/* Worst case execution time for each thread */
+	ThreadWCETOMap &map = cfrd->getWCETOMap();
+	for (uint32_t i = 1; i <= _threads; i++) {
+		map[i] = cfrd->getEXE() * cfr->getIters(cfr->getInitial());
+	}
+	dout << *cfr << " after iteration adjustment" << endl
+	     << cfrd->str(dbg.start) << endl;
 
 	/* Handle the cache loads */
 	/* All ECBs are loaded at least once, in the first thread */
