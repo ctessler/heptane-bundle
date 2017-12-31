@@ -181,15 +181,15 @@ main(int argc, char** argv) {
 			JPGFactory cfrjpg(cfrdot);
 			cfrjpg.produce();
 		}
-		/* Drop the WCET table per cache level */
+		/* Assigns generation IDs to CFRG nodes */
 		CFRG *cfrg = cfr_fact.getCFRG();
+		cfrg->order();
+
+		/* Drop the WCET table per cache level */
 		EntryFactory entries(*cfrg);
 		ss.str(""); ss << pre << ".entry";
 		entries.setPath(ss.str());
 		entries.produce();
-
-		/* Assigns generation IDs to CFRG nodes */
-		cfrg->order();
 
 		/* Calculate the WCETO for each CFR */
 		WCETOFactory wceto_fact(*cfrg);

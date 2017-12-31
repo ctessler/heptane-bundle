@@ -3,7 +3,7 @@
 void
 EntryFactory::produce() {
 	ofstream ofile(_path.c_str());
-	ofile << hex;
+	ofile << "cfrs = (" << endl;
 	ListDigraph::NodeIt nit(_cfrg);
 	for ( ; nit != INVALID; ++nit) {
 		ListDigraph::Node node = nit;
@@ -12,9 +12,17 @@ EntryFactory::produce() {
 		ListDigraph::Node initial = cfr->getInitial();
 		iaddr_t addr = cfr->getAddr(initial);
 
-		ofile << "0x" << addr << endl;
+		ofile << "    (0x" << hex << addr << ", "
+		      << dec << _cfrg.getGeneration(node)
+		      << ")";
+		ListDigraph::NodeIt tit(_cfrg);
+		tit = nit;
+		++tit;
+		if (tit != INVALID) {
+			ofile << ",";
+		}
+		ofile << endl;
 	}
-	ofile << dec;
-
+	ofile << ");" << endl;
 	ofile.close();
 }
