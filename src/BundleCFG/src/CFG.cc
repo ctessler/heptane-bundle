@@ -229,20 +229,28 @@ CFG::sameLoop(ListDigraph::Node a, ListDigraph::Node b) {
 	a_head = getHead(a);
 	b_head = getHead(b);
 
+	#if SAMELOOPDBG
 	cout << prefix << stringNode(a) << " and" << endl
 	     << prefix << stringNode(b) << " are ";
+	#endif /* SAMELOOPDBG */
 		
 	if (a_head == b_head) {
+		#if SAMELOOPDBG
 		cout << "in the same loop (have the same head)" << endl;
+		#endif /* SAMELOOPDBG */
 		return true;
 	}
 	if (a == b_head && isHead(a)) {
+		#if SAMELOOPDBG
 		cout << "in the same loop a is b's head" << endl;
+		#endif /* SAMELOOPDBG */
 		return true;
 	}
 
 	if (b == a_head && isHead(b)) {
+		#if SAMELOOPDBG
 		cout << "in the same loop b is a's head" << endl;
+		#endif /* SAMELOOPDBG */
 		return true;
 	}
 
