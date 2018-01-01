@@ -214,6 +214,13 @@ main(int argc, char** argv) {
 		cout << "JPG : " << jpg.getPath() << endl;
 
 		wceto_fact.dumpCFRs();
+		ss.str(""); ss << pre << ".wceto";
+		ofstream result(ss.str().c_str());
+		result << "WCETO" << endl 
+		       << wceto_fact.value(cfrg->findCFR(cfrg->getTerminal()))
+		       << endl;
+		result.close();
+
 	}
 
 	/* Cleanup */
