@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE CONFIGURATION SYSTEM "config.dtd"> 
+
+<CONFIGURATION>
+
+<TARGET NAME="MIPS" ENDIANNESS="BIG"/>
+
+<!-- Compiler toolchain -->
+<!-- ****************** -->
+
+<!-- Preprocessor -->
+<PREPROCESSOR NAME="mips-cpp" OPT="-I. -I.."/>
+<!-- Compiler (options -c -S are automatically put to generate assembly code) -->
+<!-- Option -ggdb should be used if html output of critical path is asked for in subsequent WCET estimation -->
+<COMPILER NAME="mips-gcc" OPT="-fomit-frame-pointer -ggdb"/>
+<!-- Assembler -->
+<ASSEMBLER NAME="mips-as" OPT=""/>
+<!-- Linker (option -T script is automatically set when SCRIPT is specified) -->
+<LINKER NAME="mips-ld" OPT="" SCRIPT="../simul.ld"/>
+<!-- Objdump (called with options -t -d -no-show-raw-insn) -->
+<OBJDUMP NAME="mips-objdump" OPT=""/>
+<!-- Readelf (called with option -S) -->
+<READELF NAME="mips-readelf" OPT=""/>
+<LIBS NAME="" />
+
+
+<!-- Directories of inputs, temporaries and outputs (default values . /tmp and .) -->
+<!-- **************************************************************************** -->
+<INPUTDIR NAME="."/>
+<TMPDIR NAME="/tmp"/>
+<RESULTDIR NAME="."/>
+
+<!-- Configuration of the result files to generate -->
+<!-- ********************************************* -->
+
+<!-- Results for a program P are put in files P.s, P.exe, P.objdump, P.readelf, P.xml -->
+<!-- The annotation file name is the one given specified by ANNOTATIONFILE -->
+<!-- OUTPUTOBJDUMP and OUTPUTREADELF should be put to YES to use data cache analysis -->
+<OUTPUTASM VALUE="NO"/>
+<OUTPUTEXE VALUE="YES"/>
+<OUTPUTOBJDUMP VALUE="YES"/>
+<OUTPUTANNOT VALUE="YES"/>
+<OUTPUTREADELF VALUE="YES"/>
+<OUTPUTCFG VALUE="YES"/>
+<OUTPUTCODEADDRESS VALUE="YES"/>
+
+<!-- Program parameters -->
+<!-- ****************** -->
+
+<!-- NAME: program name, used as a file name prefix when generating outputs in RESULTDIR -->
+<!-- ANNOTATIONFILE: annotation file name (used as an input in INPUTDIR/ANNOTATIONFILE -->
+<!-- for defining loop bounds in a binary or as an output in RESULTDIR/ANNOTATIONFILE -->
+<!-- to produce annotations from C/ASM sources). -->
+
+<!-- SOURCEFILE NAME: source file name (merged with INPUTDIR to load file) -->
+<!-- SOURCEFILE TYPE: C/ASM/BINARY if a binary file is specified, there should be only 1 file -->
+
+<PROGRAM NAME = "simple" ENTRYPOINT = "main" ANNOTATIONFILE = "annot.xml">
+  <SOURCEFILE NAME="simple.c" TYPE="C"/>
+</PROGRAM>
+
+</CONFIGURATION>
