@@ -23,6 +23,7 @@ public:
 	 * Symbol used as the start of a line
 	 */
 	string start;
+	int getLevel() { return _level; }
 private:
 	void update();
 	int _level;
