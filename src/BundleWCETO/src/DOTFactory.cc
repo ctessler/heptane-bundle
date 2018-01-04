@@ -1,5 +1,38 @@
 #include "DOTFactory.h"
 
+string
+DOTFactory::replaceStr(string s, char a, char b) {
+	for (int i=0; i < s.length(); i++) {
+		if (s[i] == a) {
+			s[i] = b;
+		}
+	}
+	return s;
+}
+
+string
+DOTFactory::removeStr(string s, char a) {
+	int pos;
+	do {
+		pos = s.find(a);
+		if (pos != string::npos) {
+			s.erase(pos, 1);
+		}
+	} while (pos != string::npos);
+	return s;
+}
+
+string
+DOTFactory::functionString(FunctionCall &call) {
+	string fstr = call.str();
+	fstr = replaceStr(fstr, ' ', '_');
+	fstr = removeStr(fstr, '[');
+	fstr = removeStr(fstr, ']');
+	fstr = replaceStr(fstr, ':', '_');
+	fstr = removeStr(fstr, ',');
+	return fstr;
+}
+
 void
 DOTFactory::produce() {
 	ofstream dot(_path.c_str());
@@ -26,8 +59,8 @@ DOTFactory::produce() {
 			continue;
 		}
 		stringstream callstream;
-		callstream << call.getName() << "_0x" << hex
-			   << call.getCallSite() << dec;
+		string fstr = functionString(call);
+		callstream << fstr;
 		string callstr = callstream.str();
 		dot << "subgraph cluster_" << callstr << " {" << endl
 		    << "\tgraph [label = \"" << call << "\"];" << endl;
@@ -90,7 +123,7 @@ DOTFactory::produce() {
 	}
 	dot << "}" << endl;
 	dot.close();
-	cout << _debug.str();
+	//cout << _debug.str();
 }
 
 void
@@ -302,8 +335,9 @@ DOTFactory::nodeDOTrow(ListDigraph::Node node) {
 string
 DOTFactory::nodeLabel(ListDigraph::Node node) {
 	stringstream label;
-	label << _cfg.getFunction(node).getName() << "_0x"
-	      << _cfg.getFunction(node).getCallSite()
+	FunctionCall call = _cfg.getFunction(node);
+	string fstr = functionString(call);
+	label << fstr
 	      << "_" << _cfg.stringAddr(node);
 	return label.str();
 }

@@ -51,17 +51,14 @@ CFGFactory::produce() {
 		throw runtime_error("No start node for CFG");
 	}
 
-	ListDigraph::Node terminal = makeCall(cfg, INVALID, node);
+	FunctionCall call("main", CallStack({0x0}));
+	ListDigraph::Node terminal = makeCall(cfg, call, node);
 
 	cfg->setTerminal(terminal);
 	ListDigraph::Node initial =
-		cfg->find(firstAddr(node), FunctionCall("main", firstAddr(node)));
+		cfg->find(firstAddr(node), call);
 	cfg->setInitial(initial);
 
-	string CFGFile = "tmp.cfg";
-	CFGWriter cfgw(*cfg);
-	cfgw.write(CFGFile);
-	
 	identifyLoops(*cfg);
 
 	dbg.inc("LoopBounds", "|");
@@ -85,27 +82,17 @@ dmcpre(int level, Node *node) {
 #define DBG_MAKECALL
 /* Debug MakeCall 1 */
 void
-CFGFactory::dmc1(CFG *cfg, ListDigraph::Node call_site, Node *node) {
+CFGFactory::dmc1(CFG *cfg, FunctionCall call, Node *node) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
-	mlog << pre << "Call Site Address: ";
-	if (call_site != INVALID) {
-		mlog << "0x" << hex << cfg->getAddr(call_site) << dec << endl;
-	} else {
-		mlog << "INVALID" << endl;
-	}
+	mlog << pre << "associated FunctionCall " << call << endl;
 #endif /* DBG_MAKECALL */
-	dout << hnodeStr(node) << " call site ";
-	if (call_site == INVALID) {
-		dbg.buf << "INVALID" << endl;
-	} else {
-		dbg.buf << cfg->stringNode(call_site) << endl;
-	}
+	dout << hnodeStr(node) << " associated FunctionCall " << call << endl;
 	dbg.flush(cout);
 }
 
 void
-CFGFactory::dmc2(CFG *cfg, ListDigraph::Node call_site, Node *node,
+CFGFactory::dmc2(CFG *cfg, FunctionCall call, Node *node,
 		 ListDigraph::Node first, ListDigraph::Node last) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -114,7 +101,7 @@ CFGFactory::dmc2(CFG *cfg, ListDigraph::Node call_site, Node *node,
 #endif
 }
 
-void CFGFactory::dmc3(CFG *cfg, ListDigraph::Node call_site, Node *node,
+void CFGFactory::dmc3(CFG *cfg, FunctionCall call, Node *node,
 		      vector<Node*> &succs) {
  #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -134,7 +121,7 @@ void CFGFactory::dmc3(CFG *cfg, ListDigraph::Node call_site, Node *node,
 #endif /* DBG_MAKECALL */
 }
 
-void CFGFactory::dmc4(CFG *cfg, ListDigraph::Node call_site, Node *node,
+void CFGFactory::dmc4(CFG *cfg, FunctionCall call, Node *node,
 		      Node *next) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -145,7 +132,7 @@ void CFGFactory::dmc4(CFG *cfg, ListDigraph::Node call_site, Node *node,
 #endif /* DBG_MAKECALL */
 }
 
-void CFGFactory::dmc5(CFG *cfg, ListDigraph::Node call_site, Node *node,
+void CFGFactory::dmc5(CFG *cfg, FunctionCall call, Node *node,
 		      Node *next) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -156,7 +143,7 @@ void CFGFactory::dmc5(CFG *cfg, ListDigraph::Node call_site, Node *node,
 }
 
 void
-CFGFactory::dmc6(CFG *cfg, ListDigraph::Node call_site, Node *node,
+CFGFactory::dmc6(CFG *cfg, FunctionCall call, Node *node,
 		 ListDigraph::Node last, ListDigraph::Node succ_first) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -168,7 +155,7 @@ CFGFactory::dmc6(CFG *cfg, ListDigraph::Node call_site, Node *node,
 }
 
 void
-CFGFactory::dmc7(CFG *cfg, ListDigraph::Node call_site, Node *node,
+CFGFactory::dmc7(CFG *cfg, FunctionCall call, Node *node,
 		 ListDigraph::Node last) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -185,7 +172,7 @@ CFGFactory::dmc7(CFG *cfg, ListDigraph::Node call_site, Node *node,
 }
 
 void
-CFGFactory::dmc10(CFG *cfg, ListDigraph::Node call_site, Node *node,
+CFGFactory::dmc10(CFG *cfg, FunctionCall call, Node *node,
 		  ListDigraph::Node final) {
 #ifdef DBG_MAKECALL
 	string pre = dmcpre(dbg.getLevel(), node);
@@ -209,36 +196,24 @@ CFGFactory::dmc10(CFG *cfg, ListDigraph::Node call_site, Node *node,
  * @return the final node in the function
  */
 ListDigraph::Node
-CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
+CFGFactory::makeCall(CFG *cfg, FunctionCall call, Node *node) {
 	dbg.inc("makeCall ", ".");
-	dmc1(cfg, call_site, node);
-	string fname = node->GetCfg()->getStringName();
-	FunctionCall call(fname);
-	if (call_site == INVALID) {
-		/* special case for the first node */
-		call.setCallSite(firstAddr(node));
-	} else {
-		call.setCallSite(cfg->getAddr(call_site));
-	}
+	dmc1(cfg, call, node);
 
 	ListDigraph::Node first, last;
 	last = makeBB(cfg, call, node);
-
-	if (call_site == INVALID) {
-		call_site = cfg->find(firstAddr(node), call);
-	}
 
 	t_address addr = firstAddr(node);
 	first = cfg->find(addr, call);
 	if (first == INVALID) {
 		throw runtime_error("Unable to find starting node");
 	}
-	dmc2(cfg, call_site, node, first, last);
+	dmc2(cfg, call, node, first, last);
 
 	/* Prioritize successors of this Heptane node */
 	vector<Node*> outbound = node->GetCfg()->GetSuccessors(node);
 	vector<Node*>::iterator nit;
-	dmc3(cfg, call_site, node, outbound);
+	dmc3(cfg, call, node, outbound);
 
 	/* Needed to determine if *this* node is terminal */
 	int succ_count = 0;
@@ -250,9 +225,9 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
 
 		succ_first = cfg->find(addr, call);
 		if (succ_first == INVALID) {
-			dmc4(cfg, call_site, node, next);
-			succ_last = makeCall(cfg, call_site, next);
-			dmc5(cfg, call_site, node, next);			
+			dmc4(cfg, call, node, next);
+			succ_last = makeCall(cfg, call, next);
+			dmc5(cfg, call, node, next);			
 			succ_first = cfg->find(addr, call);
 			if (first == INVALID) {
 				throw runtime_error("Unable to find start node");
@@ -265,7 +240,7 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
 		}
 		if (!node->IsCall()) {
 			cfg->addArc(last, succ_first);
-			dmc6(cfg, call_site, node, last, succ_first);
+			dmc6(cfg, call, node, last, succ_first);
 			dout << "added #2 "
 			     << cfg->stringNode(last) << " → "
 			     << cfg->stringNode(succ_first) << endl;
@@ -274,13 +249,15 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
 	}
 	/* Handle calls from this function */
 	if (node->IsCall()) {
-		dmc7(cfg, call_site, node, last);
+		dmc7(cfg, call, node, last);
 		succ_count++;
 		dout << cfg->stringNode(last) << " is a call" << endl;
 		Cfg* callto = node->GetCallee();
 		Node *next = callto->GetStartNode();
 
-		ListDigraph::Node terminal = makeCall(cfg, last, next);
+		FunctionCall subsq(call, next->GetCfg()->getStringName(),
+				   cfg->getAddr(last));
+		ListDigraph::Node terminal = makeCall(cfg, subsq, next);
 		ListDigraph::Node fstart =
 			cfg->find(firstAddr(next), cfg->getFunction(terminal));
 		if (fstart == INVALID) {
@@ -305,13 +282,12 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
 		     << cfg->stringNode(terminal) << " → "
 		     << cfg->stringNode(ret_to) << endl;
 	}
-done:
 	if (succ_count == 0) {
 		/* This node had no successors, it must be final */
 		final = last;
 	}
 	dout << "final node " << cfg->stringNode(final) << endl;
-	dmc10(cfg, call_site, node, final);
+	dmc10(cfg, call, node, final);
 	dbg.dec(); dbg.flush(cout);
 	return final;
 }

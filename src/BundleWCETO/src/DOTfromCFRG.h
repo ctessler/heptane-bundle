@@ -2,6 +2,7 @@
 #define DOTFROMCFRG_H
 
 #include "CFRG.h"
+#include "DOTFactory.h"
 #include "WCETOFactory.h"
 
 class DOTfromCFRG {

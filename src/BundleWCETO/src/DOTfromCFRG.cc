@@ -9,8 +9,8 @@ CFRDOTid(CFR &cfr) {
 
 	stringstream id;
 	FunctionCall call = cfg->getFunction(cfg_node);
-	id << call.getName() << "_" << call.getCallSite() << "_"
-	   << cfg->stringAddr(cfg_node);
+	string fstr = DOTFactory::functionString(call);
+	id << fstr << "_" << cfg->stringAddr(cfg_node);
 
 	return id.str();
 }

@@ -41,6 +41,16 @@ public:
 	 * Pushes an element on the top of the stack
 	 */
 	void push(uint32_t);
+	/**
+	 * Copies another stack
+	 */
+	void copy(const CallStack& other);
+	/**
+	 * Count of the elements on the stack
+	 */
+	int size() {
+		return list::size();
+	}
 };
 
 /**
@@ -48,12 +58,13 @@ public:
  */
 class FunctionCall {
 public:
-	FunctionCall(string name="-NA-", iaddr_t call_site=0);
+	FunctionCall();
 	FunctionCall(string name, const CallStack &cs);
 	/**
 	 * Copy constructor
 	 */
 	FunctionCall(const FunctionCall &other);
+	void copy(const FunctionCall &other);
 	/**
 	 * Push constructor
 	 *
@@ -74,16 +85,13 @@ public:
 	string getName() const;
 	void setName(string name);
 
-	iaddr_t getCallSite() const;
-	void setCallSite(iaddr_t call_site=0);
-
 	CallStack& stack() { return _call_stack; };
+	bool stacksMatch(const FunctionCall &other) const;
+	void fillStack(CallStack &other) const;
 
 private:
 	/* Function name */
 	string _function_name;
-	/* Call site address of the function */
-	iaddr_t _call_addr;
 	/* Call stack for *this* function
 	 *   If this function was called by an instruction at 0x402,
 	 *   the top of the stack will be 0x402 

@@ -35,8 +35,7 @@ CFGWriter::nodeString(ListDigraph::Node node) {
 
 	/* Frame -1 */
 	FunctionCall call = _cfg.getFunction(node);
-	ss << "0x" << hex << setw(6) << setfill('0') << call.getCallSite()
-	   << dec << " " << call.getName();
+	ss << call;
 
 	return ss.str();
 }
@@ -62,11 +61,11 @@ CFGWriter::arcString(ListDigraph::Arc arc) {
 	ListDigraph::Node tgt = _cfg.target(arc);
 
 	ss << "0x" << hex << setw(6) << _cfg.getAddr(src) << " ";
-	ss << "0x" << setw(6) << setfill('0') << _cfg.getFunction(src).getCallSite();
-	ss << "  -->   ";
+	ss << _cfg.getFunction(src);
+	ss << " → ";
 
 	ss << "0x" << hex << setw(6) << _cfg.getAddr(tgt) << " ";
-	ss << "0x" << setw(6) << setfill('0') << _cfg.getFunction(tgt).getCallSite();
+	ss << _cfg.getFunction(tgt);
 
 	return ss.str();
 }
@@ -116,6 +115,48 @@ CFGWriter::write(string path) {
 	ofile.close();
 }
 
+static void
+fillFunction(FunctionCall &function, ifstream &ifile) {
+	string starter;
+	ifile >> starter;
+	size_t idx = starter.find(":T[");
+	if (idx == string::npos) {
+		throw runtime_error("No function call");
+	}
+	string fname; fname.assign(starter, 0, idx);
+	function.setName(fname);
+
+	starter.erase(0, idx+3);
+	string rest = starter;
+	idx = rest.find("]");
+	bool done = false;
+	if (idx != string::npos) {
+		rest.erase(idx, idx);
+		done = true;
+	}
+	size_t pos;
+	uint32_t addr = stoul(rest, &pos, 16);
+	list<uint32_t> L;
+	L.push_front(addr);
+	
+	while (!done && ifile >> rest) {
+		idx = rest.find("]");
+		if (idx != string::npos) {
+			rest.erase(idx, idx);
+			done = true;
+		}
+		addr = stoul(rest, &pos, 16);
+		L.push_front(addr);
+		if (done) {
+			break;
+		}
+	}
+	for (list<uint32_t>::iterator it = L.begin(); it != L.end(); ++it) {
+		function.stack().push(*it);
+	}
+	
+}
+
 void
 CFGReader::addNode(string addr, ifstream &ifile) {
 	ListDigraph::Node node = _cfg.addNode();
@@ -141,11 +182,7 @@ CFGReader::addNode(string addr, ifstream &ifile) {
 	iaddr_t closest_head_addr = stoul(closestHead, &pos, 16);
 
 	FunctionCall call;
-	string callsite, name;
-	ifile >> callsite >> name;
-	iaddr_t callsite_addr = stoul(callsite, &pos, 16);
-	call.setCallSite(callsite_addr);
-	call.setName(name);
+	fillFunction(call, ifile);
 
 	_cfg.setFunction(node, call);
 	
@@ -154,14 +191,19 @@ CFGReader::addNode(string addr, ifstream &ifile) {
 		 * guaranteed the node will exist in the CFG already. 
 		 */
 		ListDigraph::Node head = _cfg.find(closest_head_addr, call);
-		if (head == INVALID) {
-			stringstream ss;
-			ss << "Adding instruction 0x" << hex
-			   << instr_addr;
-			ss << " Could not find head: 0x" << hex
-			   << closest_head_addr << " " << call
-			   << dec;
-			throw runtime_error(ss.str());
+		FunctionCall copy(call);
+		while (head == INVALID) {
+			copy.stack().pop();
+			if (copy.stack().size() == 0) {
+				stringstream ss;
+				ss << "Adding instruction 0x" << hex
+				   << instr_addr;
+				ss << " Could not find head: 0x" << hex
+				   << closest_head_addr << " " << copy
+				   << dec;
+				throw runtime_error(ss.str());
+			}
+			head = _cfg.findIgnoreName(closest_head_addr, copy);
 		}
 		_cfg.setHead(node, head);
 	}
@@ -170,21 +212,25 @@ CFGReader::addNode(string addr, ifstream &ifile) {
 
 bool
 CFGReader::addArc(ifstream &ifile) {
-	string sNodeAddr, sNodeCallSite, dNodeAddr, dNodeCallSite, arrow;
+	string sNodeAddr, dNodeAddr, arrow;
 
-	if (!(ifile >> sNodeAddr >> sNodeCallSite
-	      >> arrow
-	      >> dNodeAddr >> dNodeCallSite)) {
+	if (!(ifile >> sNodeAddr)) {
 		return false;
 	}
+	FunctionCall srcFn;
+	fillFunction(srcFn, ifile);
+	if (!(ifile >> arrow >> dNodeAddr)) {
+		return false;
+	}
+	FunctionCall dstFn;
+	fillFunction(dstFn, ifile);
+
 	size_t pos;
 	iaddr_t src_addr = stoul(sNodeAddr, &pos, 16);
-	iaddr_t src_calls = stoul(sNodeCallSite, &pos, 16);
 	iaddr_t dst_addr = stoul(dNodeAddr, &pos, 16);
-	iaddr_t dst_calls = stoul(dNodeCallSite, &pos, 16);
 
-	ListDigraph::Node src = _cfg.find(src_addr, FunctionCall("NA", src_calls));
-	ListDigraph::Node dst = _cfg.find(dst_addr, FunctionCall("NA", dst_calls));
+	ListDigraph::Node src = _cfg.find(src_addr, srcFn);
+	ListDigraph::Node dst = _cfg.find(dst_addr, dstFn);
 
 	if (src == INVALID || dst == INVALID) {
 		throw runtime_error("Could not find nodes to make an arc");

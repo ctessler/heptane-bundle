@@ -58,7 +58,7 @@ CFG::addNode() {
 	_loop_head[rv] = INVALID;
 	_is_loop_head[rv] = false;
 	_loop_iters[rv] = 0;
-	_function[rv] = FunctionCall("UNASSIGNED", 0x0);
+	
 	
 	return rv;
 }
@@ -122,8 +122,8 @@ CFG::calcTerminal() {
 }
 
 void
-CFG::setFunction(ListDigraph::Node node, FunctionCall const &fcall) {
-	_function[node] = fcall;
+CFG::setFunction(ListDigraph::Node node, const FunctionCall &fcall) {
+	_function[node].copy(fcall);
 }
 
 FunctionCall
@@ -166,6 +166,22 @@ CFG::find(iaddr_t addr, FunctionCall const &fcall) {
 		ListDigraph::Node node = nit;
 		if (_addr[node] == addr &&
 		    _function[node] == fcall) {
+			return node;
+		}
+	}
+	return INVALID;
+}
+
+ListDigraph::Node
+CFG::findIgnoreName(uint32_t addr, FunctionCall const &fcall) {
+	ListDigraph::NodeIt nit(*this);
+
+	for ( ; nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		if (_addr[node] != addr) {
+			continue;
+		}
+		if (fcall.stacksMatch(_function[node])) {
 			return node;
 		}
 	}

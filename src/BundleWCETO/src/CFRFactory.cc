@@ -30,6 +30,7 @@ CFRFactory::produce() {
 
 	ListDigraph::Node cursor, initial = _cfg.getInitial();
 	dout << "Initial node: " << _cfg.stringNode(initial) << endl;
+	dbg.flush(cout);
 
 	/* First pass, assign instructions to CFRs */
 	NodeList next_cfrs;

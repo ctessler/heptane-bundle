@@ -48,7 +48,7 @@ FunctionCallTest::basic()
 	FunctionCall empty;
 	CPPUNIT_ASSERT_MESSAGE("Empty is -NA-:T[]",
 			       empty.str().compare("-NA-:T[]") == 0);
-	FunctionCall start("main");
+	FunctionCall start("main", CallStack());
 	start.stack().push(0x40000);
 	CPPUNIT_ASSERT_MESSAGE("Main is main:T[0x40000]",
 			       start.str().compare("main:T[0x40000]") == 0);
@@ -57,7 +57,7 @@ FunctionCallTest::basic()
 void
 FunctionCallTest::push_const()
 {
-	FunctionCall start("main"); start.stack().push(0x40000);
+	FunctionCall start("main", CallStack({0x40000}));
 	FunctionCall next(start, "sort", 0x40042);
 
 	CPPUNIT_ASSERT_MESSAGE("next is sort:T[0x40042, 0x40000]",

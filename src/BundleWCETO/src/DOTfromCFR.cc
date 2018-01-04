@@ -25,8 +25,8 @@ DOTfromCFR::produce() {
 			continue;
 		}
 		stringstream callstream;
-		callstream << call.getName() << "_0x" << hex
-			   << call.getCallSite() << dec;
+		string fstr = functionString(call);
+		callstream << fstr;
 		string callstr = callstream.str();
 		dot << "subgraph cluster_" << callstr << " {" << endl
 		    << "\tgraph [label = \"" << call << "\"];" << endl;
@@ -227,8 +227,11 @@ DOTfromCFR::nodeDOT(ofstream &os, ListDigraph::Node node) {
 string
 DOTfromCFR::nodeLabel(ListDigraph::Node node) {
 	stringstream label;
-	label << _cfr.getFunction(node).getName() << "_0x"
-	      << _cfr.getFunction(node).getCallSite()
+	cout << "Before: " << _cfg.getFunction(node).str() << endl;
+	FunctionCall call = _cfg.getFunction(node);
+	string fstr = functionString(call);
+	cout << "FSTR: " << fstr << endl;
+	label << fstr
 	      << "_" << _cfr.stringAddr(node);
 	return label.str();
 }

@@ -137,6 +137,7 @@ main(int argc, char** argv) {
 	CFG cfg;
 	CFGReader cfgr(cfg);
 	cfgr.read(bcfg_file);
+	cout << "CFG initial: " << cfg.stringNode(cfg.getInitial()) << endl;
 
 	map<int, Cache*>::iterator mit;
 	for (mit = ins_cache.begin(); mit != ins_cache.end(); ++mit) {

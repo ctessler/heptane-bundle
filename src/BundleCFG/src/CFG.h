@@ -56,6 +56,15 @@ public:
 
 	/* Finds the instruction with the address and function */
 	ListDigraph::Node find(iaddr_t addr, FunctionCall const &fcall);
+	/**
+	 * Finds the instruction with the address and function call
+	 * ignoring the name of the function
+	 *
+	 * You probaly don't want this, it's used exclusively for
+	 * updating or setting head's of other nodes in the CFG. 
+	 */ 
+	ListDigraph::Node findIgnoreName(uint32_t addr,
+					 FunctionCall const &fcall);
 
 	/* Finds all instructions with the address */
 	list<ListDigraph::Node> find(iaddr_t addr);

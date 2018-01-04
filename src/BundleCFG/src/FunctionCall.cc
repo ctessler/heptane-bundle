@@ -58,14 +58,28 @@ CallStack::pop() {
 	return rval;
 }
 
+void
+CallStack::copy(const CallStack &copy) {
+	CallStack::const_iterator it;
+	clear();
+	for (it = copy.begin(); it != copy.end(); ++it) {
+		push_back(*it);
+	}
+}
 
-FunctionCall::FunctionCall(string name, iaddr_t call_site) :
-    _function_name(name), _call_addr(call_site) {
+
+FunctionCall::FunctionCall() {
+	_function_name = "-NA-";
 }
 
 FunctionCall::FunctionCall(const FunctionCall &other) :
     _function_name(other._function_name), _call_stack(other._call_stack) {
-	_call_addr = other._call_addr;
+}
+
+void
+FunctionCall::copy(const FunctionCall &other) {
+	_function_name = other._function_name;
+	_call_stack.copy(other._call_stack);
 }
 
 FunctionCall::FunctionCall(string name, const CallStack &cs) :
@@ -87,32 +101,33 @@ FunctionCall::setName(string name) {
 	_function_name = name;
 }
 
-iaddr_t
-FunctionCall::getCallSite() const {
-	return _call_addr;
-}
 void
-FunctionCall::setCallSite(iaddr_t call_site) {
-	_call_addr = call_site;
+FunctionCall::fillStack(CallStack &other) const {
+	other.copy(_call_stack);
+}
+
+bool
+FunctionCall::stacksMatch(FunctionCall const &other) const {
+	return _call_stack == other._call_stack;
 }
 
 FunctionCall&
 FunctionCall::operator=(const FunctionCall &other) {
 	_function_name = other._function_name;
-	_call_addr = other._call_addr;
-
+	_call_stack.copy(other._call_stack);
 	return *this;
 }
 
 bool
 FunctionCall::operator==(const FunctionCall &other) const {
-	/* Function names don't matter in comparisons just the address */
-	#if 0
-	if (0 != _function_name.compare(other._function_name)) {
-		return false;
+
+	if (_call_stack == other._call_stack) {
+		/* Function names don't matter in comparisons just the address */
+		if (0 != _function_name.compare(other._function_name)) {
+			throw runtime_error("Unexpected difference in function names");
+		}
 	}
-	#endif
-	return (_call_addr == other._call_addr);
+	return (_call_stack == other._call_stack);
 }
 
 string

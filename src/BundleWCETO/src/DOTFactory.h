@@ -26,8 +26,14 @@ public:
 	void produce();
 	void succ(ListDigraph::Node node, stack<ListDigraph::Node> &followers);
 	void labelNodesCFR(CFR *cfr);
-private:
 	CFG const &_cfg;
+
+	/* Replaces all occurrences of a with b */
+	static string replaceStr(string s, char a, char b);
+	static string removeStr(string s, char a);
+	static string functionString(FunctionCall &call);
+	
+private:
 	Cache *_cache = NULL;
 	ListDigraph::NodeMap<string> _color;
 	ListDigraph::NodeMap<string> _cfr;

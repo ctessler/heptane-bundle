@@ -28,7 +28,7 @@ public:
 	CFG* produce();
 private:
 	Program *_prog;
-	ListDigraph::Node makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node);
+	ListDigraph::Node makeCall(CFG *cfg, FunctionCall call, Node *node);
 	ListDigraph::Node makeBB(CFG *cfg, const FunctionCall &call, Node *node);
 	stringstream _debug;
 	string _indent;
@@ -45,20 +45,20 @@ private:
 	ofstream log;
 	ofstream mlog;
 
-	void dmc1(CFG *cfg, ListDigraph::Node call_site, Node *node);
-	void dmc2(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc1(CFG *cfg, FunctionCall call, Node *node);
+	void dmc2(CFG *cfg, FunctionCall call, Node *node,
 		  ListDigraph::Node first, ListDigraph::Node last);
-	void dmc3(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc3(CFG *cfg, FunctionCall call, Node *node,
 		  vector<Node*> &succs);
-	void dmc4(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc4(CFG *cfg, FunctionCall call, Node *node,
 		  Node *next);
-	void dmc5(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc5(CFG *cfg, FunctionCall call, Node *node,
 		  Node *next);
-	void dmc6(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc6(CFG *cfg, FunctionCall call, Node *node,
 		  ListDigraph::Node last, ListDigraph::Node succ_first);
-	void dmc7(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc7(CFG *cfg, FunctionCall call, Node *node,
 		  ListDigraph::Node last);
-	void dmc10(CFG *cfg, ListDigraph::Node call_site, Node *node,
+	void dmc10(CFG *cfg, FunctionCall call, Node *node,
 		   ListDigraph::Node final);
 };
 
