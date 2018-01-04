@@ -24,7 +24,7 @@ CFRDOT(CFR &cfr, WCETOFactory &fact, int generation, unsigned int threads) {
 	stringstream label, node;
 	label << "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">"
 	      << endl << "\t"
-	      << "<TR><TD COLSPAN=\"2\">CFR: " << cfg->stringAddr(cfg_node)
+	      << "<TR><TD COLSPAN=\"2\">CFR: " << cfg->stringNode(cfg_node)
 	      << "</TD></TR>" << endl
 	      << "<TR><TD>Gen.</TD>"
 	      << "<TD>" << generation << "</TD></TR>" << endl
