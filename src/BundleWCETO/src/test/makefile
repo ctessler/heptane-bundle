@@ -6,19 +6,19 @@ LDFLAGS=-lemon $(shell xml2-config --libs) -lcppunit
 CXXFLAGS=-DGLIBCXX_FORCE_NEW -O0 -g -std=c++11 $(INCLUDE) $(LDFLAGS)
 
 cfg_srcs= FunctionCall.cc CFG.cc PolicyLRU.cc Cache.cc CacheLine.cc
-cfg_srcs+=CacheSet.cc BXMLCfg.cc 
+cfg_srcs+=CacheSet.cc BXMLCfg.cc DBG.cc
 cod=../../../BundleCFG/src
 cfg_srcs_path=$(patsubst %.cc,$(cod)/%.cc,$(cfg_srcs))
 cfg_objs=$(patsubst %.cc,ext/%.o,$(cfg_srcs))
 
 
-wcet_srcs=CFR.cc CFRFactory.cc CFRG.cc DBG.cc CFRECBs.cc
+wcet_srcs=CFR.cc CFRFactory.cc CFRG.cc CFRECBs.cc
 wcet=../
 wcet_srcs_path=$(patsubst %.cc,$(wcet)/%.cc,$(wcet_srcs))
 wcet_objs=$(patsubst %.cc,wcet/%.o,$(wcet_srcs))
 
 test_srcs= unit_test.cc CFRTest.cc CacheTest.cc BXMLCFGTest.cc
-test_srcs+=CFRFactoryTest.cc PQueueTest.cc SetTest.cc
+test_srcs+=CFRFactoryTest.cc PQueueTest.cc SetTest.cc FunctionCallTest.cc
 test_objs=$(patsubst %.cc,obj/%.o,$(test_srcs))
 
 all: run_valgrind $(tgt)
