@@ -1,4 +1,6 @@
 THREADS?=3
+valgrind="valgrind --leak-check=full"
+undefine valgrind
 wd=$(shell pwd)
 dirname=$(shell dirname ${wd})
 name=$(shell basename ${dirname})
@@ -8,8 +10,6 @@ heptane=${name}.hept
 simcfg=simulator-${THREADS}.cfg
 
 all: ${wceto} ${obs} summary-${THREADS}.txt
-	echo "Parameters may be changed by altering the following environment variables"
-	echo "THREADS"
 
 summary-${THREADS}.txt:	cost=`sed 's/.*: //' ${heptane}`
 summary-${THREADS}.txt: tot=$(shell echo ${cost} \* ${THREADS} | bc)
@@ -39,13 +39,13 @@ ${obs}: ${wceto} ${simcfg}
 	    | grep 'Execution' > ${name}-serial.obs
 
 ${wceto}: ${name}.cfg
-	valgrind --leak-check=full ../../../bin/BundleWCETO -c ${name}.cfg \
+	${valgrind} ../../../bin/BundleWCETO -c ${name}.cfg \
 	    -m ${THREADS} configBUNDLE.xml
 	mv ${name}-level-1.wceto ${wceto}
 	cat ${wceto}
 
 ${name}.cfg: 
-	valgrind --leak-check=full ../../../bin/BundleCFG --verbose configBUNDLE.xml
+	${valgrind} ../../../bin/BundleCFG --verbose configBUNDLE.xml
 
 ${simcfg}: simulator.cfg
 	sed 's/threads.*/threads = ${THREADS};/' simulator.cfg > ${simcfg}
