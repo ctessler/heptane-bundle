@@ -1,4 +1,7 @@
 #include "CFGFactory.h"
+#include "CFGReadWrite.h"
+#define dout dbg.buf << dbg.start 
+
 /**
  * Attributes are not statically defined interfaces.
  *
@@ -25,6 +28,15 @@ firstAddr(Node *node) {
 	return instrAddr(i);
 }
 
+static string
+hnodeStr(Node *node) {
+	stringstream ss;
+	string fname = node->GetCfg()->getStringName();
+	t_address addr = firstAddr(node);	
+	ss << "0x" << hex << addr << dec << "(" << fname << ")";
+	return ss.str();
+}
+
 
 CFG*
 CFGFactory::produce() {
@@ -38,29 +50,154 @@ CFGFactory::produce() {
 	if (node == NULL) {
 		throw runtime_error("No start node for CFG");
 	}
-	
+
 	ListDigraph::Node terminal = makeCall(cfg, INVALID, node);
-	cout << _debug.str() ;
 
 	cfg->setTerminal(terminal);
-	ListDigraph::Node initial = cfg->find(firstAddr(node),
-					      FunctionCall("main", 0x0));
+	ListDigraph::Node initial =
+		cfg->find(firstAddr(node), FunctionCall("main", firstAddr(node)));
 	cfg->setInitial(initial);
 
+	string CFGFile = "tmp.cfg";
+	CFGWriter cfgw(*cfg);
+	cfgw.write(CFGFile);
+	
 	identifyLoops(*cfg);
 
-	string indent_save = _indent;
-	_debug << "Loop Bounds:" << endl;
-	_indent += "| ";
+	dbg.inc("LoopBounds", "|");
 	vector<Cfg*> hep_cfgs = _prog->GetAllCfgs();
 	for (unsigned int c = 0; c < hep_cfgs.size(); c++) {
 		boundLoops(*cfg, hep_cfgs[c]);
 	}
-	_indent = indent_save;
-	cout << _debug.str();
-
+	dbg.dec();
+	dbg.flush(cout);
 	return cfg;
 }
+
+static string
+dmcpre(int level, Node *node) {
+	stringstream ss;
+	ss << "makeCall[" << setw(2) << level << "] "
+	   << hnodeStr(node) << " ";
+	return ss.str();
+}
+
+#define DBG_MAKECALL
+/* Debug MakeCall 1 */
+void
+CFGFactory::dmc1(CFG *cfg, ListDigraph::Node call_site, Node *node) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << pre << "Call Site Address: ";
+	if (call_site != INVALID) {
+		mlog << "0x" << hex << cfg->getAddr(call_site) << dec << endl;
+	} else {
+		mlog << "INVALID" << endl;
+	}
+#endif /* DBG_MAKECALL */
+	dout << hnodeStr(node) << " call site ";
+	if (call_site == INVALID) {
+		dbg.buf << "INVALID" << endl;
+	} else {
+		dbg.buf << cfg->stringNode(call_site) << endl;
+	}
+	dbg.flush(cout);
+}
+
+void
+CFGFactory::dmc2(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		 ListDigraph::Node first, ListDigraph::Node last) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << pre << "First/Last Instr: 0x" << hex << cfg->getAddr(first)
+	    << "/0x" << cfg->getAddr(last) << dec << endl;
+#endif
+}
+
+void CFGFactory::dmc3(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		      vector<Node*> &succs) {
+ #ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << pre << "Successors: " << succs.size() << hex;
+	vector<Node*>::iterator nit;
+	for (nit = succs.begin(); nit != succs.end(); nit++) {
+		Node *next = (*nit);
+		int addr = firstAddr(next);
+		if (nit != succs.begin()) {
+			mlog << ", ";
+		} else {
+			mlog << endl << "\t";
+		}
+		mlog << "0x" << addr;
+	}
+	mlog << dec << endl;
+#endif /* DBG_MAKECALL */
+}
+
+void CFGFactory::dmc4(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		      Node *next) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << pre << "no CFG node for: " << hnodeStr(next)
+	     << ", recursing" << endl
+	     << "--↓" << endl;
+	
+#endif /* DBG_MAKECALL */
+}
+
+void CFGFactory::dmc5(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		      Node *next) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << "↑--" << endl;
+	mlog << pre << "finished recursive call for: " << hnodeStr(next)
+	     << endl;
+#endif /* DBG_MAKECALL */
+}
+
+void
+CFGFactory::dmc6(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		 ListDigraph::Node last, ListDigraph::Node succ_first) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << pre << "added arc from last node: " << endl
+	     << pre << "  " << cfg->stringNode(last) << endl
+	     << pre << "   to first node →" << endl
+	     << pre << "  " << cfg->stringNode(succ_first) << endl;
+#endif
+}
+
+void
+CFGFactory::dmc7(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		 ListDigraph::Node last) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	mlog << pre << cfg->stringNode(last) << " is a call " << endl;
+
+	Cfg* callto = node->GetCallee();
+	Node *next = callto->GetStartNode();
+	string called_fname = next->GetCfg()->getStringName();
+
+	mlog << pre << "   calling function " << called_fname << endl;
+	mlog << pre << "   context should be 0x" << hex << cfg->getAddr(last)
+	     << dec << endl;
+#endif
+}
+
+void
+CFGFactory::dmc10(CFG *cfg, ListDigraph::Node call_site, Node *node,
+		  ListDigraph::Node final) {
+#ifdef DBG_MAKECALL
+	string pre = dmcpre(dbg.getLevel(), node);
+	if (final == INVALID) {
+		mlog << pre << "Final: INVALID" << endl;
+	} else {
+		mlog << pre << "Final: 0x" << hex << cfg->getAddr(final)
+		     << dec << endl;
+	}
+#endif /* DBG_MAKECALL */	
+}
+
 
 /**
  * Takes a function call from the Heptane CFG and adds it to the CFG.
@@ -73,33 +210,35 @@ CFGFactory::produce() {
  */
 ListDigraph::Node
 CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
-	string indent_save = _indent;
-	_debug << _indent << "makeCall(" << *cfg << ", ";
-	_indent += "| ";
-
+	dbg.inc("makeCall ", ".");
+	dmc1(cfg, call_site, node);
 	string fname = node->GetCfg()->getStringName();
 	FunctionCall call(fname);
 	if (call_site == INVALID) {
-		/* Special case for the first function call */
-		call.setCallSite(0x0);
+		/* special case for the first node */
+		call.setCallSite(firstAddr(node));
 	} else {
-		/* Otherwise the call site must exist in the CFG */
 		call.setCallSite(cfg->getAddr(call_site));
 	}
-	_debug << call << ", " << node << ")" << endl;
 
 	ListDigraph::Node first, last;
 	last = makeBB(cfg, call, node);
+
+	if (call_site == INVALID) {
+		call_site = cfg->find(firstAddr(node), call);
+	}
 
 	t_address addr = firstAddr(node);
 	first = cfg->find(addr, call);
 	if (first == INVALID) {
 		throw runtime_error("Unable to find starting node");
 	}
+	dmc2(cfg, call_site, node, first, last);
 
 	/* Prioritize successors of this Heptane node */
 	vector<Node*> outbound = node->GetCfg()->GetSuccessors(node);
 	vector<Node*>::iterator nit;
+	dmc3(cfg, call_site, node, outbound);
 
 	/* Needed to determine if *this* node is terminal */
 	int succ_count = 0;
@@ -111,41 +250,49 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
 
 		succ_first = cfg->find(addr, call);
 		if (succ_first == INVALID) {
+			dmc4(cfg, call_site, node, next);
 			succ_last = makeCall(cfg, call_site, next);
+			dmc5(cfg, call_site, node, next);			
 			succ_first = cfg->find(addr, call);
 			if (first == INVALID) {
-				throw runtime_error("Unable to find starting node");
+				throw runtime_error("Unable to find start node");
 			}
 			if (succ_last != INVALID) {
-				/* Only possible for one node to terminate a function */
+				/* Only possible for one node to terminate a
+				 * function */
 				final = succ_last; 
 			}
 		}
 		if (!node->IsCall()) {
 			cfg->addArc(last, succ_first);
-			_debug << _indent << "makeCall added #2 "
-			       << cfg->stringNode(last) << " -- > "
-			       << cfg->stringNode(succ_first) << endl;
+			dmc6(cfg, call_site, node, last, succ_first);
+			dout << "added #2 "
+			     << cfg->stringNode(last) << " → "
+			     << cfg->stringNode(succ_first) << endl;
 		}
 		succ_count++;
 	}
 	/* Handle calls from this function */
 	if (node->IsCall()) {
-		_debug << _indent << "makeCall " << cfg->stringNode(last) << " is a call" << endl;
+		dmc7(cfg, call_site, node, last);
+		succ_count++;
+		dout << cfg->stringNode(last) << " is a call" << endl;
 		Cfg* callto = node->GetCallee();
 		Node *next = callto->GetStartNode();
 
 		ListDigraph::Node terminal = makeCall(cfg, last, next);
-		ListDigraph::Node fstart = cfg->find(firstAddr(next), cfg->getFunction(terminal));
+		ListDigraph::Node fstart =
+			cfg->find(firstAddr(next), cfg->getFunction(terminal));
 		if (fstart == INVALID) {
-		} 
+		}
 		/* Call edge */
 		cfg->addArc(last, fstart);
-		_debug << _indent << "makeCall add #3 "
-		       << cfg->stringNode(last) << " -- > "
-		       << cfg->stringNode(fstart) << endl;
+		dout << "add #3 "
+		     << cfg->stringNode(last) << " → "
+		     << cfg->stringNode(fstart) << endl;
 
-		/* The return address is 4 past the final instruction of the call */
+		/* The return address is 4 past the final instruction of the
+		 * call */
 		unsigned long new_pc = cfg->getAddr(last) + 4;
 		ListDigraph::Node ret_to = cfg->find(new_pc, call);
 		if (ret_to == INVALID) {
@@ -154,18 +301,18 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
 
 		/* Return edge */
 		cfg->addArc(terminal, ret_to);
-		_debug << _indent << "makeCall add #4 "
-		       << cfg->stringNode(terminal) << " -- > "
-		       << cfg->stringNode(ret_to) << endl;
-		succ_count++;
+		dout << "add #4 "
+		     << cfg->stringNode(terminal) << " → "
+		     << cfg->stringNode(ret_to) << endl;
 	}
-
+done:
 	if (succ_count == 0) {
 		/* This node had no successors, it must be final */
 		final = last;
 	}
-	_debug << _indent << "makeCall final node " << cfg->stringNode(final) << endl;
-	_indent = indent_save;
+	dout << "final node " << cfg->stringNode(final) << endl;
+	dmc10(cfg, call_site, node, final);
+	dbg.dec(); dbg.flush(cout);
 	return final;
 }
 
@@ -177,8 +324,12 @@ CFGFactory::makeCall(CFG *cfg, ListDigraph::Node call_site, Node *node) {
  * @param[in] node the node containing the instructions
  * @param[out] debug string buffer for debugging.
  */
+uint32_t linec=0;
 ListDigraph::Node
 CFGFactory::makeBB(CFG *cfg, const FunctionCall &call, Node *node) {
+	#ifdef DBG_MAKEBB
+	dbg.inc("makeBB ",".");
+	#endif
 	ListDigraph::Node last = INVALID;
 	
 	vector<Instruction*> vi = node->GetAsm();
@@ -191,26 +342,40 @@ CFGFactory::makeBB(CFG *cfg, const FunctionCall &call, Node *node) {
 		 */
 		ListDigraph::Node new_node = cfg->find(addr, call);
 		if (new_node != INVALID) {
-			throw runtime_error("Node exists " + cfg->stringNode(new_node));
+			throw runtime_error("Node exists "
+					    + cfg->stringNode(new_node));
 		}
 		new_node = cfg->addNode();
 		
 		/* Add instruction attributes here */
 		cfg->setAddr(new_node, addr);
 		cfg->setFunction(new_node, call);
-		_debug << _indent << "makeBB created node " << cfg->stringNode(new_node) << endl;
+		#ifdef DBG_MAKEBB
+		dout << "created node " << cfg->stringNode(new_node) << endl;
+		#endif
+		log << setw(6) << left << linec++ << "Node: "
+		    << cfg->stringNode(new_node) << endl;
 
 		/* Add an arc from the previous instruction */
 		if (last != INVALID) {
 			cfg->addArc(last, new_node);
-			_debug << _indent << "makeBB added " << cfg->stringNode(last) << " --> "
-			       << cfg->stringNode(new_node) << endl;
+			#ifdef DBG_MAKEBB
+			dout << "added "
+			     << cfg->stringNode(last) << " --> "
+			     << cfg->stringNode(new_node) << endl;
+			log << setw(6) << left << linec++ << "Arc: "
+			    << cfg->stringNode(last) << " --> "
+			    << cfg->stringNode(new_node) << endl;
+			#endif
 		}
 
 		/* Don't forget to increment last */
 		last = new_node;
 	}
 
+	#ifdef DBG_MAKEBB
+	dbg.dec();
+	#endif
 	return last;
 }
 
@@ -245,15 +410,17 @@ ListDigraph::Node
 CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 		    ListDigraph::NodeMap<int> &pathp,
 		    ListDigraph::NodeMap<bool> &visited, unsigned int pos) {
-	string indent_save = _indent;
-	_debug << _indent << "loopDFS " << cfg.stringNode(node);
-	_indent += ".";
+	dbg.inc("loopDFS");
+	dout << cfg.stringNode(node) << endl;
+	log << "loopDFS: " << cfg.stringNode(node) << endl;
 		
 	if (visited[node]) {
-		_debug << " already visited" << endl;
+		log << "loopDFS: already visited" << endl;		
+		dout << " already visited" << endl;
+		dbg.dec();
 		return cfg.getHead(node);
 	}
-	_debug << " first visit" << endl;
+	dout << " first visit" << endl;
 	visited[node] = true;
 	pathp[node] = pos;
 	/*
@@ -261,10 +428,17 @@ CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 	 */
 	for (ListDigraph::OutArcIt a(cfg, node); a != INVALID; ++a) {
 		ListDigraph::Node tgt = cfg.runningNode(a);
+		log << "loopDFS: visited " << cfg.stringNode(tgt) << " "
+		    << visited[tgt] << endl;
 		if (!visited[tgt]) {
 			/* Recursive call */
+			log << "loopDFS: recursing on " << cfg.stringNode(tgt)
+			    << endl;
 			ListDigraph::Node header =
 				loopDFS(cfg, tgt, pathp, visited, pos + 1);
+			log << "loopDFS: return from recursion assigning head "
+			    <<  cfg.stringNode(header) << " to "
+			    << cfg.stringNode(node) << endl;
 			tagHead(cfg, node, header, pathp);
 			continue;
 		}
@@ -274,24 +448,30 @@ CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 			 * exists, therefor tgt is a loop header of
 			 * node
 			 */
-			_debug << _indent << "loopDFS " << cfg.stringNode(node)
-			       << " assigned head " << cfg.stringNode(tgt) << endl; 
+			dout << cfg.stringNode(node) << " assigned head "
+			     << cfg.stringNode(tgt) << endl; 
 			cfg.setHead(node, tgt);
+			log << cfg.stringNode(tgt) << " marked as a head" << endl;
 			cfg.markHead(tgt);
 			tagHead(cfg, node, tgt, pathp);
 			continue;
 		}
 		if (cfg.getHead(tgt) == INVALID) {
 			/* tgt has no inner loop header, done */
+			log << "loopDFS: " << cfg.stringNode(tgt) 
+			    << " has no loop" << endl;
 			continue;
 		}
 		ListDigraph::Node header = cfg.getHead(tgt);
 		if (pathp[header] > 0) {
 			/* Header of tgt is on the path to node */
+			log << "loopDFS: " << cfg.stringNode(header) 
+			    << " found on path, tagging" << endl;
 			tagHead(cfg, node, header, pathp);
 			continue;
 		}
 		/* Reentry case, find the proper header */
+		log << "loopDFS: reentry case, look for header" << endl;
 		while (cfg.getHead(header) != INVALID) {
 			header = cfg.getHead(header);
 			if (pathp[header] > 0) {
@@ -300,9 +480,11 @@ CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 				break; /* the while */
 			}
 		}
+		log << "loopDFS: rentrny case done" << endl;
 	}
-
-	_indent = indent_save;
+	log << "loodDFS: " << cfg.stringNode(node) << " done with head: "
+	    << cfg.stringNode(cfg.getHead(node)) << endl;
+	dbg.dec(); dbg.flush(cout);
 	pathp[node] = 0;
 	return cfg.getHead(node);
 }
@@ -325,23 +507,26 @@ CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 void
 CFGFactory::tagHead(CFG &cfg, ListDigraph::Node node,
 		    ListDigraph::Node head, ListDigraph::NodeMap<int> &pathp) {
-	string pre = "tagHead ";
-	_debug << _indent << pre
-	       << cfg.stringNode(node) << " pos:" << pathp[node] << " "
-	       << cfg.stringNode(head) << " pos: " << (head != INVALID ? pathp[head] : -1) << endl;
+	dbg.inc("tagHead ", ".");
+	dout << cfg.stringNode(node) << " pos:" << pathp[node] << " "
+	     << cfg.stringNode(head) << " pos: "
+	     << (head != INVALID ? pathp[head] : -1) << endl;
+	log << "tagHead: " << cfg.stringNode(node) << endl;
+	
 	if (node == head) {
+		dbg.dec();
 		return;
 	}
 	if (head == INVALID) {
-		_debug << _indent << pre
-		       << cfg.stringNode(node) << " no head assigned, aborting "
-		       << "existing head " << cfg.stringNode(cfg.getHead(node))
-		       << endl;
+		log << "tagHead: no head assigned, returning"  << endl;
+		dout << cfg.stringNode(node) << " no head assigned, aborting "
+		     << "existing head " << cfg.stringNode(cfg.getHead(node))
+		     << endl;
+		dbg.dec();
 		return;
 	}
-	string indent_save = _indent;
-	_indent += ".";
 
+	dbg.inc("tagHead(i)", ".");
 	while (cfg.getHead(node) != INVALID) {
 		ListDigraph::Node in_head = cfg.getHead(node);
 		if (in_head == head) {
@@ -349,19 +534,18 @@ CFGFactory::tagHead(CFG &cfg, ListDigraph::Node node,
 			 * Stopping condition found *this* head at the
 			 * right position
 			 */
-			_debug << _indent << pre << cfg.stringNode(node)
-			       << " already has head " << cfg.stringNode(head) << endl;
+			dout << cfg.stringNode(node) << " already has head "
+			     << cfg.stringNode(head) << endl;
 			return;
 		}
-		_debug << _indent << pre
-		       << cfg.stringNode(head) << " pos:" << pathp[head] << " "
-		       << cfg.stringNode(in_head) << " pos:" << pathp[in_head]
-		       << endl;
+		dout << cfg.stringNode(head) << " pos:" << pathp[head] << " "
+		     << cfg.stringNode(in_head) << " pos:" << pathp[in_head]
+		     << endl;
 		if (pathp[in_head] < pathp[head]) {
 			/* in_head is earlier in the path than head,
 			 * swap positions */
-			_debug << _indent << pre
-			       << cfg.stringNode(node) << " new head " << cfg.stringNode(head) << endl;
+			dout << cfg.stringNode(node) << " new head "
+			     << cfg.stringNode(head) << endl;
 			cfg.setHead(node, head);
 			node = head;
 			head = in_head;
@@ -369,10 +553,11 @@ CFGFactory::tagHead(CFG &cfg, ListDigraph::Node node,
 		}
 		node = in_head;
 	}
-	_debug << _indent << pre
-	       << cfg.stringNode(node) << " assigned head " << cfg.stringNode(head) << endl;
+	dbg.dec();
+	dout << cfg.stringNode(node) << " assigned head "
+	     << cfg.stringNode(head) << endl;
 	cfg.setHead(node, head);
-	_indent = indent_save;
+	dbg.dec();
 }
 
 /**
@@ -404,7 +589,8 @@ CFGFactory::boundLoops(CFG &cfg, Cfg* hep_cfg) {
 				throw runtime_error("Unable to find node");
 			}
 			if (!cfg.isHead(cfg_node)) {
-				throw runtime_error("Node not marked as a loop header");
+				throw runtime_error(
+				    "Node not marked as a loop header");
 			}
 			cfg.setIters(cfg_node, maxiter);
 			_debug << _indent << cfg.stringNode(cfg_node) << endl;

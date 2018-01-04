@@ -164,9 +164,6 @@ int main(int argc, char** argv) {
 		/* Restore cout, now you can output status */
 		cout.rdbuf(old_cout);
 	}
-
-	
-
 	cout << "Wrote " << CFGFile << endl;
 
 	

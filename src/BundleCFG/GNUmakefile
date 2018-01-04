@@ -4,11 +4,12 @@ INCLS+=-Isrc/CacheAnalysis -Isrc/CodeLine -Isrc/DataAddressAnalysis
 INCLS+=-Isrc/DotPrint -Isrc/DummyAnalysis -Isrc/HtmlPrint -Isrc/IPETAnalysis
 INCLS+=-I../../src/HeptaneAnalysis/src -I../../src/HeptaneAnalysis/src
 INCLS+=-I../../src/HeptaneAnalysis/src/Generic
+INCLS+=-I../BundleWCET/src
 
 OBJS=obj/main.o obj/BXMLCfg.o obj/Cache.o obj/DotPrint.o
 OBJS+=obj/CacheLine.o obj/CacheSet.o obj/PolicyLRU.o obj/LemonCFG.o obj/LemonFactory.o
 OBJS+=obj/LemonCFR.o obj/CFG.o obj/CFGFactory.o 
-OBJS+=obj/CFGReadWrite.o obj/FunctionCall.o
+OBJS+=obj/CFGReadWrite.o obj/FunctionCall.o obj/DBG.o
 
 vbin=../../bin/BundleCFG
 all: $(vbin)

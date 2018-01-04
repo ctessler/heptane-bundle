@@ -89,8 +89,10 @@ CFGWriter::write(string path) {
 		}
 		ListDigraph::Node head = _cfg.getHead(nit);
 		while (head != INVALID) {
-			ofile << nodeString(head) << endl;
-			visited[head] = true;
+			if (!visited[head]) {
+				ofile << nodeString(head) << endl;
+				visited[head] = true;
+			}
 			head = _cfg.getHead(head);
 		}
 		ofile << nodeString(nit) << endl;
@@ -153,7 +155,13 @@ CFGReader::addNode(string addr, ifstream &ifile) {
 		 */
 		ListDigraph::Node head = _cfg.find(closest_head_addr, call);
 		if (head == INVALID) {
-			throw runtime_error("Could not find head");
+			stringstream ss;
+			ss << "Adding instruction 0x" << hex
+			   << instr_addr;
+			ss << " Could not find head: 0x" << hex
+			   << closest_head_addr << " " << call
+			   << dec;
+			throw runtime_error(ss.str());
 		}
 		_cfg.setHead(node, head);
 	}

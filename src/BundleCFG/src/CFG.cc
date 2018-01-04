@@ -63,6 +63,10 @@ CFG::addNode() {
 	return rv;
 }
 
+/**
+ *
+ * output: Address[iterations]?(function, head)
+ */
 string
 CFG::stringNode(ListDigraph::Node node) const {
 	if (node == INVALID) {
@@ -75,9 +79,11 @@ CFG::stringNode(ListDigraph::Node node) const {
 	}
 	ListDigraph::Node head = getHead(node);
 	ss << "("
-	   << _function[node] << ", ";
-	ss << "head:" << stringAddr(head)
-	   << ")";
+	   << _function[node];
+	if (head != INVALID) {
+		ss << ", head:" << stringAddr(head);
+	}
+	ss << ")";
 	return ss.str();
 }
 
