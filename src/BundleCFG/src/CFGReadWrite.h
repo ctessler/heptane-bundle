@@ -38,7 +38,8 @@ private:
 	string arcHeader();		
 	string nodeString(ListDigraph::Node node);
 	string arcString(ListDigraph::Arc arc);
-	
+	void doHeads(ofstream &ofile, ListDigraph::NodeMap<bool> &visited,
+	    ListDigraph::Node head);
 };
 
 class CFGReader : public CFGRWBase {

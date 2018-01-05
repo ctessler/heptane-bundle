@@ -87,13 +87,7 @@ CFGWriter::write(string path) {
 			continue;
 		}
 		ListDigraph::Node head = _cfg.getHead(nit);
-		while (head != INVALID) {
-			if (!visited[head]) {
-				ofile << nodeString(head) << endl;
-				visited[head] = true;
-			}
-			head = _cfg.getHead(head);
-		}
+		doHeads(ofile, visited, head);
 		ofile << nodeString(nit) << endl;
 		visited[nit] = true;
 	}
@@ -113,6 +107,21 @@ CFGWriter::write(string path) {
 
 	ofile.flush();
 	ofile.close();
+}
+
+void
+CFGWriter::doHeads(ofstream &ofile, ListDigraph::NodeMap<bool> &visited,
+		   ListDigraph::Node head) {
+	if (head == INVALID) {
+		return;
+	}
+	if (visited[head]) {
+		return;
+	}
+	ListDigraph::Node prec = _cfg.getHead(head);
+	doHeads(ofile, visited, prec);
+	ofile << nodeString(head) << endl;
+	visited[head] = true;
 }
 
 static void
