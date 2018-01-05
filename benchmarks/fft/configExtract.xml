@@ -16,7 +16,7 @@
 <!-- Assembler -->
 <ASSEMBLER NAME="mips-as" OPT=""/>
 <!-- Linker (option -T script is automatically set when SCRIPT is specified) -->
-<LINKER NAME="mips-ld" OPT="" SCRIPT=""/>
+<LINKER NAME="mips-ld" OPT="" SCRIPT="../simul.ld"/>
 <!-- Objdump (called with options -t -d -no-show-raw-insn) -->
 <OBJDUMP NAME="mips-objdump" OPT=""/>
 <!-- Readelf (called with option -S) -->
