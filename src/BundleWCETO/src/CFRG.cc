@@ -22,15 +22,17 @@ cfr_desc(CFRG &cfrg, ListDigraph::Node cfr_node) {
 	
 	return cfg->stringNode(cfg_initial);
 }
-static void
+static string
 debug_queue(pqueue_t &pqueue, CFRG &cfrg, ListDigraph::NodeMap<int> &dists) {
 	pqueue_t::iterator it;
-	cout << "PRIORITY QUEUE SIZE: " << pqueue.size() << endl;
+	stringstream ss;
+	ss << "PRIORITY QUEUE SIZE: " << pqueue.size() << endl;
 	for (it = pqueue.begin(); it != pqueue.end(); ++it) {
 		ListDigraph::Node node = *it;
-		cout << "Dist: " << dists[node]
+		ss << "Dist: " << dists[node]
 		     << " -- " << cfr_desc(cfrg, node) << endl;
 	}
+	return ss.str();
 }
 
 ListDigraph::Node
@@ -359,18 +361,22 @@ void CFRG::_order(ListDigraph::Node source,
 			if (!isHead(tgt) && isLoopPart(tgt)) {
 				dout << "Not head, in a loop, skipped" << endl;
 				/* Loop nodes are handled specially */
+				#if 0 /* XXX-ct suspect */
 				if (it != pqueue.end()) {
 					pqueue.erase(it);
 				}
+				#endif
 				continue;
 			}
 			if (isHead(node) && inLoopNode(node, tgt)) {
 				/* Target is in the loop of node */
 				dout << "Interior loop node of "
 				     << cfr_desc(*this, node) << endl;
+				#if 0 /* XXX-ct suspect */
 				if (it != pqueue.end()) {
 					pqueue.erase(it);
 				}
+				#endif
 				continue;
 			}
 			int arc_cost = -1; /* Constant */
@@ -430,11 +436,11 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 	 * Need a single pass of dijkstra, limited to within the loop to update
 	 * distances correctly.
 	 */
+	dout << "Successor nodes (⚲)" << endl;
 	for (ListDigraph::OutArcIt ait(*this, cfrg_node); ait != INVALID;
 	     ++ait) {
 		ListDigraph::Node tgt = ListDigraph::target(ait);
-		dout << "Successor node: " << endl
-		     << "	" << cfr_desc(*this, tgt) << endl;
+		dout << "⚲ " << cfr_desc(*this, tgt) << endl;
 		pqueue_t::iterator pit = pqfind(pqueue, tgt);
 		if (isHead(tgt) && inLoopNode(cfrg_node, tgt)) {
 			dout << "recursive call for" << endl;
@@ -442,11 +448,16 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 
 			/* Distance to tgt needs to be updated first */
 			pqueue_t::iterator pit = pqfind(pqueue, tgt);
+			bool req=false;
 			if (pit != pqueue.end()) {
 				pqueue.erase(pit);
+				req=true;
 			}
 			if (distances[tgt] > distances[cfrg_node] - 1) {
 				distances[tgt] = distances[cfrg_node] - 1;
+			}
+			if (req) {
+				pqueue.insert(tgt);
 			}
 
 			interiorLoopOrder(tgt, pqueue, distances, prev);
@@ -457,8 +468,7 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 		CFR *cfr = findCFR(tgt);
 		if (cfg_head != _cfg.getHead(getCFGLoopHead(cfr))) {
 			/* Outside of the loop */
-			dout << endl << _indent << "     "
-			     << cfr_desc(*this, tgt)
+			dout << cfr_desc(*this, tgt)
 			     << " added to successors" << endl;
 			succ.insert(tgt);
 			continue;
@@ -480,7 +490,7 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 				pqueue.insert(tgt);
 			}
 			prev[tgt] = cfrg_node;
-			dout << " updated node: " << endl
+			dout << "updated: " 
 			     << cfr_desc(*this, tgt) << " dist: "
 			     << distances[tgt] << endl;
 		}
@@ -489,27 +499,42 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 	dout << "BEGIN STAGE 2" << endl;
 	dbg.flush(ilo);
 	ListDigraph::Node cfrg_cursor =	smallestInLoop(cfrg_node, pqueue);
-	dout << "smallest in loop: " << cfr_desc(*this, cfrg_cursor) << endl;
 	dbg.flush(ilo);
 	while (cfrg_cursor != INVALID) {
-		dout << endl << _indent << "    "
-		     << "smallest in loop: " << cfr_desc(*this, cfrg_cursor)
-		     << endl;
+		dout << "↬ : "
+		     << cfr_desc(*this, cfrg_cursor)
+		     << " dist: " << distances[cfrg_cursor] << endl;
+		dbg.flush(ilo);
 		pqueue_t::iterator pit = pqfind(pqueue, cfrg_cursor);
-		pqueue.erase(pit);
-
-		if (isHead(cfrg_cursor)) {
-			interiorLoopOrder(cfrg_cursor, pqueue, distances, prev);
+		if (pit != pqueue.end()) {
+			pqueue.erase(pit);
+			dout << "Removed " << cfr_desc(*this, cfrg_cursor)
+			     << " from queue" << endl;
+			dbg.flush(ilo);
 		}
 
+		if (isHead(cfrg_cursor)) {
+			dout << __LINE__ << " recursive call" << endl;
+			dbg.flush(ilo);
+			interiorLoopOrder(cfrg_cursor, pqueue, distances, prev);
+			dout << __LINE__ << " return from recursive call" << endl;
+			dbg.flush(ilo);
+			cfrg_cursor = smallestInLoop(cfrg_node, pqueue);
+			continue;
+		}
+
+		dbg.inc("↓ " + cfr_desc(*this, cfrg_cursor) + " ");
+		dout <<  "successors: (⚲)" << endl;
+		dbg.inc("⚲ ");
+		dbg.flush(ilo);
 		for (ListDigraph::OutArcIt ait(*this, cfrg_cursor);
 		     ait != INVALID; ++ait) {
 			ListDigraph::Node tgt = ListDigraph::target(ait);
-			pit = pqfind(pqueue, tgt);
+			dout << "⚲ " << cfr_desc(*this, tgt)
+			     << " dist: " << distances[tgt] << endl;
 			CFR *cfr = findCFR(tgt);
 			if (cfr->getHead(cfr->getInitial()) != cfg_head) {
-				dout << endl << _indent << "    "
-				     << "skipping " << cfr_desc(*this, tgt)
+				dout << "skipping " << cfr_desc(*this, tgt)
 				     << endl;
 				/* Not in this loop */
 				succ.insert(tgt);
@@ -520,23 +545,29 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 			int alt = arc_cost + distances[cfrg_cursor];
 			if (distances[tgt] == INT_MAX || distances[tgt] > alt) {
 				bool req=false;
+				pit = pqfind(pqueue, tgt);
 				if (pit != pqueue.end()) {
 					pqueue.erase(pit);
-					bool req=true;
+					req=true;
 				}
 
 				distances[tgt] = alt;
+				prev[tgt] = cfrg_cursor;
+				dout << "updated node "
+				     << cfr_desc(*this, tgt) << " dist: "
+				     << distances[tgt] << endl;
 				if (req) {
 					pqueue.insert(tgt);
 				}
-				prev[tgt] = cfrg_cursor;
-				dout << endl << _indent << "    "
-				     << "updated node "
-				     << cfr_desc(*this, tgt) << " dist: "
-				     << distances[tgt] << endl;
 			}
+			dbg.flush(ilo);
 		}
+		dbg.dec();
+		dbg.dec();
+		dbg.flush(ilo);
 		cfrg_cursor = smallestInLoop(cfrg_node, pqueue);
+		dout << __LINE__ << " ↓ in loop: " << cfr_desc(*this, cfrg_cursor)
+		     << " dist: " << distances[cfrg_cursor] << endl;
 	}
 	dout << "END STAGE 2" << endl;
 	dbg.flush(ilo);
@@ -546,23 +577,29 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 	 * been processed.
 	 */
 	int min = distances[cfrg_node];
+	int count=0;
+	dbg.inc("Min Select: ");
 	for (ListDigraph::InArcIt ait(*this, cfrg_node); ait != INVALID;
 	     ++ait) {
 		ListDigraph::Node pred = source(ait);
+		count++;
 		if (cfg_head != _cfg.getHead(getCFGLoopHead(findCFR(pred)))) {
 			continue;
 		}
+		dout << "Candidate " << cfr_desc(*this, pred)
+		     << " dist: " << distances[pred] << endl;
 		if (distances[pred] < distances[cfrg_node]) {
 			min = distances[pred] - 1;
 		}
 	}
+	dout << "Selected distance from " << count << " successors" << endl;
 	/* 
 	 * Set the distance to the head as the 
 	 * longest to reach it + 1 more arc
 	 */
 	distances[cfrg_node] = min;
 	dout << "Distance: " << distances[cfrg_node] << endl;
-	iloSuccessorUpdate(distances[cfrg_node] - 1, pqueue, distances,
+	iloSuccessorUpdate(distances[cfrg_node], pqueue, distances,
 			   prev, succ);
 	dbg.dec();
 	dbg.flush(ilo);
@@ -582,6 +619,7 @@ CFRG::interiorLoopOrder(ListDigraph::Node cfrg_node,
 #define dout dbg.buf << dbg.start
 ListDigraph::Node
 CFRG::smallestInLoop(ListDigraph::Node cfrg_node, pqueue_t &pqueue) {
+	dout << "Called with head: " << cfr_desc(*this, cfrg_node) << endl;
 	string	_pre = "→ SIL: " + cfr_desc(*this, cfrg_node) + " " ;
 	dbg.inc(_pre);
 	CFR *cfr = findCFR(cfrg_node);
@@ -595,12 +633,10 @@ CFRG::smallestInLoop(ListDigraph::Node cfrg_node, pqueue_t &pqueue) {
 	ListDigraph::Node cfrg_next_node = *it;
 	ListDigraph::Node cfg_next_head;
 	do {
-		dout << "Checking: " << cfr_desc(*this, cfrg_next_node) << endl;
 		CFR *cfr_next = findCFR(cfrg_next_node);
 		cfg_next_head = _cfg.getHead(getCFGLoopHead(cfr_next));
 		
 		if (cfg_next_head == cfg_head) {
-			dout << "Chosen!" << endl;
 			/* It's in the loop, bail */
 			break;
 		}
@@ -627,7 +663,8 @@ CFRG::iloSuccessorUpdate(int new_distance,
 			 set<ListDigraph::Node> &succ)
 {
 	dbg.inc("→ iLOsu: ");
-	dout << "begin, successors: " << succ.size() << endl;
+	dout << "begin, successors: " << succ.size()
+	     << " new distance: " << new_distance << endl;
 	set<ListDigraph::Node>::const_iterator sit;
 	for (sit = succ.begin(); sit != succ.end(); sit++) {
 		ListDigraph::Node next = *sit;
