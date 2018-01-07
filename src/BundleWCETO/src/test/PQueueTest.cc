@@ -31,6 +31,7 @@ PQueueTest::basic()
 	int_default.push(5);
 	int_default.push(16);
 
+	cout << "PQueueTest::basic" << endl;
 	print_queue(int_default);
 }
 
@@ -55,6 +56,7 @@ PQueueTest::reverse()
 	int_rev.push(5);
 	int_rev.push(16);
 
+	cout << "PQueueTest::reverse" << endl;
 	print_queue(int_rev);
 }
 
@@ -111,6 +113,7 @@ PQueueTest::node()
 	dists[node] = 0;
 	basic_digraph.push(node);
 
+	cout << "PQueueTest::node" << endl;	
 	print_node_queue(basic_digraph, dists);
 }
 

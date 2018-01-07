@@ -17,13 +17,7 @@ public:
 	CFRGNodeComp(ListDigraph::NodeMap<int> &distances) : _dist(distances) {
 	}
 	bool operator() (const ListDigraph::Node &lhs,
-			 const ListDigraph::Node &rhs) const {
-		if (_dist[lhs] < _dist[rhs]) {
-			/* Least first */
-			return true;
-		}
-		return false;
-	}
+			 const ListDigraph::Node &rhs) const;
 private:
 	ListDigraph::NodeMap<int> &_dist;
 };
@@ -34,7 +28,14 @@ typedef list<CFR*> CFRList;
 class CFRG : public ListDigraph {
 public:
 	CFRG(CFG &cfg) : _cfg(cfg), _gen(*this) {
-		
+		ord.open("order.log");
+		ilo.open("ilo.log");
+		sil.open("sil.log");
+	}
+	~CFRG() {
+		ord.close();
+		sil.close();
+		ilo.close();
 	}
 	CFG * getCFG() {
 		return &_cfg;
@@ -95,6 +96,8 @@ public:
 	 * Returns true if the cfr is in the loop started by the heading cfr
 	 */
 	bool inLoop(CFR* head, CFR* cfr);
+	bool inLoopNode(ListDigraph::Node cfrg_head_node,
+			ListDigraph::Node cfrg_node);
 	/**
 	 * Returns true if the CFR is in any loop
 	 */
@@ -172,7 +175,8 @@ private:
 		_indent = _indent_stack.top();
 		_indent_stack.pop();
 	}
-		
+	DBG dbg;
+	ofstream ord, ilo, sil;
 };
 
 
