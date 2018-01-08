@@ -10,7 +10,6 @@ NodeCFRMap::replace(ListDigraph::Node node, CFR *cfr) {
 }
 
 CFRFactory::~CFRFactory() {
-	cout << "CFRFactory::destructor" << endl;
 	delete cfrg;
 	map<ListDigraph::Node, CFR*>::iterator mit;
 	for (mit = _cfrs.begin(); mit != _cfrs.end(); ++mit) {

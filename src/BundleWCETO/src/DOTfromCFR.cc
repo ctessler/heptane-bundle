@@ -227,10 +227,8 @@ DOTfromCFR::nodeDOT(ofstream &os, ListDigraph::Node node) {
 string
 DOTfromCFR::nodeLabel(ListDigraph::Node node) {
 	stringstream label;
-	cout << "Before: " << _cfr.getFunction(node).str() << endl;
 	FunctionCall call = _cfr.getFunction(node);
 	string fstr = functionString(call);
-	cout << "FSTR: " << fstr << endl;
 	if (fstr.compare(0,1,"-") == 0) {
 		throw runtime_error("Node without a function");
 	}

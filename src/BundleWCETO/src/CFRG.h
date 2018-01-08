@@ -98,6 +98,15 @@ public:
 	bool inLoop(CFR* head, CFR* cfr);
 	bool inLoopNode(ListDigraph::Node cfrg_head_node,
 			ListDigraph::Node cfrg_node);
+
+	/**
+	 * Returns true if the cfr is contained within any loop within
+	 * the loop of the head 
+	 */	
+	bool inDerivedLoop(CFR* head, CFR* cfr);
+	bool inDerivedLoopNode(ListDigraph::Node cfrg_head_node,
+			       ListDigraph::Node cfrg_node);
+	
 	/**
 	 * Returns true if the CFR is in any loop
 	 */
@@ -121,7 +130,6 @@ public:
 	 * Caller must delete the returned list
 	 */
 	CFRList* preds(CFR* cfr);
-	
 
 	/**
 	 * An expensive operation, this finds the CFR based on the
@@ -144,6 +152,9 @@ public:
 		    ListDigraph::NodeMap<int> &distances,
 		    node_map_t &prev);
 	void interiorLoopOrder(ListDigraph::Node, pqueue_t&,
+			       ListDigraph::NodeMap<int>&,
+			       node_map_t &);
+	void interiorLoopOrder_old(ListDigraph::Node, pqueue_t&,
 			       ListDigraph::NodeMap<int>&,
 			       node_map_t &);
 	ListDigraph::Node smallestInLoop(ListDigraph::Node cfrg_node,

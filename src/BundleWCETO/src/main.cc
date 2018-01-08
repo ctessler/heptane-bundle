@@ -163,8 +163,6 @@ main(int argc, char** argv) {
 			ss.str("");
 			ss << pre << "-cfr-";
 			CFR* cfr = cfrit->second;
-			cout << "CFRLIST " << mit->first << " CFR "
-			     << *cfr << endl; 
 			ListDigraph::Node cfr_initial = cfr->getInitial();
 			ss << "0x" << hex << cfr->getAddr(cfr_initial) << dec
 			   << ".dot";
@@ -184,6 +182,7 @@ main(int argc, char** argv) {
 		}
 		/* Assigns generation IDs to CFRG nodes */
 		CFRG *cfrg = cfr_fact.getCFRG();
+		cout << "Ordering CFRs" << endl;
 		cfrg->order();
 
 		/* Drop the WCET table per cache level */
@@ -196,6 +195,7 @@ main(int argc, char** argv) {
 		WCETOFactory wceto_fact(*cfrg);
 		wceto_fact.setThreads(n_threads);
 		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
+		cout << "Calculating WCETO" << endl;
 		wceto_fact.produce();
 		
 		/* Produce the images for the Control Flow Region Graph */
