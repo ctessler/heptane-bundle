@@ -12,9 +12,9 @@
 #include "CFR.h"
 using namespace lemon;
 
-class CFRGNodeComp {
+class CFRGNodeCompLT {
 public:
-	CFRGNodeComp(ListDigraph::NodeMap<int> &distances) : _dist(distances) {
+	CFRGNodeCompLT(ListDigraph::NodeMap<int> &distances) : _dist(distances) {
 	}
 	bool operator() (const ListDigraph::Node &lhs,
 			 const ListDigraph::Node &rhs) const;
@@ -22,7 +22,18 @@ private:
 	ListDigraph::NodeMap<int> &_dist;
 };
 
-typedef multiset<ListDigraph::Node, CFRGNodeComp> pqueue_t;
+class CFRGNodeCompGR {
+public:
+	CFRGNodeCompGR(ListDigraph::NodeMap<int> &distances) : _dist(distances) {
+	}
+	bool operator() (const ListDigraph::Node &lhs,
+			 const ListDigraph::Node &rhs) const;
+private:
+	ListDigraph::NodeMap<int> &_dist;
+};
+
+typedef multiset<ListDigraph::Node, CFRGNodeCompLT> pqueue_t;
+typedef multiset<ListDigraph::Node, CFRGNodeCompGR> pqueue_gr_t;
 typedef list<CFR*> CFRList;
 
 class CFRG : public ListDigraph {
@@ -83,6 +94,14 @@ public:
 		return INVALID;
 	}
 	bool isHead(ListDigraph::Node cfrg_node);
+	bool isHeadCFR(CFR* cfr);
+	bool isTopHead(CFR* cfr);
+	bool isTopHeadNode(ListDigraph::Node cfrg_node);
+	/**
+	 * Gets the CFRG node which contains the loop head of the given CFR
+	 */
+	CFR* getHead(CFR* cfr);
+	ListDigraph::Node getHeadNode(ListDigraph::Node cfrg_node);
 	/**
 	 * Returns true if node a and node b share the same innermost
 	 * loop head. If a and b have no innermost loop head, the
@@ -118,10 +137,6 @@ public:
 	 * it starts.
 	 */
 	CFR* crown(CFR* cfr);
-	/**
-	 * Returns true if the CFR begins a loop
-	 */
-	bool isLoopHead(CFR* cfr);
 
 	/**
 	 * Returns a list of CFRs that immediately precede the given
@@ -151,6 +166,9 @@ public:
 		    ListDigraph::Node target,
 		    ListDigraph::NodeMap<int> &distances,
 		    node_map_t &prev);
+	void _order_new(ListDigraph::Node source,
+			ListDigraph::NodeMap<int> &distances,
+			node_map_t &prev);
 	void interiorLoopOrder(ListDigraph::Node, pqueue_t&,
 			       ListDigraph::NodeMap<int>&,
 			       node_map_t &);
@@ -175,7 +193,9 @@ private:
 	ListDigraph::NodeMap<int> _gen;
 
 	void doLoopOffsets(ListDigraph::NodeMap<int> &loopOffset);
-
+	int topoMax(ListDigraph::Node cfrg_node, ListDigraph::NodeMap<int> &dist);
+	void topoAdj(pqueue_t &pq, ListDigraph::Node cfrg_node,
+		     ListDigraph::NodeMap<int> &dist);
 	string _indent = "";
 	stack<string> _indent_stack;
 	void indentInc() {

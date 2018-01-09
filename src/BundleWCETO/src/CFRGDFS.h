@@ -5,6 +5,7 @@
 typedef bool (*DFS_mask_t)(CFRG &, CFR *cfr, void *userdata); 
 typedef bool (*DFS_work_t)(CFRG &cfrg, CFR *cfr, void *userdata);
 typedef bool (*DFS_sel_t)(CFRG &cfrg, CFR *cfr, void *userdata);
+typedef bool (*DFS_fin_t)(CFRG &cfrg, CFR *cfr, void *userdata);
 
 class CFRGDFS {
 public:
@@ -13,8 +14,12 @@ public:
 	/*
 	 * Performs the depth first search, returns true if the
 	 * selector function found the node.
+	 *
+	 * search - uses a stack, no finish function available
+	 * recSearch - uses recursion, finish function available
 	 */
 	bool search(CFR *start);
+	bool recSearch(CFR *start);
 	/* 
 	 * Sets the search mask, when the mask returns false the search
 	 * will not include the CFR
@@ -35,6 +40,13 @@ public:
 	void setSel(DFS_sel_t sel) { _sel_fn = sel; }
 	DFS_sel_t getSel() { return _sel_fn; }
 	/*
+	 * Sets the finish function, called on each CFR after all of
+	 * it's children have been visited -- only called if recSearch
+	 * is used. 
+	 */
+	void setFin(DFS_fin_t fin) { _fin_fn = fin; }
+	DFS_sel_t setFin() { return _fin_fn; }
+	/*
 	 * Sets the user data
 	 */
 	void setUserData(void *data) { _userdata = data; }
@@ -45,7 +57,10 @@ private:
 	DFS_mask_t _mask_fn = NULL;
 	DFS_work_t _work_fn = NULL;
 	DFS_sel_t _sel_fn = NULL;
+	DFS_fin_t _fin_fn = NULL;
 	void *_userdata = NULL;
+
+	bool _recSearch(CFR *start);	
 };
 
 #endif /* CFRDFS_H */

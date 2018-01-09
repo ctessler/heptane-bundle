@@ -14,13 +14,11 @@ CFRGDFS::search(CFR* start) {
 
 		if ((cur != start) && _sel_fn) {
 			if (_sel_fn(_cfrg, cur, _userdata)) {
-				cout << prefix << " has reached the search node"
-				     << endl;
+				/* Reached the target */
 				return true;
 			}
 		}
 		if (_work_fn) {
-			cout << prefix << "calling work" << endl;
 			_work_fn(_cfrg, cur, _userdata);
 		}
 		_visited[cur] = true;
@@ -33,8 +31,6 @@ CFRGDFS::search(CFR* start) {
 		for ( ; ait != INVALID; ++ait) {
 			ListDigraph::Node node_succ = _cfrg.target(ait);
 			CFR *cfr_succ = _cfrg.findCFR(node_succ);
-			cout << prefix << *cur << " has successor "
-			     << *cfr_succ << endl;
 			if (_mask_fn) {
 				if (!_mask_fn(_cfrg, cfr_succ, _userdata)) {
 					continue;
@@ -46,4 +42,41 @@ CFRGDFS::search(CFR* start) {
 		}
 	}
 	return false;
+}
+
+bool
+CFRGDFS::recSearch(CFR *start) {
+	_visited.clear();
+	return _recSearch(start);
+}
+
+bool
+CFRGDFS::_recSearch(CFR *start) {
+	if (_sel_fn) {
+		if (_sel_fn(_cfrg, start, _userdata)) {
+			/* Reached the target */
+			return true;
+		}
+	}
+
+	if (_work_fn) {
+		_work_fn(_cfrg, start, _userdata);
+	}
+	_visited[start] = true;
+	ListDigraph::OutArcIt ait(_cfrg, _cfrg.findNode(start));
+	for ( ; ait != INVALID; ++ait) {
+		ListDigraph::Node nsucc = _cfrg.target(ait);
+		CFR *succ = _cfrg.findCFR(nsucc);
+		if (_mask_fn) {
+			if (!_mask_fn(_cfrg, succ, _userdata)) {
+				continue;
+			}
+		}
+		if (!_visited[succ]) {
+			_recSearch(succ);
+		}
+	}
+	if (_fin_fn) {
+		_fin_fn(_cfrg, start, _userdata);
+	}
 }
