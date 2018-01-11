@@ -1,25 +1,6 @@
 #include "CFRG.h"
 #include "CFRGDFS.h"
 
-bool CFRGNodeCompLT::operator() (const ListDigraph::Node &lhs,
-			       const ListDigraph::Node &rhs) const {
-	if (_dist[lhs] < _dist[rhs]) {
-		/* Least first */
-		return true;
-	}
-	return false;
-}
-
-bool CFRGNodeCompGR::operator() (const ListDigraph::Node &lhs,
-			       const ListDigraph::Node &rhs) const {
-	if (_dist[lhs] > _dist[rhs]) {
-		/* Greatest */
-		return true;
-	}
-	return false;
-}
-
-
 static string
 cfr_desc(CFRG &cfrg, ListDigraph::Node cfr_node) {
 	if (cfr_node == INVALID) {
@@ -320,7 +301,7 @@ void
 CFRG::dijk(ListDigraph::Node source, ListDigraph::Node target,
 	   ListDigraph::NodeMap<int> &distances,
 	   node_map_t &prev) {
-	pqueue_t pqueue((CFRGNodeCompLT(distances)));
+	pqueue_t pqueue((NodeCompLT(distances)));
 	ListDigraph::Node cur;
 	prev.clear();
 
@@ -391,7 +372,7 @@ void CFRG::_order(ListDigraph::Node source,
 		  ListDigraph::NodeMap<int> &distances,
 		  node_map_t &prev) {
 	dbg.inc("_order: ");
-	pqueue_t pqueue((CFRGNodeCompLT(distances)));
+	pqueue_t pqueue((NodeCompLT(distances)));
 	ListDigraph::Node cur;
 	prev.clear();
 
@@ -673,7 +654,7 @@ CFRG::iloSuccessorUpdate(int new_distance,
 class OrderData {
 public:
 	OrderData(ListDigraph::NodeMap<int> &d) :
-		distances(d), pqueue((CFRGNodeCompGR(d))) {
+		distances(d), pqueue((NodeCompGR(d))) {
 	}
 	int finish=0;
 	ListDigraph::NodeMap<int> &distances;
@@ -688,7 +669,6 @@ order_dfs_fin(CFRG &cfrg, CFR *cfr, void *userdata) {
 	data->finish += 1;
 	data->pqueue.insert(cfrg_node);
 
-	cout << "finish function called" << endl;
 	return true;
 }
 

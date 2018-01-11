@@ -180,8 +180,18 @@ main(int argc, char** argv) {
 			JPGFactory cfrjpg(cfrdot);
 			cfrjpg.produce();
 		}
-		/* Assigns generation IDs to CFRG nodes */
 		CFRG *cfrg = cfr_fact.getCFRG();
+
+		/* Make a graph before doing WCETO processing */
+		WCETOFactory wceto_fact(*cfrg);		
+		DOTfromCFRG cfrg_nowceto(*cfrg, wceto_fact);
+		ss.str(""); ss << pre << "-cfrg-nowceto.dot";
+		cfrg_nowceto.setPath(ss.str());
+		cfrg_nowceto.produce(n_threads);
+		JPGFactory nowcet(cfrg_nowceto.getPath());
+		nowcet.produce();
+
+		/* Assigns generation IDs to CFRG nodes */
 		cout << "Ordering CFRs" << endl;
 		cfrg->order();
 
@@ -192,7 +202,6 @@ main(int argc, char** argv) {
 		entries.produce();
 
 		/* Calculate the WCETO for each CFR */
-		WCETOFactory wceto_fact(*cfrg);
 		wceto_fact.setThreads(n_threads);
 		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
 		cout << "Calculating WCETO" << endl;

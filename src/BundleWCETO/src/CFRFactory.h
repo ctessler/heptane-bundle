@@ -6,6 +6,9 @@
 #include "CFR.h"
 #include "CFRG.h"
 #include "DBG.h"
+#include "CFGDFS.h"
+#include "CFGTopSort.h"
+#include "PQueue.h"
 #include <map>
 using namespace std;
 
@@ -22,6 +25,9 @@ public:
 	CFRFactory(CFG &cfg, Cache &cache) : _cfg(cfg), _cache(cache),
 		_initial(cfg), _visited(cfg) {
 		cfrg = new CFRG(cfg);
+		xlog.open("asstx.log");
+		bcfr.open("buildcfr.log");
+		prdc.open("cfrprdc.log");
 	}
 	~CFRFactory();
 	
@@ -40,7 +46,7 @@ private:
 	ListDigraph::NodeMap<bool> _initial;
 	ListDigraph::NodeMap<bool> _visited;
 	/* Initial instruction in the CFG -> CFR */
-	map<ListDigraph::Node, CFR*> _cfrs;
+	NodeCFRMap _cfrs;
 	/* Any instruction in CFG -> CFR */
 	NodeCFRMap _cfg_to_cfr;
 
@@ -48,13 +54,13 @@ private:
 	/* Marks the first exit nodes from this nodes loop as initial
 	 * CFR instructions */
 	void markLoopExits(ListDigraph::Node node);
-	list<ListDigraph::Node> addToConflicts(ListDigraph::Node cfr_initial,
-	    ListDigraph::Node node, Cache &cache);
-	bool conflicts(ListDigraph::Node node, Cache &cache);
+ 	bool conflicts(ListDigraph::Node node, Cache &cache);
 
 	NodeList assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
 	    Cache &cache);
+	void preen(ListDigraph::Node starter);
 	CFRList buildCFR(CFR *cfr);
+	CFRList CFRsuccs(CFR *cfr);
 	void ensureArc(CFR* source, CFR* target);
 	
 	void visit(ListDigraph::Node node, bool yes=true);
@@ -68,6 +74,7 @@ private:
 	string _path, _indent;
 
 	DBG dbg;
+	ofstream xlog, bcfr, prdc;
 	bool newCFRTest(ListDigraph::Node node);
 };
 

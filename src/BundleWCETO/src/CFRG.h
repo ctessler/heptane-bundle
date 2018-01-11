@@ -10,32 +10,10 @@
 #include "BundleTypes.h"
 #include "CFG.h"
 #include "CFR.h"
+#include "PQueue.h"
 using namespace lemon;
 
-class CFRGNodeCompLT {
-public:
-	CFRGNodeCompLT(ListDigraph::NodeMap<int> &distances) : _dist(distances) {
-	}
-	bool operator() (const ListDigraph::Node &lhs,
-			 const ListDigraph::Node &rhs) const;
-private:
-	ListDigraph::NodeMap<int> &_dist;
-};
-
-class CFRGNodeCompGR {
-public:
-	CFRGNodeCompGR(ListDigraph::NodeMap<int> &distances) : _dist(distances) {
-	}
-	bool operator() (const ListDigraph::Node &lhs,
-			 const ListDigraph::Node &rhs) const;
-private:
-	ListDigraph::NodeMap<int> &_dist;
-};
-
-typedef multiset<ListDigraph::Node, CFRGNodeCompLT> pqueue_t;
-typedef multiset<ListDigraph::Node, CFRGNodeCompGR> pqueue_gr_t;
 typedef list<CFR*> CFRList;
-
 class CFRG : public ListDigraph {
 public:
 	CFRG(CFG &cfg) : _cfg(cfg), _gen(*this) {

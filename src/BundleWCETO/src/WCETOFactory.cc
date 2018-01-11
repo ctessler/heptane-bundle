@@ -5,11 +5,11 @@
  *
  * Returning true indicates that the CFR can be passed to the test function.
  */
+#define dout fact->dbg.buf << fact->dbg.start
 static bool
 lfs_top_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 	WCETOFactory *fact = (WCETOFactory *) userdata;
 	bool rv = true;
-	#define dout fact->dbg.buf << fact->dbg.start
 	fact->dbg.inc("WCETOFactory::lfs_top_filter ");
 	dout << *cfr << " does ";
 	/**
@@ -30,9 +30,9 @@ lfs_top_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 	fact->dbg.buf << "pass the filter." << endl;
 	fact->dbg.flush(cout);
 	fact->dbg.dec();
-	#undef dout
 	return rv;
 }
+#undef dout
 
 /**
  * List First Search Test Function
@@ -56,20 +56,21 @@ static bool
 lfs_top_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	WCETOFactory *fact = (WCETOFactory *) userdata;
 	#define dout fact->dbg.buf << fact->dbg.start
-	fact->dbg.inc("WCETOFactory::lfs_top_test ");
 
 	ListDigraph::Node cfrgi = cfrg.findNode(cfr);
 	CFRDemandMap &loopt = fact->loop_table();
 	CFRDemandMap &cfrt = fact->cfr_table();
 	bool rv = true;
-
+	dout << "working on" << *cfr << endl;
+	fact->dbg.inc("WCETOFactory::lfs_top_test ");
 	for (ListDigraph::InArcIt iat(cfrg, cfrgi); iat != INVALID; ++iat) {
 		ListDigraph::Node pred_node = cfrg.source(iat);
 		CFR *pred_cfr = cfrg.findCFR(pred_node);
-		dout << "preceding CFR " << *pred_cfr << endl;
 		if (cfrg.isLoopPart(pred_node)) {
 			/* Preceding node is part of a loop */
 			if (cfrg.inLoop(cfr, pred_cfr)) {
+				dout << *pred_cfr << " is in the loop, ok."
+				     << endl;
 				/* Members of this loop (cfr) are not
 				   expected to be calculated */
 				continue;
@@ -87,21 +88,27 @@ lfs_top_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 			continue;
 		}
 		/* Otherwise it's time to check the singular CFRs */
-		dout << *pred_cfr << " is an isolated CFR" << endl;
 		if (!cfrt.present(pred_cfr)) {
 			dout << *pred_cfr 
 			     << " has not been computed, skipping." << endl;
 			rv = false; break;
 		}
+		dout << *pred_cfr << " is an isolated CFR, passes" << endl;
+	}
+	fact->dbg.dec();
+
+	if (rv) {
+		dout << *cfr << " is ready." << endl;
+	} else {
+		dout << *cfr << " is not ready." << endl;
 	}
 	
 	fact->dbg.flush(cout);
-	fact->dbg.dec();
-	#undef dout
 	/* change to return rv after the work portion has been
 	   completed */
 	return rv;
 }
+#undef dout
 
 /**
  * List First Work Function
@@ -128,9 +135,9 @@ lfs_top_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	#undef dout
 }
 
+#define dout dbg.buf << dbg.start
 void
 WCETOFactory::produce() {
-	#define dout dbg.buf << dbg.start
 	dbg.inc("WCETOFactory::produce ");
 	
 	CFRGLFS lfs(_cfrg, lfs_top_filter, lfs_top_test, lfs_top_work,
@@ -138,27 +145,30 @@ WCETOFactory::produce() {
 	CFR *initial = _cfrg.getInitialCFR();
 	lfs.search(initial);
 	dbg.dec();
-	#undef dout
+	dbg.flush(cout);
 }
+#undef dout
 
+#define dout dbg.buf << dbg.start
 uint32_t
 WCETOFactory::value(CFR *cfr) {
-	#define dout dbg.buf << dbg.start
 	dbg.inc("WCETOFactory::value ");
 	uint32_t wceto=0;
-
 	CFRDemand *dmnd = getDemand(cfr);
+	if (!dmnd) {
+		return 0;
+	}
 	wceto = dmnd->getWCETOMap().wceto(_threads);
 
 	dbg.flush(cout);
 	dbg.dec(); 
-	#undef dout
 	return wceto;
 }
+#undef dout
 
+#define dout dbg.buf << dbg.start
 CFRDemand *
 WCETOFactory::inDemand(CFR* cfr) {
-	#define dout dbg.buf << dbg.start
 	dbg.inc("inDemand: ");
 	CFRDemand *cfrd = _cfrt.present(cfr);
 	if (cfrd) {
@@ -196,18 +206,16 @@ WCETOFactory::inDemand(CFR* cfr) {
 		    pair<CFR*, CFRDemand*>(pred_cfr, new CFRDemand(*pred_dmnd)));
 	}
 	dbg.dec();
-
 	maxMerge(*cfrd, scratch, true);
-
 	dout << *cfr << " demand after merging: " << endl
 	     << cfrd->str(dbg.start) << endl;
-
 	delete preds;
+
 	dbg.flush(cout);	
 	dbg.dec(); 
-	#undef dout
 	return cfrd;
 }
+#undef dout
 
 class LoopData {
 public:
@@ -253,9 +261,9 @@ lfs_loop_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 	}
 	fact.dbg.flush(cout);
 	fact.dbg.dec();
-	#undef dout
 	return rv;
 }
+#undef dout
 
 /**
  * List First Search Test Function
@@ -338,9 +346,9 @@ lfs_loop_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	delete preds;
 	fact.dbg.flush(cout);	
 	fact.dbg.dec();
-	#undef dout
 	return rv;
 }
+#undef dout
 
 static void
 lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {

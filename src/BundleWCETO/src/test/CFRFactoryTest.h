@@ -8,6 +8,7 @@
 
 class CFRFactoryTest : public CppUnit::TestFixture {
 	CPPUNIT_TEST_SUITE(CFRFactoryTest);
+	CPPUNIT_TEST(basic);
 	CPPUNIT_TEST(produceLeak);
 	CPPUNIT_TEST_SUITE_END();
 public:
@@ -15,6 +16,7 @@ public:
 	void tearDown();
 
 	void produceLeak();
+	void basic();	
 };
 
 #endif

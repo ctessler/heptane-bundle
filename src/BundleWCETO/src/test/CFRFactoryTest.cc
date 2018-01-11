@@ -31,3 +31,19 @@ CFRFactoryTest::produceLeak()
 	fact.produce();
 }
 
+void
+CFRFactoryTest::basic()
+{
+	cout << "CFRFactoryTest::basic" << endl;
+	PolicyLRU lru;
+	Cache cache(32, 2, 32, 10, 100, &lru);
+	CFG cfg;
+
+	ListDigraph::Node a = cfg.addNode();
+	cfg.setInitial(a);
+	cfg.setAddr(a, 0x4000);
+
+	CFRFactory fact(cfg, cache);
+	fact.produce();
+}
+

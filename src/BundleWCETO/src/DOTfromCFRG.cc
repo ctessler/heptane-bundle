@@ -42,11 +42,15 @@ CFRDOT(CFR &cfr, WCETOFactory &fact, int generation, unsigned int threads) {
 	      << "</TD></TR>" << endl;
 	CFRDemand *dmnd = fact.getDemand(&cfr);
 	ECBs *ecbs = cfr.getECBs();
-	label << "<TR><TD>Single WCET</TD><TD>" << dmnd->getEXE()
+	string cfr_ecb = "()";
+	if (dmnd) {
+		cfr_ecb = dmnd->getECBs().str();
+	}
+	label << "<TR><TD>Single WCET</TD><TD>" << (dmnd ? dmnd->getEXE() :0)
 	      << "</TD></TR>" << endl
-	      << "<TR><TD>Load Cost</TD><TD>" << dmnd->getLoad()
+	      << "<TR><TD>Load Cost</TD><TD>" << (dmnd ? dmnd->getLoad() : 0)
 	      << "</TD></TR>" << endl
-	      << "<TR><TD>Demand ECBs</TD><TD>" << dmnd->getECBs()
+	      << "<TR><TD>Demand ECBs</TD><TD>" << cfr_ecb 
 	      << "</TD></TR>" << endl
 	      << "<TR><TD>Local ECBs</TD><TD>" << *ecbs << "</TD></TR>" << endl
 	      << "</TABLE>>";
