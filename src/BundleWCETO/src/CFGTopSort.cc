@@ -35,9 +35,10 @@ order_dfs_sel(CFG &cfg, ListDigraph::Node node, void *userdata) {
 	OrderData *data = (OrderData *) userdata;
 	TS_sel_t sel_fn = data->topo.getSel();
 	if (sel_fn) {
-		return sel_fn(cfg, node, data->topo.getUserData());
+		bool r = sel_fn(cfg, node, data->topo.getUserData());
+		return r;
 	}
-	return true;
+	return false;
 }
 
 static bool
@@ -45,7 +46,8 @@ order_dfs_mask(CFG &cfg, ListDigraph::Node node, void *userdata) {
 	OrderData *data = (OrderData *) userdata;
 	TS_mask_t mask_fn = data->topo.getMask();
 	if (mask_fn) {
-		return mask_fn(cfg, node, data->topo.getUserData());
+		bool r = mask_fn(cfg, node, data->topo.getUserData());
+		return r;
 	}
 	return true;
 }

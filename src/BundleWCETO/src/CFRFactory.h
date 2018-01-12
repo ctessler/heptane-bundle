@@ -15,6 +15,9 @@ using namespace std;
 class NodeList : public list<ListDigraph::Node> {
 };
 
+class NodeNodeMap : public map<ListDigraph::Node, ListDigraph::Node> {
+};
+
 class NodeCFRMap : public map<ListDigraph::Node, CFR*> {
 public:
 	void replace(ListDigraph::Node, CFR*);
@@ -27,14 +30,16 @@ public:
 		cfrg = new CFRG(cfg);
 		xlog.open("asstx.log");
 		bcfr.open("buildcfr.log");
-		prdc.open("cfrprdc.log");
+		prdc.open("produce.log");
+		preenlog.open("preen.log");
 	}
 	~CFRFactory();
 	
 	/* Gets the CFR of an instruction */
 	CFR* getCFR(ListDigraph::Node cfg_node);
 
-	map<ListDigraph::Node, CFR*> produce();
+	NodeCFRMap produce();
+	map<ListDigraph::Node, CFR*> produce_old();	
 	/* Gets the CFRG a product of produce */ 
 	CFRG *getCFRG() { return cfrg; }
 	bool debugOn = false;
@@ -45,6 +50,13 @@ private:
 	
 	ListDigraph::NodeMap<bool> _initial;
 	ListDigraph::NodeMap<bool> _visited;
+
+	/*
+	 * Maps from the CFG node -> CFG node that begins the CFR the
+	 * node is a part of
+	 */ 
+	NodeNodeMap _cfr_addr;
+	
 	/* Initial instruction in the CFG -> CFR */
 	NodeCFRMap _cfrs;
 	/* Any instruction in CFG -> CFR */
@@ -74,8 +86,16 @@ private:
 	string _path, _indent;
 
 	DBG dbg;
-	ofstream xlog, bcfr, prdc;
+	ofstream xlog, bcfr, prdc, preenlog;
 	bool newCFRTest(ListDigraph::Node node);
+
+	void produce_prep();
+	void produce_assign();
+	void produce_create();
+	void produce_link();		
+	NodeList labelCFR(ListDigraph::Node entry, Cache &cache);
+	NodeList expandCFR(ListDigraph::Node entry);
+	
 };
 
 #endif /* CFR_FACTORY */

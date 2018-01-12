@@ -19,12 +19,179 @@ CFRFactory::~CFRFactory() {
 	xlog.close();
 	bcfr.close();
 	prdc.close();
-	
+	preenlog.close();
 }
 
 #define dout dbg.buf << dbg.start
-map<ListDigraph::Node, CFR*>
+
+void
+CFRFactory::produce_prep() {
+	dout << "Clearing initial state" << endl;
+	visitClear();
+	for (ListDigraph::NodeIt nit(_cfg); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		_cfr_addr[node] = INVALID;
+	}
+}
+
+void
+CFRFactory::produce_assign() {
+	dbg.inc("CFRF-assn: ");
+	dout << "begin" << endl;
+	ListDigraph::Node initial = _cfg.getInitial();
+	dbg.flush(prdc);
+	
+	NodeList next_cfrs;
+	next_cfrs.push_back(initial);
+	dbg.inc("◌ ");
+	do {
+		ListDigraph::Node cur = next_cfrs.front(); next_cfrs.pop_front();
+		string nstr = _cfg.stringNode(cur);
+		dout << nstr << " begin" << endl;
+		if (visited(cur)) {
+			dout << nstr << " already begins a CFR, done." << endl;
+			dbg.flush(prdc);
+			continue;
+		}
+		visit(cur);
+		Cache copy(_cache);
+		dbg.flush(prdc);
+		NodeList xflicts = labelCFR(cur, copy);
+		for (ListDigraph::Node &node : xflicts) {
+			next_cfrs.push_back(node);
+		}
+		dout << nstr << " end" << endl;
+	} while(!next_cfrs.empty());
+	dbg.dec();
+	dout << "end" << endl;
+	dbg.dec(); dbg.flush(prdc);
+
+	#define PARANOIA
+	#ifdef PARANOIA
+	bool puke=false;
+	for (ListDigraph::NodeIt nit(_cfg); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		if (_cfr_addr[node] == INVALID) {
+			puke = true;
+			dout << _cfg.stringNode(node) << " no CFR" << endl;
+		}
+	}
+	if (puke) {
+		throw runtime_error("Nodes without CFRs");
+	}
+	#endif /* PARANOIA */
+}
+
+void
+CFRFactory::produce_create() {
+	dbg.inc("CFRF-create: ");
+	dout << "begin" << endl;
+	ListDigraph::Node initial = _cfg.getInitial();
+	dbg.flush(prdc);
+	visitClear();
+	
+	NodeList next_cfrs;
+	next_cfrs.push_back(initial);
+	dbg.inc("⬍ ");
+	do {
+		ListDigraph::Node cur = next_cfrs.front(); next_cfrs.pop_front();
+		string nstr = _cfg.stringNode(cur);
+		dout << nstr << " begin" << endl;
+		dbg.flush(prdc);
+		if (visited(cur)) {
+			dout << nstr << " already visited, done." << endl;
+			dbg.flush(prdc);
+			continue;
+		}
+		visit(cur);
+		NodeList nexts = expandCFR(cur);
+		for (ListDigraph::Node &node : nexts) {
+			string nstr = _cfg.stringNode(node);
+			dout << "+ " << nstr << endl;
+			next_cfrs.push_back(node);
+		}
+		dout << nstr << " end" << endl;
+	} while(!next_cfrs.empty());
+	dbg.dec();
+
+	dout << "end" << endl;
+	dbg.dec(); dbg.flush(prdc);
+}
+
+void
+CFRFactory::produce_link() {
+	dbg.inc("CFRF-link: ");
+	dout << "begin" << endl;
+	ListDigraph::Node initial = _cfg.getInitial();
+	dbg.flush(prdc);
+	visitClear();
+	
+	NodeList next_cfrs;
+	next_cfrs.push_front(initial);
+	dbg.inc("❊ ");
+	do {
+		ListDigraph::Node cur = next_cfrs.front(); next_cfrs.pop_front();
+		string nstr = _cfg.stringNode(cur);
+		dbg.flush(prdc);
+		if (visited(cur)) {
+			dout << nstr << " already visited, done." << endl;
+			dbg.flush(prdc);
+			continue;
+		}
+		visit(cur);
+		ListDigraph::Node cur_cfri = _cfr_addr[cur];
+		CFR *cur_cfr = _cfrs[cur_cfri];
+		if (cfrg->findNode(cur_cfr) == INVALID) {
+			dout << "Adding to CFRG: " << *cur_cfr << endl;
+			cfrg->addNode(cur_cfr);
+		}
+
+		ListDigraph::OutArcIt ait(_cfg, cur);
+		for (; ait != INVALID; ++ait) {
+			ListDigraph::Node succ = _cfg.runningNode(ait);
+			ListDigraph::Node cfri = _cfr_addr[succ];
+			CFR *succ_cfr = _cfrs[cfri];
+			if (cfrg->findNode(succ_cfr) == INVALID) {
+				dout << "Adding to CFRG" << *succ_cfr << endl;
+				cfrg->addNode(succ_cfr);
+			}
+			next_cfrs.push_back(succ);
+			if (_cfr_addr[cur] == _cfr_addr[succ]) {
+				/* In the same CFR continue */
+				continue;
+			}
+			ensureArc(cur_cfr, succ_cfr);
+		}
+	} while(!next_cfrs.empty());
+	dbg.dec();
+
+	cfrg->setInitialCFR(_cfrs[initial]);
+	
+	dout << "end" << endl;
+	dbg.dec(); dbg.flush(prdc);
+}
+	
+NodeCFRMap
 CFRFactory::produce() {
+	dbg.inc("CFRF-prod:" );
+	produce_prep();
+
+	produce_assign();
+	produce_create();
+	produce_link();
+
+	
+	
+	dout << "end" << endl;
+	dbg.dec(); dbg.flush(prdc);
+
+	return _cfrs;
+}
+#undef dout
+
+#define dout dbg.buf << dbg.start
+map<ListDigraph::Node, CFR*>
+CFRFactory::produce_old() {
 	dbg.inc("CFRFactory::produce: ");
 
 	visitClear();
@@ -42,14 +209,14 @@ CFRFactory::produce() {
 		visitClear();
 		cursor = next_cfrs.front(); next_cfrs.pop_front();
 		dout << "Working on node: " << _cfg.stringNode(cursor) << endl;
-		if (_cfg_to_cfr.find(cursor) != _cfg_to_cfr.end()) {
-			dout << "Already handled, next" << endl;
-			continue;
-		}
 		dbg.flush(xlog);
 		/* This node starts a CFR, but it may be a loop head */
 		CFR *cfr;
 		if (newCFRTest(cursor)) {
+			NodeCFRMap::iterator it = _cfg_to_cfr.find(cursor);
+			if (it != _cfg_to_cfr.end()) {
+				_cfg_to_cfr.erase(it);
+			}
 			cfr = addCFR(cursor);
 			dout << "Created a new CFR " << *cfr << endl;
 		} else {
@@ -62,10 +229,14 @@ CFRFactory::produce() {
 		Cache copy(_cache);
 		NodeList xflicts = assignToConflicts(cfr, cursor, copy);
 		for (ListDigraph::Node &node : xflicts) {
-			/* Critical! */
+			/* Critical! assignToConflicts will add the
+			   node otherwise */
 			_initial[node] = true;
-			if (_cfg_to_cfr.find(node) != _cfg_to_cfr.end()) {
-				continue;
+			NodeCFRMap::iterator it = _cfg_to_cfr.find(node);
+			if (it != _cfg_to_cfr.end()) {
+				if (!newCFRTest(node)) {
+					continue;
+				}
 			}
 			next_cfrs.push_back(node);
 		}
@@ -78,6 +249,24 @@ CFRFactory::produce() {
 	dout << "Initial CFR: " << *cfr << endl;
 	cfrg->setInitialCFR(cfr);
 
+	#define PARANOIA
+	#ifdef PARANOIA
+	bool puke = false;
+	for (ListDigraph::NodeIt nit(_cfg); nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		NodeCFRMap::iterator it = _cfg_to_cfr.find(node);
+		if (it == _cfg_to_cfr.end()) {
+			string s = _cfg.stringNode(node);
+			cout << s << " node without a CFR" << endl;
+			puke = true;
+		}
+				
+	}
+	if (puke) {
+		throw runtime_error("Nodes without CFRs");
+	}		
+	#endif
+	
 	/*
 	 * Second pass.
 	 * CFR's have been created and contain only their first
@@ -189,6 +378,7 @@ CFRFactory::markLoops() {
 		}
 		/* Have a loop head */
 		_initial[node] = true;
+		_cfr_addr[node] = node;
 		markLoopExits(node);
 	}
 }
@@ -216,6 +406,7 @@ CFRFactory::markLoopExits(ListDigraph::Node node) {
 		if (head != succ_head) {
 			/* succ is not in node's loop */
 			_initial[succ] = true;
+			_cfr_addr[node] = node;
 			continue;
 		}
 		if (visited(succ)) {
@@ -243,10 +434,16 @@ CFRFactory::assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
 	nexts.push_back(cursor);
 	while (!nexts.empty()) {
 		ListDigraph::Node cur = nexts.front(); nexts.pop_front();
+		if (visited(cur)) {
+			dout << _cfg.stringNode(cur)
+			     << " already visited, skipping." << endl;
+			continue;
+		}
 		visit(cur);
 		if (conflicts(cur, cache)) {
 			dout << _cfg.stringNode(cur)
 			     << " xflicts, preening" << endl;
+			dbg.flush(xlog);
 			preen(cur);
 			/* Since preening occured at cur, create a CFR
 			   if needed */
@@ -273,7 +470,7 @@ CFRFactory::assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
 				continue;
 			}
 			if (_initial[succ]) {
-				dout << s << " CFR starter, added to xflicts"
+				dout << s << " CFR member, added to xflicts"
 				     << endl;
 				xflicts.push_back(succ);
 				continue;
@@ -286,6 +483,13 @@ CFRFactory::assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
 			}
 			dout << s << " added" << endl;
 			_cfg_to_cfr.replace(succ, cfr);
+			#define PARANOIA
+			#ifdef PARANOIA
+			NodeCFRMap::iterator cit = _cfg_to_cfr.find(succ);
+			if (cit->second != cfr) {
+				throw runtime_error("WUT DE WAY");
+			}
+			#endif
 			nexts.push_back(succ);
 		}
 	}
@@ -295,6 +499,132 @@ CFRFactory::assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
 }
 #undef dout
 
+
+/**
+ * Labels instructions starting with the given entry point.
+ */
+#define dout dbg.buf << dbg.start
+NodeList
+CFRFactory::labelCFR(ListDigraph::Node entry, Cache &cache) {
+	dbg.inc("labelCFR ✇: ");
+	string estr = _cfg.stringNode(entry);
+	dout << estr << " begin" << endl;
+	dbg.inc("✇: ");
+
+	/*
+	 * Two cases for this CFR assignment
+	 *   Case 1: It is a new CFR
+	 *   Case 2: The CFR is being broken
+	 */
+	ListDigraph::Node marker = INVALID; /* Case 1 */
+	if (_cfr_addr[entry] != INVALID) {  /* Case 2 */
+		dout << estr << " breaks CFR "
+		     << _cfg.stringNode(_cfr_addr[entry]) << endl;
+		marker = _cfr_addr[entry];
+	}
+
+	/* This CFR may also be a loop head */
+	bool loopt = false;
+	if (_cfg.isHead(entry)) {
+		dout << estr << " is a loop head" << endl;
+		loopt = true;
+	}
+
+	NodeList xflicts, nexts;
+	ListDigraph::NodeMap<bool> v(_cfg);
+	nexts.push_front(entry);
+	do {
+		ListDigraph::Node cur = nexts.front(); nexts.pop_front();
+		string cstr = _cfg.stringNode(cur);
+		if (v[cur]) {
+			dout << cstr << " already visited, skipping." << endl;
+			continue;
+		}
+		v[cur] = true;
+		if (loopt && !_cfg.inLoop(entry, cur)) {
+			dout << cstr << " out of loop, added to xflicts" << endl;
+			xflicts.push_back(cur);
+			continue;
+		}
+		if (_cfg.isHead(cur) && cur != entry) {
+			dout << cstr << " is a loop, added to xflicts" << endl;
+			xflicts.push_back(cur);
+			continue;
+		}
+		if (_cfr_addr[cur] != marker) {
+			/* Not in our CFR scope */
+			string cfrstr = _cfg.stringNode(_cfr_addr[cur]);
+			dout << cstr << " in different CFR " << cfrstr << endl;
+			dout << cstr << " added to xflicts" << endl;
+			xflicts.push_back(cur);
+			continue;
+		}
+		if (conflicts(cur, cache)) {
+			dout << cstr << " conflicts, adding to xflicts." << endl;
+			xflicts.push_back(cur);
+			continue;
+		}
+		cache.insert(_cfg.getAddr(cur));
+		dout << "+ " << cstr << endl;
+		_cfr_addr[cur] = entry;
+		for (ListDigraph::OutArcIt a(_cfg, cur); a != INVALID; ++a) {
+			ListDigraph::Node kid = _cfg.runningNode(a);
+			nexts.push_back(kid);
+		}
+	} while(!nexts.empty());
+
+	dbg.dec();
+	dout << estr << " end" << endl;
+	dbg.dec(); dbg.flush(xlog);
+
+	return xflicts;
+}
+#undef dout
+
+#define dout dbg.buf << dbg.start
+NodeList
+CFRFactory::expandCFR(ListDigraph::Node entry) {
+	dbg.inc("expandCFR ⬍: ");
+	string estr = _cfg.stringNode(entry);
+	dout << estr << " begin" << endl;
+	dbg.inc("⬍: ");
+
+	CFR *cfr = addCFR(entry);
+
+	NodeList next_cfr, nexts;
+	ListDigraph::NodeMap<bool> v(_cfg);
+	nexts.push_front(entry);
+	do {
+		ListDigraph::Node cur = nexts.front(); nexts.pop_front();
+		ListDigraph::Node cfr_node =
+		    cfr->find(_cfg.getAddr(cur), _cfg.getFunction(cur));
+		string cstr = _cfg.stringNode(cur);
+		if (v[cur]) {
+			dout << cstr << " already visited, skipping." << endl;
+			continue;
+		}
+		v[cur] = true;
+		for (ListDigraph::OutArcIt a(_cfg, cur); a != INVALID; ++a) {
+			ListDigraph::Node kid = _cfg.runningNode(a);
+			string ks = _cfg.stringNode(kid);
+			if (_cfr_addr[kid] != entry) {
+				dout << ks << " in next CFR." << endl;
+				next_cfr.push_back(kid);
+				continue;
+			}
+			ListDigraph::Node cfr_kid = cfr->addNode(kid);
+			dout << cstr << " → " << ks << endl;
+			cfr->addArc(cfr_node, cfr_kid);
+			nexts.push_back(kid);
+		}
+	} while(!nexts.empty());
+
+	dbg.dec();
+	dout << estr << " end" << endl;
+	dbg.dec(); dbg.flush(xlog);
+
+	return next_cfr;
+}
 
 class PreenData {
 public:
@@ -392,6 +722,7 @@ preen_clear_sel(CFG &cfg, ListDigraph::Node node, void *userdata) {
 	return false;
 }
 
+#define dout dbg.buf << dbg.start
 void
 CFRFactory::preen(ListDigraph::Node starter) {
 	NodeCFRMap::iterator it = _cfg_to_cfr.find(starter);
@@ -409,12 +740,35 @@ CFRFactory::preen(ListDigraph::Node starter) {
 	CFGTopSort topo(_cfg, &pdata, preen_protect_mask);
 	topo.sort(cfgi);
 
+	dbg.inc("preen:" );
+	dout << *scfr << " preening at : " << _cfg.stringNode(starter) << endl;
 	pqueue_t::iterator pit;
 	for (pit = topo.result.begin(); pit != topo.result.end(); ++pit) {
 		ListDigraph::Node cfg_node = *pit;
-		cout << "  " << _cfg.stringNode(cfg_node) << endl;
+		if (cfg_node != starter) {
+			dout << _cfg.stringNode(cfg_node) << " skipping." << endl;
+			continue;
+		}
+		break;
 	}
+	/*
+	 * pit now points to the starter, remove all nodes after (and
+	 * including) the starter from the CFR
+	 */
+	for ( ; pit != topo.result.end(); ++pit) {
+		ListDigraph::Node cfg_node = *pit;
+		it = _cfg_to_cfr.find(cfg_node);
+		if (it != _cfg_to_cfr.end()) {
+			string s = _cfg.stringNode(cfg_node);
+			dout << s << " removed." << endl;
+			_cfg_to_cfr.erase(it);
+		}
+	}
+	
+	dbg.dec();
+	dbg.flush(preenlog);
 }
+#undef dout
 
 #define dout dbg.buf << dbg.start
 CFRList
@@ -433,18 +787,26 @@ CFRFactory::buildCFR(CFR *cfr) {
 	do {
 		cfg_node = cfg_nodes.front(); cfg_nodes.pop_front();
 		if (visited(cfg_node)) {
+			dout << _cfg.stringNode(cfg_node) << " already visited"
+			     << ", skipping." << endl;
 			continue;
 		}
 		visit(cfg_node);
 		for (ListDigraph::OutArcIt ait(_cfg, cfg_node); ait != INVALID;
 		     ++ait) {
 			ListDigraph::Node cfg_kid = _cfg.runningNode(ait);
-			CFR *kid_cfr = _cfg_to_cfr[cfg_kid];
+			NodeCFRMap::iterator it = _cfg_to_cfr.find(cfg_kid);
 			string s = _cfg.stringNode(cfg_kid);
-			if (kid_cfr == NULL) {
+			if (it == _cfg_to_cfr.end()) {
 				dout << "succ: " << s << " no CFR" << endl;
 				dbg.flush(bcfr);
 				throw runtime_error("Every node should have a CFR");
+			}
+			CFR *kid_cfr = _cfg_to_cfr[cfg_kid];
+			if (kid_cfr == NULL) {
+				dout << "succ: " << s << " invalid CFR" << endl;
+				dbg.flush(bcfr);
+				throw runtime_error("Every node should have a valid CFR");
 			}
 			if (kid_cfr != cfr) {
 				dout << s << " ∈ " << *kid_cfr 
@@ -457,8 +819,10 @@ CFRFactory::buildCFR(CFR *cfr) {
 			ListDigraph::Node cfr_kid = cfr->addNode(cfg_kid);
 			cfr_node = cfr->find(_cfg.getAddr(cfg_node),
 					     _cfg.getFunction(cfg_node));
-			dout << s << " → " << cfr->stringNode(cfr_kid) << endl;
+			dout << cfr->stringNode(cfr_node)
+			     << " → " << cfr->stringNode(cfr_kid) << endl;
 			cfr->addArc(cfr_node, cfr_kid);
+			dout << s << " added to node list" << endl;
 			cfg_nodes.push_back(cfg_kid);
 		}
 	} while (!cfg_nodes.empty());
@@ -494,13 +858,20 @@ CFRFactory::CFRsuccs(CFR *cfr) {
 		for (ListDigraph::OutArcIt ait(_cfg, cfg_node); ait != INVALID;
 		     ++ait) {
 			ListDigraph::Node cfg_kid = _cfg.runningNode(ait);
-			CFR *kid_cfr = _cfg_to_cfr[cfg_kid];
+			NodeCFRMap::iterator it = _cfg_to_cfr.find(cfg_kid);
 			string s = _cfg.stringNode(cfg_kid);
-			if (kid_cfr == NULL) {
+			if (it == _cfg_to_cfr.end()) {
 				dout << "succ: " << s << " no CFR" << endl;
 				dbg.flush(bcfr);
 				throw runtime_error("Every node should have a CFR");
 			}
+			CFR *kid_cfr = _cfg_to_cfr[cfg_kid];
+			if (kid_cfr == NULL) {
+				dout << "succ: " << s << " invalid CFR" << endl;
+				dbg.flush(bcfr);
+				throw runtime_error("Every node should have a valid CFR");
+			}
+			
 			if (kid_cfr != cfr) {
 				dout << s << " ∈ " << *kid_cfr 
 				     << " adding to nexts" << endl;
@@ -524,7 +895,7 @@ CFRFactory::CFRsuccs(CFR *cfr) {
 void
 CFRFactory::ensureArc(CFR* source, CFR* target) {
 	#define dout dbg.buf << dbg.start
-	dbg.inc("ensureArc: ");
+	dbg.inc("⌒: ");
 	ListDigraph::Node cfrgs, cfrgt;
 	cfrgs = cfrg->findNode(source);
 	cfrgt = cfrg->findNode(target);
@@ -536,7 +907,7 @@ CFRFactory::ensureArc(CFR* source, CFR* target) {
 		return;
 	}
 
-	dout << "+arc: " << *source << " --> " << *target << endl; 
+	dout << *source << " → " << *target << endl; 
 	cfrg->addArc(cfrgs, cfrgt);
 	dbg.dec();
 	#undef dout

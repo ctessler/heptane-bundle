@@ -5,6 +5,7 @@
 #include<iostream>
 #include<cstdint>
 #include<list>
+#include<stdint.h>
 using namespace std;
 
 /**

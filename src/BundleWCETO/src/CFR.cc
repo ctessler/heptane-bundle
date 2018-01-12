@@ -209,6 +209,8 @@ CFR::calcECBs() {
 	Cache scratch(_cache->getSets(), _cache->getWays(),
 		      _cache->getLineSize(), _cache->latency(),
 		      _cache->memLatency(),  _cache->getPolicy());
+	/* XXX-ct clear the cache and run through valgrind */
+	// scratch.clear();
 	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
 		ListDigraph::Node node = nit;
 		iaddr_t addr = getAddr(node);
