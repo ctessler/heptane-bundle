@@ -35,16 +35,19 @@ BXMLCfg::~BXMLCfg() {
 	if (_doc) {
 		xmlFreeDoc(_doc);
 	}
+	xmlCleanupParser();	
 }
 
 void BXMLCfg::read(string XMLFile) {
+	if (_doc) {
+		xmlFreeDoc(_doc);
+	}
 	_doc = xmlParseFile(XMLFile.c_str());
 	if (!_doc) {
 		string error = "Could not load file: ";
 		error += XMLFile.c_str();
 		throw runtime_error(error);
 	}
-
 	//xmlNodePtr node = xmlDocGetRootElement(_doc);
 	xmlNodePtr archNode = getArchNode();
 	xmlNodePtr targetNode = getTargetNode();
@@ -247,23 +250,23 @@ BXMLCfg::addCacheLevel(xmlNodePtr node) {
 	char *buff;
 	buff = (char *)xmlGetProp(node, (xmlChar *) "level");
 	sscanf(buff, "%i", &level);
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "nbsets");
 	sscanf(buff, "%i", &nsets);
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "nbways");
 	sscanf(buff, "%i", &nways);
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "cachelinesize");
 	sscanf(buff, "%i", &linesize);
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "latency");
 	sscanf(buff, "%i", &latency);
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "type");
 	Cache *new_cache = new Cache(nsets, nways, linesize, latency, _load_latency);
@@ -285,14 +288,14 @@ BXMLCfg::addCacheLevel(xmlNodePtr node) {
 		iord = "data";
 		_dat_cache.insert(make_pair(level, new_cache));
 	}
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "replacement_policy");
 	if (string ("LRU") == buff) {
 		new_cache->setPolicy(&lru);
 		valid_policy = true;
 	}
-	free(buff);
+	xmlFree(buff);
 	if (!valid_policy) {
 		throw runtime_error("CACHE has no supported replacement policy");
 	}
@@ -320,11 +323,11 @@ xmlNodePtr BXMLCfg::getMemoryNode() {
 	char *buff;
 	buff = (char *)xmlGetProp(node, (xmlChar *) "store_latency");
 	sscanf(buff, "%i", &_store_latency);
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "load_latency");
 	sscanf(buff, "%i", &_load_latency);
-	free(buff);
+	xmlFree(buff);
 
 	return node;
 }
@@ -347,7 +350,7 @@ xmlNodePtr BXMLCfg::getDirNode() {
 	char *buff;
 	buff = (char *)xmlGetProp(node, (xmlChar *) "name");
 	_dir = buff;
-	free(buff);
+	xmlFree(buff);
 
 	return node;
 }
@@ -373,11 +376,11 @@ xmlNodePtr BXMLCfg::getEntryNode() {
 	char *buff;
 	buff = (char *)xmlGetProp(node, (xmlChar *) "input_file");
 	_cfg = buff;
-	free(buff);
+	xmlFree(buff);
 
 	buff = (char *)xmlGetProp(node, (xmlChar *) "entrypointname");
 	_entry = buff;
-	free(buff);
+	xmlFree(buff);
 
 	return node;
 
