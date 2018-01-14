@@ -33,7 +33,7 @@ public:
 	 * Override to protect against incorrect node addition
 	 */
 	ListDigraph::Node addNode(void);
-	string stringNode(ListDigraph::Node node) const;
+	virtual string stringNode(ListDigraph::Node node) const;
 
 	/* Gets and sets the initial (root) node of the CFG */
 	ListDigraph::Node getInitial() const;
