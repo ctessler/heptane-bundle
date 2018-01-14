@@ -10,13 +10,13 @@ typedef bool (*TS_sel_t)(CFG &cfg, ListDigraph::Node node, void *userdata);
 
 class CFGTopSort {
 public:
-	CFGTopSort(CFG &cfg) : _cfg(cfg), _distances(_cfg),
-			       result((NodeCompLT(_distances))) {
+	CFGTopSort(CFG &cfg) : _cfg(cfg), _distances(_cfg), _resd(_cfg),
+			       result((NodeCompLT(_resd))) {
 	}
 	CFGTopSort(CFG &cfg, void *userdata,
 	    TS_mask_t mn=NULL, TS_work_t wn=NULL, TS_sel_t sn=NULL)
-		: _userdata(userdata), _cfg(cfg), _distances(_cfg),
-		  result((NodeCompLT(_distances))) {
+		: _userdata(userdata), _cfg(cfg), _distances(_cfg), _resd(_cfg),
+		  result((NodeCompLT(_resd))) {
 		setMask(mn);
 		setWork(wn);
 		setSel(sn);
@@ -55,6 +55,7 @@ public:
 private:
 	CFG &_cfg;
 	ListDigraph::NodeMap<int> _distances;
+	ListDigraph::NodeMap<int> _resd;
 	TS_mask_t _mask_fn = NULL;
 	TS_work_t _work_fn = NULL;
 	TS_sel_t _sel_fn = NULL;

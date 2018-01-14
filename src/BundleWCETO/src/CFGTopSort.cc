@@ -3,7 +3,7 @@
 class OrderData {
 public:
 	OrderData(CFGTopSort &t, ListDigraph::NodeMap<int> &d) :
-		topo(t), distances(d), pqueue((NodeCompGR(d))) {
+		topo(t), distances(d), pqueue((NodeCompGR(distances))) {
 	}
 	int finish=0;
 	ListDigraph::NodeMap<int> &distances;
@@ -14,6 +14,8 @@ public:
 static bool
 order_dfs_fin(CFG &cfg, ListDigraph::Node node, void *userdata) {
 	OrderData *data = (OrderData *) userdata;
+	pqueue_gr_t::iterator git = data->pqueue.find(node);
+
 	data->distances[node] = data->finish;
 	data->finish += 1;
 	data->pqueue.insert(node);
@@ -70,7 +72,7 @@ CFGTopSort::sort(ListDigraph::Node start) {
 	int c=0;
 	for (git = data.pqueue.begin(); git != data.pqueue.end(); ++git, ++c) {
 		ListDigraph::Node node = *git;
-		_distances[node] = c;
+		_resd[node] = c;
 		result.insert(node);
 	}
 }
