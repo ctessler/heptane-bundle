@@ -1,5 +1,4 @@
 #include "DBG.h"
-
 DBG::DBG() {
 	_level=-2;
 	inc("");
@@ -29,11 +28,14 @@ DBG::dec() {
 void
 DBG::flush(ostream &stream) {
 	stream << buf.str();
+	stream.flush();
 	buf.str("");
 }
 
+
 void
 DBG::update() {
-	start = _indents.top();
+	stringstream agstr; agstr << ++_age << " ";
+	start = agstr.str() + _indents.top();
 	cont = "\n" + start + "+- ";
 }

@@ -30,6 +30,7 @@ private:
 	stack<string> _indents;
 	stack<string> _pfxs;
 	string _fill=" ";
+	uint64_t _age=0;
 };
 
 #endif /* DBG_H */
