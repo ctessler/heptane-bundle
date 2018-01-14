@@ -46,7 +46,7 @@ CFRDOT(CFR &cfr, WCETOFactory &fact, int generation, unsigned int threads) {
 	if (dmnd) {
 		cfr_ecb = dmnd->getECBs().str();
 	}
-	label << "<TR><TD>Single WCET</TD><TD>" << (dmnd ? dmnd->getEXE() :0)
+	label << "<TR><TD>Single EXE</TD><TD>" << (dmnd ? dmnd->getEXE() :0)
 	      << "</TD></TR>" << endl
 	      << "<TR><TD>Load Cost</TD><TD>" << (dmnd ? dmnd->getLoad() : 0)
 	      << "</TD></TR>" << endl
