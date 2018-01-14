@@ -53,10 +53,9 @@ CFGFactory::produce() {
 
 	FunctionCall call("main", CallStack({0x0}));
 	ListDigraph::Node terminal = makeCall(cfg, call, node);
-
 	cfg->setTerminal(terminal);
-	ListDigraph::Node initial =
-		cfg->find(firstAddr(node), call);
+
+	ListDigraph::Node initial = cfg->find(firstAddr(node), call);
 	cfg->setInitial(initial);
 
 	identifyLoops(*cfg);
@@ -312,6 +311,9 @@ CFGFactory::makeBB(CFG *cfg, const FunctionCall &call, Node *node) {
 	vector<Instruction*>::iterator it;
 	for (it = vi.begin(); it != vi.end(); it++) {
 		t_address addr = instrAddr(*it);
+		/*
+		cout << "Code: " << (*it)->GetCode() << endl;
+		*/
 
 		/* Nodes should not exist, if they are visited multiple times
 		 * there are multiple call sites which creates distinct nodes.
@@ -328,9 +330,9 @@ CFGFactory::makeBB(CFG *cfg, const FunctionCall &call, Node *node) {
 		cfg->setFunction(new_node, call);
 		#ifdef DBG_MAKEBB
 		dout << "created node " << cfg->stringNode(new_node) << endl;
-		#endif
 		log << setw(6) << left << linec++ << "Node: "
 		    << cfg->stringNode(new_node) << endl;
+		#endif
 
 		/* Add an arc from the previous instruction */
 		if (last != INVALID) {
@@ -460,7 +462,7 @@ CFGFactory::loopDFS(CFG &cfg, ListDigraph::Node node,
 	}
 	log << "loodDFS: " << cfg.stringNode(node) << " done with head: "
 	    << cfg.stringNode(cfg.getHead(node)) << endl;
-	dbg.dec(); dbg.flush(cout);
+	dbg.dec(); dbg.flush(dlog);
 	pathp[node] = 0;
 	return cfg.getHead(node);
 }

@@ -165,8 +165,6 @@ int main(int argc, char** argv) {
 		cout.rdbuf(old_cout);
 	}
 	cout << "Wrote " << CFGFile << endl;
-
-	
 	return 0;
 }
 

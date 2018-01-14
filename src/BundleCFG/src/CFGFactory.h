@@ -20,10 +20,12 @@ public:
 	CFGFactory(Program *prog) : _prog(prog) {
 		log.open("creation.log");
 		mlog.open("makeCall.log");
+		dlog.open("loopDFS.log");
   	}
 	~CFGFactory() {
 		log.close();
 		mlog.close();
+		dlog.close();
 	}
 	CFG* produce();
 private:
@@ -44,6 +46,7 @@ private:
 	DBG dbg;
 	ofstream log;
 	ofstream mlog;
+	ofstream dlog;
 
 	void dmc1(CFG *cfg, FunctionCall call, Node *node);
 	void dmc2(CFG *cfg, FunctionCall call, Node *node,
