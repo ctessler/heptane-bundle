@@ -84,6 +84,10 @@ public:
 	 */
 	void insert(iaddr_t addr);
 	/**
+	 * Clears the cache contents (not the parameters)
+	 */
+	void clear();
+	/**
 	 * Returns the latency (the amount of time it takes to move a
 	 * block from this cache level down one.) 
 	 */

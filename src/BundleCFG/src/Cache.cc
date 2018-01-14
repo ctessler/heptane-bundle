@@ -48,12 +48,16 @@ void Cache::insert(iaddr_t addr) {
 	cs->insert(addr);
 }
 
-Cache::~Cache() {
+void Cache::clear() {
 	map<int, CacheSet*>::iterator it;
 	for (it = _sets.begin(); it != _sets.end(); it++) {
 		it->second->clear();
 		delete it->second;
 	}
 	_sets.clear();
+}
+
+Cache::~Cache() {
+	clear();
 }
 
