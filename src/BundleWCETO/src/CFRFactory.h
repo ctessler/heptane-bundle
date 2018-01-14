@@ -37,9 +37,8 @@ public:
 	
 	/* Gets the CFR of an instruction */
 	CFR* getCFR(ListDigraph::Node cfg_node);
-
 	NodeCFRMap produce();
-	map<ListDigraph::Node, CFR*> produce_old();	
+
 	/* Gets the CFRG a product of produce */ 
 	CFRG *getCFRG() { return cfrg; }
 	bool debugOn = false;
@@ -62,17 +61,10 @@ private:
 	/* Any instruction in CFG -> CFR */
 	NodeCFRMap _cfg_to_cfr;
 
-	void markLoops();
 	/* Marks the first exit nodes from this nodes loop as initial
 	 * CFR instructions */
-	void markLoopExits(ListDigraph::Node node);
  	bool conflicts(ListDigraph::Node node, Cache &cache);
-
-	NodeList assignToConflicts(CFR *cfr, ListDigraph::Node cursor,
-	    Cache &cache);
-	void preen(ListDigraph::Node starter);
-	CFRList buildCFR(CFR *cfr);
-	CFRList CFRsuccs(CFR *cfr);
+	/* Ensures there is an arc from source to target in the CFRG */
 	void ensureArc(CFR* source, CFR* target);
 	
 	void visit(ListDigraph::Node node, bool yes=true);
@@ -87,7 +79,6 @@ private:
 
 	DBG dbg;
 	ofstream xlog, bcfr, prdc, preenlog;
-	bool newCFRTest(ListDigraph::Node node);
 
 	void produce_prep();
 	void produce_assign();
