@@ -170,20 +170,57 @@ CFR::wceto(uint32_t threads) {
 uint32_t
 CFR::exeCost() {
 	calcTerminal();
-	ListDigraph::ArcMap<int> lengthMap(*this);
-	for (ListDigraph::ArcIt ait(*this); ait != INVALID; ++ait) {
-		ListDigraph::Arc a = ait;
-		lengthMap[a] = -1;
+	if (_exe != 0) {
+		return _exe;
 	}
-	Dijkstra<ListDigraph> dijk_loaded(*this, lengthMap);
-	Dijkstra<ListDigraph>::DistMap dist(*this);
-	dijk_loaded.distMap(dist);
-	dijk_loaded.run(getInitial());
+	CFGTopSort topo(*this);
+	topo.sort(getInitial());
 
-	int longest_path = dist[getTerminal()] * - 1 + 1;
-	uint32_t exe = longest_path * _cache->latency();
+	ListDigraph::NodeMap<int> dist(*this);
+	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
+		dist[nit] = 0;
+	}
 
-	return exe;
+	/* 
+	 * In the case of a CFR that starts a loop, the first
+	 * instruction may or may not be included twice in the
+	 * topological sort, it depends if the entire loop is
+	 * contained within the CFR
+	 *
+	 * To avoid counting that instruction twice, but avoid a
+	 * constant subtraction a visited map is used.
+	 */
+	ListDigraph::NodeMap<bool> v(*this);
+	
+	pqueue_t::iterator pit;
+	int weight = 1;
+	int maxd = 0;
+	/* Longest path using the result of the topological sort */
+	for (pit = topo.result.begin(); pit != topo.result.end(); ++pit) {
+		ListDigraph::Node n = *pit;
+		if (v[n]) {
+			continue;
+		}
+		v[n] = true;
+		int max = 0;
+		ListDigraph::InArcIt a(*this, n);
+		for ( ; a != INVALID; ++a) {
+			ListDigraph::Node p = source(a);
+			if (dist[p] > max) {
+				max = dist[p];
+			}
+		}
+		if ((max + weight) > dist[n]) {
+			dist[n] = max + weight;
+		}
+		if (dist[n] > maxd) {
+			/* Cheat, don't bother looking at the terminal */
+			maxd = dist[n];
+		}
+	}
+	_exe = maxd *_cache->latency();
+	
+	return _exe;
 }
 
 /**
@@ -211,6 +248,7 @@ CFR::calcECBs() {
 		      _cache->memLatency(),  _cache->getPolicy());
 	/* XXX-ct clear the cache and run through valgrind */
 	// scratch.clear();
+	scratch.clear();
 	for (ListDigraph::NodeIt nit(*this); nit != INVALID; ++nit) {
 		ListDigraph::Node node = nit;
 		iaddr_t addr = getAddr(node);

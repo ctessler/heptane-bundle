@@ -4,12 +4,14 @@
 #include "CFRECBs.h"
 #include "CFG.h"
 #include "DBG.h"
+#include "CFGTopSort.h"
 #include <lemon/dijkstra.h>
 
 class CFR : public CFG {
 public:
 	CFR(CFG &cfg) : CFG(), _cfg(cfg), _to_cfg(*this)
 	{
+		_exe = 0;
 	}
 	/* Returns the CFR membership of this node */
 	ListDigraph::Node membership(ListDigraph::Node node) const {
@@ -23,7 +25,7 @@ public:
 	}
 	CFR(CFR &cfr) : CFG(), _cfg(cfr._cfg), _to_cfg(*this)
 	{
-
+		_exe = 0;
 	}
 	/* Returns a pointer to the CFG which this CFR was extracted from */
 	CFG* getCFG() const { return &_cfg; }
@@ -114,6 +116,7 @@ public:
 	ECBs* getECBs();
 private:
 	CFG &_cfg;
+	uint32_t _exe;
 	DBG dbg;
 	/*
 	 * Nodes in the CFR hold no information, they are place holders for
