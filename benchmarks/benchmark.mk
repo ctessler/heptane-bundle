@@ -4,16 +4,17 @@ MIPSCC=$(shell command -v mips-cc 2>/dev/null)
 subdirs=bundle
 .PHONY: all clean $(subdirs) precheck
 
-all: $(subdirs)
+all: ${name}.xml $(subdirs)
 ifndef MIPSCC
 	$(error "mips-cc is not in the PATH")
 endif
 
-$(subdirs): ${name}.xml
+$(subdirs): 
 	make -C $@ $(opt)
 
 ${name}.xml: configExtract.xml
-	../../bin/HeptaneExtract configExtract.xml
+	- ../../bin/HeptaneExtract configExtract.xml
+	@echo "Ignore 'Unknown annotation type found in binary 48' errors"
 
 ${name}.exe: ${name}.c
 	mips-gcc -fomit-frame-pointer -ggdb -c -S ${name}.c -o ${name}.s
@@ -23,7 +24,6 @@ ${name}.exe: ${name}.c
 	mips-objdump -t -d -z ${name}.exe > ${name}.objdump
 
 clean: opt=clean
-clean: $(subdirs)
 clean:
 	rm -rf res*.xml *.pdf ${name}.xml *.log
 	rm -rf ${name}.dot ${name}.html ${name}.jpg core

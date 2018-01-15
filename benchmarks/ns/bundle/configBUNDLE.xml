@@ -30,12 +30,13 @@
 <!-- Cache -->
 <!-- NB: cache look-up is always considered when calculating the WCET, -->
 <!-- 111 for a all-miss for a 2-level cache hierarchy -->
-<CACHE nbsets="16" nbways="1" cachelinesize="32" replacement_policy="LRU"
-       type="icache" level="1" latency="10"/>
-<CACHE nbsets="16" nbways="2" cachelinesize="32" replacement_policy="LRU"
-       type="dcache" level="1" latency="10"/>
-<MEMORY load_latency="100" store_latency="100"/>
-
+<!-- Cache Begin -->
+<CACHE nbsets="16" nbways="1" cachelinesize="32" level="1" 
+       replacement_policy="LRU" type="icache" latency="10" />
+<CACHE nbsets="16" nbways="1" cachelinesize="32" level="1" 
+       replacement_policy="LRU" type="dcache" latency="10" />
+<MEMORY load_latency="100" store_latency="100" />
+<!-- Cache End -->
 
 </ARCHITECTURE>
 <!-- List of analysis steps, to be applied sequentially -->

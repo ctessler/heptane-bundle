@@ -44,17 +44,19 @@
 <ANALYSIS>
 
 <!-- Build the cfg of the input_file, compute the contexts and set the entry point to be analyzed -->
-<ENTRYPOINT keepresults="true" input_file ="statemate.xml" output_file ="statemate_main.xml" entrypointname="main"/>
+<ENTRYPOINT keepresults="true" input_file ="matmult.xml" output_file ="matmult_main.xml" entrypointname="main"/>
 
 <!-- Instruction cache analysis: each of the 3 analysis steps (must/may/persistence) can be turned on/off individually -->
-<ICACHE keepresults="true" input_file ="" output_file ="resICacheL1.xml" level="1" must="on" persistence="on" may="on" keep_age="off"/>
+<ICACHE keepresults="true" input_file ="" output_file ="resICacheL1.xml"
+	level="1" must="on" persistence="on" may="on" keep_age="off"/>
 
 <!-- To use data cache analysis, you have to first call analysis DATAADDRESS to attach addresses -->
 <!-- to load/store instructions. This requires that the CFG is extracted with OUTPUTOBJDUMP and OUTPUTREADELF set to true -->
 <!-- Data cache analysis has to be called for each cache level individually -->
 <DATAADDRESS keepresults="true" input_file ="" output_file ="" sp="7FFFE000"/>
 <!-- Data cache analysis: each of the 3 analysis steps (must/may/persistence) can be turned on/off individually -->
-<DCACHE keepresults="true" input_file ="" output_file ="resDCacheL1.xml" level="1" must="on" persistence="on" may="on"/>
+<DCACHE keepresults="true" input_file ="" output_file ="resDCacheL1.xml"
+	level="1" must="on" persistence="on" may="on"/>
 
 <!-- Pipeline analysis -->
 <PIPELINE keepresults="true" input_file ="" output_file ="resPipeline.xml"/>
@@ -88,10 +90,10 @@
 <!-- Codeline information is inserted by applying analysis CODELINE, whereas HTMLPRINT generates the html -->
 <!-- CODELINE requires that the program is compiled with -ggdb option -->
 <CODELINE keepresults="true" input_file ="" output_file =""
-	  binaryfile="../statemate.exe"  addr2lineCommand="mips-addr2line" />
+	  binaryfile="../matmult.exe"  addr2lineCommand="mips-addr2line" />
 
 <HTMLPRINT keepresults="true" input_file ="" output_file =""
-	  colorize="true" html_file ="statemate.html"/>
+	  colorize="true" html_file ="../matmult.html"/>
 </ANALYSIS>
 
 </CONFIGURATION>

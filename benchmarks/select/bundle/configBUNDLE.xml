@@ -44,7 +44,7 @@
 <ANALYSIS>
 
 <!-- Build the cfg of the input_file, compute the contexts and set the entry point to be analyzed -->
-<ENTRYPOINT keepresults="true" input_file ="statemate.xml" output_file ="statemate_main.xml" entrypointname="main"/>
+<ENTRYPOINT keepresults="true" input_file ="select.xml" output_file ="select_main.xml" entrypointname="main"/>
 
 <!-- Instruction cache analysis: each of the 3 analysis steps (must/may/persistence) can be turned on/off individually -->
 <ICACHE keepresults="true" input_file ="" output_file ="resICacheL1.xml" level="1" must="on" persistence="on" may="on" keep_age="off"/>
@@ -88,10 +88,10 @@
 <!-- Codeline information is inserted by applying analysis CODELINE, whereas HTMLPRINT generates the html -->
 <!-- CODELINE requires that the program is compiled with -ggdb option -->
 <CODELINE keepresults="true" input_file ="" output_file =""
-	  binaryfile="../statemate.exe"  addr2lineCommand="mips-addr2line" />
+	  binaryfile="../select.exe"  addr2lineCommand="mips-addr2line" />
 
 <HTMLPRINT keepresults="true" input_file ="" output_file =""
-	  colorize="true" html_file ="statemate.html"/>
+	  colorize="true" html_file ="../select.html"/>
 </ANALYSIS>
 
 </CONFIGURATION>
