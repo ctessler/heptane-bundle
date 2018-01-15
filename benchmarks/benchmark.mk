@@ -24,7 +24,7 @@ ${name}.exe: ${name}.c
 	mips-objdump -t -d -z ${name}.exe > ${name}.objdump
 
 clean: opt=clean
-clean:
+clean: $(subdirs)
 	rm -rf res*.xml *.pdf ${name}.xml *.log
 	rm -rf ${name}.dot ${name}.html ${name}.jpg core
 	rm -rf ${name}_*.xml annot.xml
