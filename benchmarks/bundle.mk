@@ -29,8 +29,12 @@ summary-${THREADS}.txt: ${obs} ${wceto} ${heptane}
 	@echo "${tot} (${THREADS} threads)" >> $@
 	@echo -n "Bundle Observed " >> $@
 	@cat ${name}-bundle.obs >> $@
+	@echo -n "Bundle " >> $@
+	@cat ${name}-bundle.switches >> $@
 	@echo -n "Serial Observed " >> $@
 	@cat ${name}-serial.obs >> $@
+	@echo -n "Serial " >> $@
+	@cat ${name}-serial.switches >> $@
 	cat $@
 
 ${heptane}:
@@ -38,10 +42,15 @@ ${heptane}:
 	    | grep WCET > ${heptane}
 
 ${obs}: ${wceto} ${SIMCFG}
-	simulator -c ${SIMCFG} -f *.entry ../${name}.exe -t ${THREADS} \
-	    | grep 'Execution' > ${name}-bundle.obs
-	simulator -c ${SIMCFG} ../${name}.exe -t ${THREADS} \
-	    | grep 'Execution' > ${name}-serial.obs
+	simulator -c ${SIMCFG} -f *.entry ../${name}.exe -t ${THREADS} > \
+	    ${name}-bsim.res
+	simulator -c ${SIMCFG} ../${name}.exe -t ${THREADS} > \
+	    ${name}-ssim.res
+	grep 'Execution' ${name}-bsim.res > ${name}-bundle.obs
+	grep 'Execution' ${name}-ssim.res > ${name}-serial.obs
+	grep 'Thread Level' ${name}-bsim.res > ${name}-bundle.switches
+	grep 'Thread Level' ${name}-ssim.res > ${name}-serial.switches
+	rm ${name}-bsim.res ${name}-ssim.res
 
 ${wceto}: ${name}.cfg
 	${valgrind} ../../../bin/BundleWCETO -c ${name}.cfg -m ${THREADS} \
@@ -57,4 +66,4 @@ ${SIMCFG}: simulator.cfg
 
 clean:
 	rm -f ${top} ${name}.cfg *.dot *.jpg *.entry vgcore.* *.wceto simulator-*.cfg
-	rm -f summary-*.txt *.obs *.hept *.log core
+	rm -f summary-*.txt *.obs *.hept *.log core *.switches

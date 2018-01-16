@@ -15,7 +15,14 @@ function single_file {
 	local hwcet=$(sed -n "$str" $file)
 	local bobs=$(sed -n 's/Bundle Observed Execution Time: \([0-9]\+\).*/\1/p' $file)
 	local hobs=$(sed -n 's/Serial Observed Execution Time: \([0-9]\+\).*/\1/p' $file)
-	echo "$name,$T,$bwceto,$hwcet,$bobs,$hobs"
+	local bctxs=$(sed -n 's/Bundle Thread Level Switches: \([0-9]\+\).*/\1/p' $file)
+	local sctxs=$(sed -n 's/Serial Thread Level Switches: \([0-9]\+\).*/\1/p' $file)
+
+	local ctol;
+	local ben;
+	(( ben = $hobs - $bobs ))
+	(( ctol = ($hobs - $bobs) / ($bctxs - $sctxs) ))
+	echo "$name,$T,$bwceto,$hwcet,$bobs,$bctxs,$hobs,$sctxs,$ben,$ctol"
 }
 
 
@@ -27,7 +34,11 @@ fi
 THREADS=$1
 shift
 
-echo "# Benchmark, Threads, Bundle WCETO, Heptane WCETO, Bundle Observed, Heptane Observed"
+echo "# Terms: "
+echo "#     bmark = benchmark, t = threads, Bu = bundle, He = heptane, obs = observed"
+echo "#     ctx = thread level context switch, ben = Bundle Benefit "
+echo "#     ctol = cycle tolerance"
+echo "# bmark, t, BuWCETO, HeWCETO, BuObs, BuCTXs, HeObs, HeCTXs, Ben, CTOL"
 
 while (( "$#" ))
 do
