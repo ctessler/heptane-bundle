@@ -18,11 +18,24 @@ function single_file {
 	local bctxs=$(sed -n 's/Bundle Thread Level Switches: \([0-9]\+\).*/\1/p' $file)
 	local sctxs=$(sed -n 's/Serial Thread Level Switches: \([0-9]\+\).*/\1/p' $file)
 
+	local aben;
+	(( aben = $hwcet - $bwceto ))
+	
+	local oben;
+	(( oben = $hobs - $bobs ))
+	if [ "$den" == "0" ]
+	   then
+		   den=1
+	fi
+
 	local ctol;
-	local ben;
-	(( ben = $hobs - $bobs ))
-	(( ctol = ($hobs - $bobs) / ($bctxs - $sctxs) ))
-	echo "$name,$T,$bwceto,$hwcet,$bobs,$bctxs,$hobs,$sctxs,$ben,$ctol"
+	local den;
+	(( den = $bctxs - $sctxs ))
+	(( ctol = ($hobs - $bobs) / $den ))
+	printf "$FMT" \
+	       $name, $T, $bwceto, $hwcet, $aben, $bobs, $bctxs, $hobs, $sctxs, $oben, \
+	       $ctol
+	
 }
 
 
@@ -34,11 +47,16 @@ fi
 THREADS=$1
 shift
 
+
+
 echo "# Terms: "
 echo "#     bmark = benchmark, t = threads, Bu = bundle, He = heptane, obs = observed"
 echo "#     ctx = thread level context switch, ben = Bundle Benefit "
 echo "#     ctol = cycle tolerance"
-echo "# bmark, t, BuWCETO, HeWCETO, BuObs, BuCTXs, HeObs, HeCTXs, Ben, CTOL"
+FMT="%-9s %3s %8s %8s %9s %8s %7s %8s %7s %8s %4s\n"
+printf "# $FMT" bmark, t, BuWCETO, HeWCETO, BenWCETO, BuObs, BuCTXs, HeObs, HeCTXs, BenObs, CTOL
+FMT="%-11s %3s %8s %8s %9s %8s %7s %8s %7s %8s %4s\n" 
+
 
 while (( "$#" ))
 do
