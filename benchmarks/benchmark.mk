@@ -27,6 +27,6 @@ clean: opt=clean
 clean: $(subdirs)
 	rm -rf res*.xml *.pdf ${name}.xml *.log
 	rm -rf ${name}.dot ${name}.html ${name}.jpg core
-	rm -rf ${name}_*.xml annot.xml
-	rm -rf ${name}.exe
+	rm -rf ${name}_*.xml annot.xml ${name}.o ${name}.s ${name}.objdump
+	rm -rf ${name}.readelf ${name}.exe
 
