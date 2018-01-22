@@ -141,25 +141,8 @@ public:
 		  ListDigraph::NodeMap<int> &distances,
 		  node_map_t &prev);
 	void _order(ListDigraph::Node source,
-		    ListDigraph::Node target,
 		    ListDigraph::NodeMap<int> &distances,
 		    node_map_t &prev);
-	void _order_new(ListDigraph::Node source,
-			ListDigraph::NodeMap<int> &distances,
-			node_map_t &prev);
-	void interiorLoopOrder(ListDigraph::Node, pqueue_t&,
-			       ListDigraph::NodeMap<int>&,
-			       node_map_t &);
-	void interiorLoopOrder_old(ListDigraph::Node, pqueue_t&,
-			       ListDigraph::NodeMap<int>&,
-			       node_map_t &);
-	ListDigraph::Node smallestInLoop(ListDigraph::Node cfrg_node,
-					 pqueue_t &pqueue);
-	void iloSuccessorUpdate(int new_distance,
-				pqueue_t &pqueue,
-				ListDigraph::NodeMap<int> &distances,
-				node_map_t &prev,
-				set<ListDigraph::Node> &succ);
 private:
 	CFG &_cfg;
 	CFR *_initial = NULL;
