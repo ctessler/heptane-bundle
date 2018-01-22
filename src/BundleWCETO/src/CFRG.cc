@@ -423,7 +423,7 @@ void CFRG::_order(ListDigraph::Node source,
 	dbg.dec();
 	dbg.flush(ord);
 
-	dout << "Adjustment Pass 1 : " << endl;
+	dout << "Adjustment Pass: " << endl;
 	dbg.inc("→ _ordern: ");
 	for (it = result.begin(); it != result.end(); ++it) {
 		ListDigraph::Node cfrg_node = *it;
@@ -441,7 +441,7 @@ void CFRG::_order(ListDigraph::Node source,
 	}
 	dbg.dec();
 
-	dout << "Longest Paths Pass 1 : " << endl;
+	dout << "Longest Paths Pass: " << endl;
 	dbg.inc("→ _ordern: ");
 	for (it = result.begin(); it != result.end(); ++it) {
 		ListDigraph::Node cfrg_node = *it;
