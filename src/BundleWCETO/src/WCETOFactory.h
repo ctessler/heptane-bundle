@@ -11,9 +11,13 @@ typedef list<ThreadWCETOMap*> PredList;
 class WCETOFactory {
 public:
 	WCETOFactory(CFRG &cfrg) : _cfrg(cfrg) {
+		setThreads(0);
+		setCTXCost(0);
 	}
-	WCETOFactory(CFRG &cfrg, uint32_t threads) : _cfrg(cfrg) {
+	WCETOFactory(CFRG &cfrg, uint32_t threads, uint32_t ctx_cost) :
+		_cfrg(cfrg) {
 		setThreads(threads);
+		setCTXCost(ctx_cost);
 	}
 	/**
 	 * Sets the number of threads the WCETO will be calculated for
@@ -25,6 +29,17 @@ public:
 	}
 	uint32_t getThreads() {
 		return _threads;
+	}
+	/**
+	 * Sets the number of cycles each context switch costs
+	 *
+	 * @param[in] ctx_cost the number of cycles
+	 */
+	void setCTXCost(uint32_t ctx_cost) {
+		_ctx_cost = ctx_cost;
+	}
+	uint32_t getCTXCost() {
+		return _ctx_cost;
 	}
 	/**
 	 * Induces the calculation of WCETO values
@@ -84,7 +99,7 @@ public:
 	DBG dbg;
 	void dumpCFRs();
 private:
-	uint32_t _threads;
+	uint32_t _threads, _ctx_cost;
 	CFRG &_cfrg;
 	CFRDemandMap _cfrt, _loopt, _scratcht;
 
