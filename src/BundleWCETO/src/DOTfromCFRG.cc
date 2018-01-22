@@ -20,14 +20,19 @@ CFRDOT(CFR &cfr, WCETOFactory &fact, int generation, unsigned int threads) {
 	CFG *cfg = cfr.getCFG();
 	ListDigraph::Node cfr_initial = cfr.getInitial();
 	ListDigraph::Node cfg_node = cfr.toCFG(cfr_initial);
+	string switching = "Yes";
+	if (!cfr.getSwitching()) {
+		switching = "No";
+	}
 
 	stringstream label, node;
 	label << "<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\">"
 	      << endl << "\t"
 	      << "<TR><TD COLSPAN=\"2\">CFR: " << cfg->stringNode(cfg_node)
 	      << "</TD></TR>" << endl
-	      << "<TR><TD>Gen.</TD>"
-	      << "<TD>" << generation << "</TD></TR>" << endl
+	      << "<TR><TD>Gen. (Switch)</TD>"
+	      << "<TD>" << generation << " (" << switching
+	                << ")</TD></TR>" << endl
 	      << "<TR><TD>Stack Top</TD>"
 	      << "<TD>" << cfg->getFunction(cfg_node) << "</TD></TR>" << endl
 	      << "<TR><TD>isHead (iters)</TD>"
