@@ -25,6 +25,7 @@ usage(void) {
 	     << "	-m/--threads #	Number of threads to use" << endl
 	     << "	-h/--help	this message" << endl
 	     << "	-t/--trace	enable tracing" << endl
+	     << "	-x/--ctx-cost #	Cycles per context switch" << endl
 	     << "	-v/--verbose	enable verbose output" << endl
 	     << endl;
 }
@@ -41,6 +42,7 @@ main(int argc, char** argv) {
 
 	/* Long form command line options */
 	static struct option long_options[] = {
+		{"ctx-cost", required_argument, NULL, 'x'},
 		{"CFG", required_argument, NULL, 'c'},
 		{"help", no_argument, &hflag, 1},
 		{"threads", required_argument, NULL, 'm'},
@@ -50,11 +52,11 @@ main(int argc, char** argv) {
 	};
 
 	string cfgfile, bcfg_file, base;
-	unsigned int n_threads = 0;
+	unsigned int n_threads = 0, ctx_cost = 0;
 		
 	while (1) {
 		int opt_ind, c;
-		c = getopt_long(argc, argv, "c:hm:tv", long_options, &opt_ind);
+		c = getopt_long(argc, argv, "c:hm:tvx:", long_options, &opt_ind);
 		if (c == -1) {
 			/* End of parsed options */
 			break;
@@ -76,6 +78,9 @@ main(int argc, char** argv) {
 			break;
 		case 't':
 			tflag = 1;
+			break;
+		case 'x':
+			ctx_cost = atoi(optarg);
 			break;
 		case 'v':
 			vflag = 1;
@@ -109,10 +114,16 @@ main(int argc, char** argv) {
 		usage();
 		return -1;
 	}
+	if (ctx_cost == 0) {
+		cout << "No context switch cost [-x] given." << endl;
+		usage();
+		return -1;
+	}
 	
 	cout << "Configuration file: " << cfgfile << endl
 	     << "Bundle CFG file: " << bcfg_file << "\t"
-	     << "Thread Count: " << n_threads << endl;
+	     << "Thread Count: " << n_threads << "\t"
+	     << "Context Switch Cost (in Cycles): " << ctx_cost << endl;
 
 	/*
 	 * Command line arguments have been parsed.
