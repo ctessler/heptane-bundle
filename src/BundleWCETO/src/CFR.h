@@ -11,6 +11,7 @@ class CFR : public CFG {
 public:
 	CFR(CFG &cfg) : CFG(), _cfg(cfg), _to_cfg(*this)
 	{
+		_switching = true;
 		_exe = 0;
 	}
 	/* Returns the CFR membership of this node */
@@ -25,6 +26,7 @@ public:
 	}
 	CFR(CFR &cfr) : CFG(), _cfg(cfr._cfg), _to_cfg(*this)
 	{
+		_switching = true;
 		_exe = 0;
 	}
 	/* Returns a pointer to the CFG which this CFR was extracted from */
@@ -33,6 +35,25 @@ public:
 	/* Gets and sets the Cache */
 	void setCache(Cache *cache) { _cache = cache; }
 	Cache* getCache() { return _cache; }
+
+	/* Gets and sets the switching property of *this* CFR */
+	void setSwitching(bool on=true);
+	bool getSwitching();
+
+	/* WCETO calculation for *this* CFR */
+	uint32_t wceto(uint32_t threads);
+	/* Finds the maximum execution cost of one thread */
+	uint32_t exeCost();
+	/* Finds the cost for loading the cache with all instructions */
+	uint32_t loadCost();
+
+	/*
+	 * ECB calculation and retrieval
+	 *
+	 * Caller of ECBs() must delete the list.
+	 */
+	uint32_t calcECBs();
+	ECBs* getECBs();
 	
 	/*
 	 * Override to prevent nodes from being added without having a node in
@@ -100,28 +121,25 @@ public:
 	friend std::ostream &operator<< (std::ostream &stream, const CFR& cfr);
 	string str() const;
 
-	/* WCETO calculation for *this* CFR */
-	uint32_t wceto(uint32_t threads);
-	/* Finds the maximum execution cost of one thread */
-	uint32_t exeCost();
-	/* Finds the cost for loading the cache with all instructions */
-	uint32_t loadCost();
-
-	/*
-	 * ECB calculation and retrieval
-	 *
-	 * Caller of ECBs() must delete the list.
-	 */
-	uint32_t calcECBs();
-	ECBs* getECBs();
 private:
+	/*
+	 * A note about loop heads of nodes, the CFR stores the CFG node as the
+	 * loop head. This is because the loop head may not be contained within
+	 * the CFR.
+	 */
 	CFG &_cfg;
 	uint32_t _exe;
-	DBG dbg;
-	/*
-	 * Nodes in the CFR hold no information, they are place holders for
-	 * nodes in the CFG.
+	ECBs _ecbs;
+	/* A CFR cannot exist without a cache */
+	Cache *_cache;
+	/**
+	 * CFRs are "switching" or "pass through" switching means it
+	 * forces a thread level context switch, pass through means it
+	 *  does not. This mapping records if it is switching or pass through
 	 */
+	bool _switching;
+	DBG dbg;
+	
 	/* 
 	 * This is the identifier of the CFR (in the CFG) which all nodes belong
 	 * to, the CFR stores the node from the CFG ie 
@@ -134,17 +152,7 @@ private:
 	/* CFG node -> CFR node */
 	map<ListDigraph::Node, ListDigraph::Node> _from_cfg;
 	/* CFR node -> CFG node (that is the head) */
-	map<ListDigraph::Node, ListDigraph::Node> _cfg_head;	
-
-	ECBs _ecbs;
-	/*
-	 * A note about loop heads of nodes, the CFR stores the CFG node as the
-	 * loop head. This is because the loop head may not be contained within
-	 * the CFR.
-	 */
-
-	/* A CFR cannot exist without a cache */
-	Cache *_cache;
+	map<ListDigraph::Node, ListDigraph::Node> _cfg_head;
 
 	uint32_t maxLoads();
 };

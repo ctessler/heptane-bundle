@@ -1,5 +1,15 @@
 #include "CFR.h"
 
+void
+CFR::setSwitching(bool on) {
+	_switching = on;
+}
+
+bool
+CFR::getSwitching() {
+	return _switching;
+}
+
 ListDigraph::Node
 CFR::addNode(ListDigraph::Node from_cfg) {
 	ListDigraph::Node rv = CFG::addNode();
