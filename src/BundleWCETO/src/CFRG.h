@@ -80,6 +80,14 @@ public:
 	 */
 	CFR* getHead(CFR* cfr);
 	ListDigraph::Node getHeadNode(ListDigraph::Node cfrg_node);
+
+	/**
+	 * Returns true if the CFR is preceded by a CFR that is part
+	 * of a loop.
+	 */
+	bool isLoopExit(ListDigraph::Node cfrg_node);
+	bool isLoopExitCFR(CFR *cfr);
+	
 	/**
 	 * Returns true if node a and node b share the same innermost
 	 * loop head. If a and b have no innermost loop head, the

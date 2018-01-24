@@ -52,7 +52,8 @@ main(int argc, char** argv) {
 	};
 
 	string cfgfile, bcfg_file, base;
-	unsigned int n_threads = 0, ctx_cost = 0;
+	unsigned int n_threads = 0;
+	int ctx_cost = -1;
 		
 	while (1) {
 		int opt_ind, c;
@@ -114,7 +115,7 @@ main(int argc, char** argv) {
 		usage();
 		return -1;
 	}
-	if (ctx_cost == 0) {
+	if (ctx_cost == -1) {
 		cout << "No context switch cost [-x] given." << endl;
 		usage();
 		return -1;
@@ -194,7 +195,7 @@ main(int argc, char** argv) {
 		CFRG *cfrg = cfr_fact.getCFRG();
 
 		/* Make a graph before doing WCETO processing */
-		WCETOFactory wceto_fact(*cfrg);		
+		WCETOFactory wceto_fact(*cfrg, n_threads, ctx_cost);		
 		DOTfromCFRG cfrg_nowceto(*cfrg, wceto_fact);
 		ss.str(""); ss << pre << "-cfrg-nowceto.dot";
 		cfrg_nowceto.setPath(ss.str());
@@ -206,14 +207,8 @@ main(int argc, char** argv) {
 		cout << "Ordering CFRs" << endl;
 		cfrg->order();
 
-		/* Drop the WCET table per cache level */
-		EntryFactory entries(*cfrg);
-		ss.str(""); ss << pre << ".entry";
-		entries.setPath(ss.str());
-		entries.produce();
 
 		/* Calculate the WCETO for each CFR */
-		wceto_fact.setThreads(n_threads);
 		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
 		cout << "Calculating WCETO" << endl;
 		wceto_fact.produce();
@@ -227,6 +222,12 @@ main(int argc, char** argv) {
 		string path = cfrg_dot.getPath();
 		JPGFactory cfrg_jpg(path);
 		cfrg_jpg.produce();
+
+		/* Drop the WCET table per cache level */
+		EntryFactory entries(*cfrg);
+		ss.str(""); ss << pre << ".entry";
+		entries.setPath(ss.str());
+		entries.produce();
 
 		/* Produce images for the Control Flow Graphs */
 		dot.produce();

@@ -98,6 +98,48 @@ CFRG::isTopHeadNode(ListDigraph::Node cfrg_node) {
 	return isTopHead(findCFR(cfrg_node));
 }
 
+bool
+CFRG::isLoopExit(ListDigraph::Node cfrg_node) {
+	return isLoopExitCFR(findCFR(cfrg_node));
+}
+bool
+CFRG::isLoopExitCFR(CFR *cfr) {
+	CFRList *plist = preds(cfr);
+	CFRList::iterator it;
+	bool rv = false;
+	for (it = plist->begin(); it != plist->end(); ++it) {
+		CFR* pred_cfr = *it;
+		if (!isLoopPartCFR(pred_cfr)) {
+			/* Predecessor isn't part of a loop */
+			continue;
+		}
+		/* Predecessor belongs to a loop */
+		if (!isLoopPartCFR(cfr)) {
+			/* Easy test */
+			rv = true;
+			break;
+		}
+		/* cfr is part of a loop */
+		if (sameLoop(cfr, pred_cfr)) {
+			/* Both are in the same loop */
+			continue;
+		}
+		if (isHeadCFR(pred_cfr)) {
+			/*
+			 * pred_cfr ---> cfr -+
+			 *  ^   |         ^   |
+			 *  +---+         +---+
+			 */
+			rv = true;
+			break;
+		}
+	}
+	delete plist;
+	return rv;
+}
+
+
+
 CFR*
 CFRG::getHead(CFR* cfr) {
 	ListDigraph::Node cfri = cfr->getInitial();

@@ -8,6 +8,15 @@ EntryFactory::produce() {
 	for ( ; nit != INVALID; ++nit) {
 		ListDigraph::Node node = nit;
 		CFR *cfr = _cfrg.findCFR(node);
+		if (!cfr->getSwitching()) {
+			continue;
+		}
+		if (_cfrg.isLoopPartCFR(cfr)) {
+			CFR *crown = _cfrg.crown(cfr);
+			if (crown != cfr) {
+				continue;
+			}
+		}
 
 		ListDigraph::Node initial = cfr->getInitial();
 		iaddr_t addr = cfr->getAddr(initial);

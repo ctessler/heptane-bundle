@@ -4,6 +4,7 @@
 #include "CFRG.h"
 #include "DBG.h"
 #include "CFRGLFS.h"
+#include "CFRGTopSort.h"
 #include "CFRDemandMap.h"
 
 typedef list<ThreadWCETOMap*> PredList;
@@ -30,8 +31,9 @@ public:
 	uint32_t getThreads() {
 		return _threads;
 	}
-	/**
+	/** 
 	 * Sets the number of cycles each context switch costs
+	 * This is a *per* thread context switch
 	 *
 	 * @param[in] ctx_cost the number of cycles
 	 */
@@ -116,6 +118,10 @@ private:
 	 */
 	void maxMerge(CFRDemand &dem, CFRDemandMap &map, bool includeLoad);
 	uint32_t maxEle(ThreadWCETOMap &dem, uint32_t &idx);
+	void switchPass();
+	void updateSwitching(ListDigraph::Node node,
+			     ListDigraph::NodeMap<bool> &visited);
+	bool shouldSwitch(CFR* cfr);
 };
 
 #endif /* WCETOFACTORY_H */

@@ -276,5 +276,6 @@ CFR::calcECBs() {
 ECBs*
 CFR::getECBs() {
 	ECBs *ecbs = new ECBs(_ecbs);
+	ecbs->sort();
 	return ecbs;
 }

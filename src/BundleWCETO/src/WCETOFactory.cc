@@ -139,32 +139,29 @@ lfs_top_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 void
 WCETOFactory::produce() {
 	dbg.inc("WCETOFactory::produce ");
+
+	switchPass();
 	
 	CFRGLFS lfs(_cfrg, lfs_top_filter, lfs_top_test, lfs_top_work,
 		    (void*) this);
 	CFR *initial = _cfrg.getInitialCFR();
 	lfs.search(initial);
+
 	dbg.dec();
 	dbg.flush(cout);
 }
 #undef dout
 
-#define dout dbg.buf << dbg.start
 uint32_t
 WCETOFactory::value(CFR *cfr) {
-	dbg.inc("WCETOFactory::value ");
 	uint32_t wceto=0;
 	CFRDemand *dmnd = getDemand(cfr);
 	if (!dmnd) {
 		return 0;
 	}
 	wceto = dmnd->getWCETOMap().wceto(_threads);
-
-	dbg.flush(cout);
-	dbg.dec(); 
 	return wceto;
 }
-#undef dout
 
 #define dout dbg.buf << dbg.start
 CFRDemand *
@@ -173,6 +170,7 @@ WCETOFactory::inDemand(CFR* cfr) {
 	CFRDemand *cfrd = _cfrt.present(cfr);
 	if (cfrd) {
 		dout << *cfr << " is present" << endl;
+		dbg.flush(cout); dbg.dec();
 		return cfrd;
 	}
 	cfrd = _cfrt.request(cfr);
@@ -183,6 +181,15 @@ WCETOFactory::inDemand(CFR* cfr) {
 
 	dout << *cfr << " base demandmap: " << endl
 	     << cfrd->str(dbg.start) << endl;
+
+	/* Add the context switch cost (only if it's a switching CFR) */
+	if (cfr->getSwitching()) {
+		for (uint32_t i = 1; i <= _threads; i++) {
+			twmap[i] += _ctx_cost;
+		}
+		dout << *cfr << " demand with switching: " << endl
+		     << cfrd->str(dbg.start) << endl;
+	}
 
 	/* Consider predecessors */
 	CFRList *preds = _cfrg.preds(cfr);
@@ -480,7 +487,7 @@ WCETOFactory::loopDemand(CFR *cfr) {
 		}
 		CFRDemand *pdmnd = scratch.present(pred);
 		dbg.inc("loopDemand pred: ");
-		dout << pdmnd->str(dbg.start) << endl;
+		dbg.buf << pdmnd->str(dbg.start) << endl;
 		/* Find the max WCET value */
 		if (pdmnd->getEXE() > wceto) {
 			wceto = pdmnd->getEXE();
@@ -513,7 +520,7 @@ WCETOFactory::loopDemand(CFR *cfr) {
 		map[i] += piterload * iters;
 	}
 	/* The first thread includes the per iteration load cost in
-	   the initial load, remove the doubl counting */
+	   the initial load, remove the double counting */
 	map[1] -= piterload; 
 	dout << cfrd->getECBs()
 	     << " ECB dupe count: " << dcount << endl;
@@ -684,3 +691,224 @@ WCETOFactory::dumpCFRs() {
 	dbg.dec(); 
 	#undef dout
 }
+
+
+/**
+ * A function that returns if a CFR should remain a switching CFR or not.
+ *
+ * This function may only be called during the WCETO calculation. If
+ * called outside of the WCETO calculation process the result is
+ * unreliable. 
+ *
+ * @param[in] cfr the CFR in question
+ *
+ * @return true if the CFR should be as switching CFR, false if it
+ * should be pass through
+ */
+#define dout dbg.buf << dbg.start
+bool
+WCETOFactory::shouldSwitch(CFR *cfr) {
+	dbg.inc("shouldSwitch: " + cfr->str() + " " );
+	bool rv = false;
+
+	uint32_t B = cfr->getCache()->memLatency();
+	ECBs *ecbs = cfr->getECBs();
+	ecbs->sort();
+	
+	CFRList *preds = _cfrg.preds(cfr);
+	if (preds->size() == 0) {
+		dout << "initial CFR, switching." << endl;
+		rv = true;
+	}
+	
+	CFRList::iterator it;
+	for (it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred_cfr = *it;
+		if (_cfrg.isLoopPartCFR(pred_cfr)) {
+			/* Loop exits are always switched */
+			dout << "is a loop exit, switching." << endl;
+			rv = true;
+			break;
+		}
+		/* Merge the ECBs */
+		ECBs u(*ecbs);
+		ECBs *others = pred_cfr->getECBs();
+		others->sort();
+		u.merge(*others);
+		delete others;
+
+		/* To count only the 2+ occurences */
+		uint32_t dupes = dupeCount(u);
+		uint32_t pcost = dupes * B * _threads;
+		if (pcost > _ctx_cost) {
+			/* Found one that doesn't exceed the CTX cost */
+			dout << *pred_cfr << " has too many conflicts, switching."
+			     << endl;
+			rv = true;
+			break;
+		}
+	}
+	delete preds;
+	delete ecbs;
+
+	if (rv == false) {
+		dout << "pass through CFR" << endl;
+	}
+	
+	dbg.dec();
+	return rv;
+}
+
+class DFSData {
+public:
+	DFSData(WCETOFactory &f, CFRG &c) : fact(f), assigned(c) {
+	}
+	ListDigraph::NodeMap<bool> assigned;
+	WCETOFactory &fact;
+	ECBs eu;
+	CFRList nexts;
+};
+
+/**
+ * The masking function will decide if this CFR can be added to the
+ * pass through region
+ */
+#undef dout
+#define dout fact.dbg.buf << fact.dbg.start
+static bool
+dfs_mask(CFRG &cfrg, CFR *cfr, void *userdata) {
+	DFSData *data = (DFSData *) userdata;
+	WCETOFactory &fact = data->fact;
+	ECBs u(data->eu);
+	fact.dbg.inc("dfs_mask: ");
+	dout << *cfr << " BEGIN" << endl;
+
+	bool rv = true;
+	if (cfrg.isHeadCFR(cfr)) {
+		rv = false;
+	}
+	
+	ListDigraph::Node cfr_node = cfrg.findNode(cfr);
+	ListDigraph::InArcIt ait(cfrg, cfr_node);
+	for ( ; ait != INVALID; ++ait) {
+		ListDigraph::Node pred_node = cfrg.source(ait);
+		CFR *pred_cfr = cfrg.findCFR(pred_node);
+		if (pred_cfr->getSwitching() == false) {
+			/* One predecessor is a pass through, but
+			   decided this CFR would not work. Cannot
+			   change this CFR to a pass through node */
+			rv = false;
+			break;
+		}
+	}
+	dout << *cfr << " END (" << rv << ")" << endl;
+	fact.dbg.dec(); fact.dbg.flush(cout);
+	return rv;
+}
+
+static bool
+dfs_work(CFRG &cfrg, CFR *cfr, void *userdata) {
+	DFSData *data = (DFSData *) userdata;
+	WCETOFactory &fact = data->fact;
+	ListDigraph::Node cfrn = cfrg.findNode(cfr);
+	uint32_t B = cfr->getCache()->memLatency();
+	ECBs u(data->eu);
+
+	fact.dbg.inc("dfs_work: ");
+	dout << *cfr << " BEGIN" << endl;
+	
+	/*
+	 * Check if the successors can be added to this pass through
+	 * region
+	 */
+	ListDigraph::OutArcIt ait(cfrg, cfrn);
+	fact.dbg.inc("succs: ");
+	for ( ; ait != INVALID; ++ait) {
+		ListDigraph::Node succ_node = cfrg.target(ait);
+		CFR *succ_cfr = cfrg.findCFR(succ_node);
+		if (cfrg.isHead(succ_node) && cfrg.isTopHeadNode(succ_node)) {
+			dout << *succ_cfr << " is a loop crown, stopping" << endl;
+			continue;
+		}
+		if (data->assigned[succ_node]) {
+			dout << *succ_cfr << " skipped already assigned" << endl;
+			/* Already assigned switching */
+			continue;
+		}
+		if (cfrg.isLoopExitCFR(succ_cfr)) {
+			dout << *succ_cfr << " loop exit, assigned switching"
+			     << endl;
+			succ_cfr->setSwitching(true);
+			data->assigned[succ_node] = true;
+			continue;
+		}
+		
+		ECBs *ecbs = cfr->getECBs();
+		u.merge(*ecbs);
+		delete ecbs;
+
+		uint32_t dupes = fact.dupeCount(u);
+		uint32_t pcost = dupes * B;
+		dout << *succ_cfr << " pass through cost: " << pcost << endl;
+		if (pcost < fact.getCTXCost()) {
+			dout << *succ_cfr << " assigned pass through" << endl;
+			succ_cfr->setSwitching(false);
+		} else {
+			dout << *succ_cfr << " assigned switching" << endl;
+			succ_cfr->setSwitching(true);
+			data->assigned[succ_node] = true;
+		}
+	}
+	fact.dbg.dec();
+	dout << *cfr << " END" << endl;
+	fact.dbg.dec();
+}
+
+static bool
+dfs_sel(CFRG &cfrg, CFR *cfr, void *userdata) {
+	return false;
+}
+static bool
+dfs_fin(CFRG &cfrg, CFR *cfr, void *userdata) {
+	return false;
+}
+#undef dout
+
+
+#define dout dbg.buf << dbg.start
+void
+WCETOFactory::switchPass() {
+	dbg.inc("switchPass: ");
+
+	CFRGTopSort tops(_cfrg);
+	tops.sort(_cfrg.getInitial());
+	pqueue_t::iterator pit;
+	for (pit = tops.result.begin(); pit != tops.result.end(); ++pit) {
+		ListDigraph::Node node = *pit;
+		CFR *cfr = _cfrg.findCFR(node);
+		if (_cfrg.isLoopPart(node)) {
+			/* Node is part of a loop */
+			if (!_cfrg.isTopHeadNode(node)) {
+				/* Not the loop head */
+				cfr->setSwitching(false);
+				continue;
+			}
+			/* 
+			 * Is a loop head, handle switching update for
+			 * the entire loop
+			 */
+			continue;
+		}
+		DFSData data(*this, _cfrg);
+		CFRGDFS dfs(_cfrg);
+		dfs.setUserData(&data);
+		dfs.setMask(dfs_mask);
+		dfs.setWork(dfs_work);
+		dfs.search(cfr);
+	}
+	
+	
+	dbg.dec(); dbg.flush(cout);
+}
+
+#undef dout
