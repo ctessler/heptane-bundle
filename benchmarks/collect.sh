@@ -31,9 +31,14 @@ function single_file {
 	local ctol;
 	local den;
 	(( den = $bctxs - $sctxs ))
-	(( ctol = ($hobs - $bobs) / $den ))
+	if [ "$den" != "0" ]
+	then
+		(( ctol = ($hobs - $bobs) / $den ))
+	else
+		ctol=0
+	fi
 	printf "$FMT" \
-	       $name, $T, $bwceto, $hwcet, $aben, $bobs, $bctxs, $hobs, $sctxs, $oben, \
+	       $name, $T, $bwceto, $hwcet, $aben, $bobs, $hobs, $bctxs, $sctxs, $oben, \
 	       $ctol
 	
 }
@@ -51,11 +56,12 @@ shift
 
 echo "# Terms: "
 echo "#     bmark = benchmark, t = threads, Bu = bundle, He = heptane, obs = observed"
-echo "#     ctx = thread level context switch, ben = Bundle Benefit "
-echo "#     ctol = cycle tolerance"
-FMT="%-9s %3s %8s %8s %9s %8s %7s %8s %7s %8s %4s\n"
-printf "# $FMT" bmark, t, BuWCETO, HeWCETO, BenWCETO, BuObs, BuCTXs, HeObs, HeCTXs, BenObs, CTOL
-FMT="%-11s %3s %8s %8s %9s %8s %7s %8s %7s %8s %4s\n" 
+echo "#     X = thread level context switch, B+ = Bundle Benefit "
+echo "#     ctol = additional cycle tolerance"
+echo "#     Note: observed times don't include context switch cost cycles" 
+FMT="%-8s %3s %10s %10s %9s %10s %10s %4s %4s %6s %3s\n"
+printf "# $FMT" bmark, t, BuWCETO, HeWCETO, B+WCETO, BuObs, HeObs, BuX, HeX, B+Obs, CTOL
+FMT="%-10s %3s %10s %10s %9s %10s %10s %4s %4s %6s %3s\n" 
 
 
 while (( "$#" ))
