@@ -158,6 +158,10 @@ public:
 	void _order(ListDigraph::Node source,
 		    ListDigraph::NodeMap<int> &distances,
 		    node_map_t &prev);
+
+	/* Debugging function */
+	void dupeCheck();
+      
 private:
 	CFG &_cfg;
 	CFR *_initial = NULL;

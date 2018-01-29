@@ -2,6 +2,8 @@
 
 void
 EntryFactory::produce() {
+	_cfrg.dupeCheck();
+	
 	ofstream ofile(_path.c_str());
 	ofile << "cfrs = (" << endl;
 	ofile << " // (CFR addr, priority, ((succ addr, prio),"
@@ -84,8 +86,8 @@ EntryFactory::nextSwitches(ListDigraph::Node cfrg_node) {
 			}
 			CFR *succ_cfr = _cfrg.findCFR(succ_node);
 			if (succ_cfr->getSwitching()) {
-				cout << *cfr << " has an edge to " << *succ_cfr << endl;
 				list->push_back(succ_cfr);
+				visited[succ_node] = true;
 				continue;
 			}
 			cout << *cfr << " pushing " << *succ_cfr << endl;			

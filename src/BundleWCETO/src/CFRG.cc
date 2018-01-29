@@ -635,3 +635,28 @@ CFRG::topoAdj(pqueue_t &pq, ListDigraph::Node cfrg_node,
 	}
 		
 }
+
+void
+CFRG::dupeCheck() {
+	ListDigraph::NodeMap<bool> visited(*this);
+	stack<ListDigraph::Node> s;
+	s.push(getInitial());
+
+	while (!s.empty()) {
+		ListDigraph::Node node = s.top(); s.pop();
+		visited[node] = true;
+
+		ListDigraph::OutArcIt ait(*this, node);
+		ListDigraph::NodeMap<bool> checked(*this);
+		for ( ; ait != INVALID; ++ait) {
+			ListDigraph::Node succ = target(ait);
+			if (checked[succ] == true) {
+				throw runtime_error("Found a duplicate edge");
+			}
+			checked[succ] = true;
+			if (!visited[node]) {
+				s.push(succ);
+			}
+		}
+	}
+}
