@@ -131,6 +131,13 @@ public:
 	 * Caller must delete the returned list
 	 */
 	CFRList* preds(CFR* cfr);
+	/**
+	 * Returns a list of CFRS that immediately succeed the given
+	 * CFR in the CFRG
+	 *
+	 * Caller must delete the returned list
+	 */
+	CFRList* succs(CFR* cfr);
 
 	/**
 	 * An expensive operation, this finds the CFR based on the

@@ -272,6 +272,18 @@ CFRG::preds(CFR *cfr) {
 	return list;
 }
 
+CFRList*
+CFRG::succs(CFR *cfr) {
+	CFRList *list = new CFRList();
+	ListDigraph::Node cfrg_node = findNode(cfr);
+	for (ListDigraph::OutArcIt iat(*this, cfrg_node); iat != INVALID; ++iat) {
+		ListDigraph::Node pred_node = target(iat);
+		CFR *succ_cfr = findCFR(pred_node);
+		list->push_back(succ_cfr);
+	}
+	return list;
+}
+
 CFR *
 CFRG::findCFRbyCFGNode(ListDigraph::Node node) {
 	if (node == INVALID) {

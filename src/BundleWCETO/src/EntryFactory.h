@@ -16,6 +16,7 @@ public:
 private:
 	CFRG &_cfrg;
 	string _path;
+	CFRList *nextSwitches(ListDigraph::Node cfrg_node);
 };
 
 #endif /* ENTRY_FACTORY_H */
