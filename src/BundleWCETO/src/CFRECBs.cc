@@ -50,3 +50,26 @@ ECBs::ECBs(ECBs *src) {
 	insert(begin(), src->begin(), src->end());
 }
 
+
+uint32_t
+ECBs::dupeCount() {
+	uint32_t rval = 0;
+	ECBs u(*this);
+
+	sort();
+	u.unique();
+	u.sort();
+	ECBs::iterator eit = begin();
+	for (ECBs::iterator uit = u.begin(); uit != u.end(); ++uit) {
+		uint32_t value = *uit;
+		uint32_t count = 0;
+		while (eit != end() && value == *eit) {
+			count++;
+			eit++;
+		}
+		if (count > 1) {
+			rval += count;
+		}
+	}
+	return rval;
+}

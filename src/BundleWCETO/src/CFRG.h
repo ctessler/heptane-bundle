@@ -140,6 +140,30 @@ public:
 	CFRList* succs(CFR* cfr);
 
 	/**
+	 * Returns a list of CFRs that are in the loop of the given
+	 * CFR @param{cfr} (which is a loop head)
+	 *
+	 * If @param{cfr} contains an embedded loop, cfr_b, cfr_b will
+	 * be included in the return list. It is the callers
+	 * responsibility to call isHeadCFR(cfr_b) before handling
+	 * cfr_b
+	 *
+	 * Caller must delete the returned list
+	 */
+	CFRList* inLoopOfCFR(CFR *cfr);
+	
+	/**
+	 * Returns a list of CFRs that are one-hop outside of the
+	 * loop of the loop head CFR @param{cfr}
+	 *
+	 * If @param{cfr} contains an embedded loop it is not
+	 * considered an exit.
+	 *
+	 * Caller must delete the returned list
+	 */
+	CFRList* exitOfCFR(CFR *cfr);
+
+	/**
 	 * An expensive operation, this finds the CFR based on the
 	 * node from the *CFG*
 	 *
@@ -161,7 +185,6 @@ public:
 
 	/* Debugging function */
 	void dupeCheck();
-      
 private:
 	CFG &_cfg;
 	CFR *_initial = NULL;

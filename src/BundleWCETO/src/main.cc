@@ -15,6 +15,7 @@ using namespace std;
 #include "DOTfromCFRG.h"
 #include "EntryFactory.h"
 #include "WCETOFactory.h"
+#include "LPFactory.h"
 
 void
 usage(void) {
@@ -195,6 +196,8 @@ main(int argc, char** argv) {
 		CFRG *cfrg = cfr_fact.getCFRG();
 
 		/* Make a graph before doing WCETO processing */
+		LPFactory lp_fact(cfrg, n_threads, ctx_cost, pre + ".lp");
+		lp_fact.produce();
 		WCETOFactory wceto_fact(*cfrg, n_threads, ctx_cost);		
 		DOTfromCFRG cfrg_nowceto(*cfrg, wceto_fact);
 		ss.str(""); ss << pre << "-cfrg-nowceto.dot";

@@ -179,6 +179,11 @@ CFRG::sameLoop(CFR* a, CFR *b) {
 }
 
 
+/**
+ * Returns true if cfr is in the loop of head
+ *
+ * Returns false if cfr is a loop embedded within the loop of head.
+ */
 bool
 CFRG::inLoop(CFR* head, CFR* cfr) {
 	if (head == cfr) {
@@ -283,6 +288,89 @@ CFRG::succs(CFR *cfr) {
 	}
 	return list;
 }
+
+typedef struct dfs_iloc_data {
+	CFRList *list;
+	CFR *head;
+} dfs_iloc_data_t;
+
+static bool
+dfs_iloc_mask(CFRG &cfrg, CFR *cfr, void *userdata) {
+	dfs_iloc_data_t *data = (dfs_iloc_data_t *)userdata;
+	CFR *head = data->head;
+
+	return (cfrg.inLoop(head, cfr));
+}
+
+static bool
+dfs_iloc_work(CFRG &cfrg, CFR *cfr, void *userdata) {
+	dfs_iloc_data_t *data = (dfs_iloc_data_t *)userdata;
+	CFR *head = data->head;
+	CFRList *list = data->list;
+
+	cout << "ILOCWORK: Adding " << cfr->str() << " to list" << endl;
+	list->push_back(cfr);
+	cout << "ILOCWORK: list size: " << list->size() << endl;
+}
+
+CFRList*
+CFRG::inLoopOfCFR(CFR *cfr) {
+	CFRList *list = new CFRList();
+	dfs_iloc_data_t data;
+	data.list = list;
+	data.head = cfr;
+
+	/* Use a depth first search to find the nodes in the loop */
+	CFRGDFS dfs(*this);
+	dfs.setMask(dfs_iloc_mask);
+	dfs.setWork(dfs_iloc_work);
+	dfs.setUserData(&data);
+	dfs.search(cfr);
+
+	
+	return list;
+}
+
+
+static bool
+dfs_eoc_work(CFRG &cfrg, CFR *cfr, void *userdata) {
+	dfs_iloc_data_t *data = (dfs_iloc_data_t *)userdata;
+	CFR *head = data->head;
+	CFRList *list = data->list;
+
+	if (cfrg.inDerivedLoop(head, cfr)) {
+		/* In the loop */
+		return true;
+	}
+	
+	CFRList *preds = cfrg.preds(cfr);
+	CFRList::iterator it;
+	for (it = preds->begin(); it != preds->end(); ++it) {
+		CFR *pred = *it;
+		if (cfrg.inDerivedLoop(head, pred)) {
+			list->push_back(cfr);
+			break;
+		}
+	}
+	delete preds;
+}
+
+CFRList*
+CFRG::exitOfCFR(CFR *cfr) {
+	CFRList *list = new CFRList();
+	dfs_iloc_data_t data;
+	data.list = list;
+	data.head = cfr;
+
+	/* Use a depth first search to find the nodes outside the loop */
+	CFRGDFS dfs(*this);
+	dfs.setWork(dfs_eoc_work);
+	dfs.setUserData(&data);
+	dfs.search(cfr);
+	
+	return list;
+}
+
 
 CFR *
 CFRG::findCFRbyCFGNode(ListDigraph::Node node) {
@@ -660,3 +748,4 @@ CFRG::dupeCheck() {
 		}
 	}
 }
+
