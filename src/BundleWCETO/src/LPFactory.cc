@@ -53,6 +53,7 @@ LPFactory::produce() {
 	}
 	lpf << ";" << endl;
 
+	#if 0
 	lpf << "int i";
 	for (ListDigraph::NodeIt nit(*_cfrg); nit != INVALID; ++nit) {
 		ListDigraph::Node cfr_node = nit;
@@ -66,6 +67,7 @@ LPFactory::produce() {
 		
 	}
 	lpf << ";" << endl;
+	#endif
 
 	lpf.close();
 }
@@ -220,10 +222,13 @@ LPFactory::makeLoopWCETO(CFR *cfr) {
 		CFR *in_cfr = *it;
 		obj << endl << "\t\t+ ";
 		string in_id = makeId(in_cfr);
+		if (in_cfr != cfr && _cfrg->isHeadCFR(in_cfr)) {
+			in_id = makeFalseId(in_cfr);
+		}
 		obj << iters << " " << in_id << ".c ";
 	}
 	obj << ";" << endl;
-	obj << makeInnerWCETO(cfr);
+	obj << makeInnerWCETO(cfr) << endl;
 	delete list;
 
 	return obj.str();
@@ -235,7 +240,7 @@ LPFactory::makeInnerWCETO(CFR *cfr) {
 	string id = makeId(cfr);
 	ct << "\t/* WCETO */" << endl << "\t";
 	ct << id << ".c = "
-	   << cfr->exeCost() << " " << id << ".t " << id << ".b;";
+	   << cfr->exeCost() << " " << id << ".t;";
 
 	return ct.str();
 }
@@ -320,6 +325,9 @@ LPFactory::makeInnerPredThread(CFR *cfr) {
 			continue;
 		}
 		string pred_id = makeId(pred_cfr);
+		if (pred_cfr != head && _cfrg->isHeadCFR(pred_cfr)) {
+			pred_id = makeFalseId(pred_cfr);
+		}
 		ct << endl << "\t\t";
 		if (it != list->begin()) {
 			ct << "+ ";
@@ -398,6 +406,25 @@ LPFactory::makeLoopSuccThread(CFR *cfr) {
 		ct << endl << "\t\t= " << fake << ".t;";
 	}
 	delete list;
+	int count=0;
+	list = _cfrg->succs(cfr);
+	for (it = list->begin(); it != list->end(); ++it) {
+		CFR *succ_cfr = *it;
+		if (_cfrg->getHead(succ_cfr) != cfr) {
+			continue;
+		}
+		++count;
+		string succ_id = makeId(succ_cfr);
+		ct << endl << "\t";
+		if (it != list->begin()) {
+			ct << " + ";
+		}
+		ct << id << "." << succ_id << ".t";
+	}
+	if (count > 0) {
+		ct << endl << "\t\t= " << fake << ".t;";
+	}
+	delete list;
 	
 	return ct.str();
 }
@@ -407,6 +434,32 @@ LPFactory::makeInnerSuccThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 
+	ct << "\t/* Successor (inner) Threads */";
+
+	CFR *head = _cfrg->getHead(cfr);
+	CFRList *list = _cfrg->succs(cfr);
+	CFRList::iterator it;
+	int count = 0;
+	for (it = list->begin(); it != list->end(); ++it) {
+		CFR *succ = *it;
+		string succ_id = makeId(succ);
+		if (_cfrg->getHead(succ) != head) {
+			/* Outside of this loop */
+			continue;
+		}
+		count++;
+		if (_cfrg->isHeadCFR(succ)) {
+			succ_id = makeFalseId(succ);
+		}
+		ct << endl << "\t";
+		if (it != list->begin()) {
+			ct << "\t+ ";
+		}
+		ct << id << "." << succ_id << ".t " << endl;
+	}
+	if (count > 0) {
+		ct << "\t\t= " << id << ".t;";
+	}
 	return ct.str();
 }
 
@@ -429,9 +482,12 @@ LPFactory::makeLoopBin(CFR *cfr) {
 	string fake = makeFalseId(cfr);
 
 	ct << "\t/* Selector (False Head) */" << endl << "\t";
-	ct << fake << ".b <= " << fake << ".t;" << endl;
+	ct << fake << ".b <= " << fake << ".t;";
+	#if 0
+	ct << endl;
 	ct << "\t/* Selector */" << endl << "\t";	
 	ct << id << ".b <= " << id << ".t;";
+	#endif
 
 	return ct.str();
 }
