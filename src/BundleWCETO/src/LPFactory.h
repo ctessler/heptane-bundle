@@ -38,16 +38,24 @@ private:
 
 	/* Returns an identifier for a CFR */
 	string makeId(CFR *cfr);
+	string makeFalseId(CFR *cfr);	
 	string makeObjective();
 	/* The constraint for the CFR's WCETO */
 	string makeWCETO(CFR *cfr);
 	string makeLoopWCETO(CFR *cfr);
+	string makeInnerWCETO(CFR *cfr);
 	/* The constraints for the boolean selector variable */
 	string makeBin(CFR *cfr);
+	string makeLoopBin(CFR *cfr);
+	string makeInnerBin(CFR *cfr);	
 	/* The sum of predecessors threads contributions */
 	string makePredThread(CFR *cfr);
+	string makeLoopPredThread(CFR *cfr);
+	string makeInnerPredThread(CFR *cfr);
 	/* The sum of successor threads contributions */	
 	string makeSuccThread(CFR *cfr);
+	string makeLoopSuccThread(CFR *cfr);
+	string makeInnerSuccThread(CFR *cfr);
 	
 	wceto_type_t findType(CFR *cfr);
 	

@@ -12,12 +12,32 @@ LPFactory::produce() {
 	for (ListDigraph::NodeIt nit(*_cfrg); nit != INVALID; ++nit) {
 		ListDigraph::Node cfr_node = nit;
 		CFR *cfr = _cfrg->findCFR(cfr_node);
-		lpf << "/* " << cfr->str() << "*/" << endl;
-		lpf << makeWCETO(cfr) << endl;
-		lpf << makePredThread(cfr) << endl;
-		lpf << makeSuccThread(cfr) << endl;
-		lpf << makeBin(cfr) << endl;
-		lpf << endl;
+		switch (findType(cfr)) {
+		case PLAIN:
+			lpf << "/* PLAIN " << cfr->str() << "*/" << endl;
+			lpf << makeWCETO(cfr) << endl;
+			lpf << makePredThread(cfr) << endl;
+			lpf << makeSuccThread(cfr) << endl;
+			lpf << makeBin(cfr) << endl << endl;
+			break;
+		case LOOP:
+			lpf << "/* LOOP HEAD " << cfr->str() << "*/" << endl;
+			lpf << makeLoopWCETO(cfr) << endl;
+			lpf << makeLoopPredThread(cfr) << endl;
+			lpf << makeLoopSuccThread(cfr) << endl;
+			lpf << makeLoopBin(cfr) << endl << endl;			
+			break;
+		case SKIP:
+			lpf << "/* INNER " << cfr->str() << "*/" << endl;
+			lpf << makeInnerWCETO(cfr) << endl;
+			lpf << makeInnerPredThread(cfr) << endl;
+			lpf << makeInnerSuccThread(cfr) << endl;
+			lpf << makeInnerBin(cfr) << endl << endl;
+			break;
+		default:
+			throw runtime_error("Unknown type");			
+		}
+		
 	}
 
 	lpf << "/* -- Variable Types -- */" << endl;
@@ -26,6 +46,24 @@ LPFactory::produce() {
 		ListDigraph::Node cfr_node = nit;
 		CFR *cfr = _cfrg->findCFR(cfr_node);
 		lpf << "," << endl << "\t" << makeId(cfr) << ".b";
+		if (_cfrg->isHeadCFR(cfr)) {
+			lpf << "," << endl << "\t" << makeFalseId(cfr) << ".b";
+		}
+		
+	}
+	lpf << ";" << endl;
+
+	lpf << "int i";
+	for (ListDigraph::NodeIt nit(*_cfrg); nit != INVALID; ++nit) {
+		ListDigraph::Node cfr_node = nit;
+		CFR *cfr = _cfrg->findCFR(cfr_node);
+		lpf << "," << endl << "\t" << makeId(cfr) << ".c";
+		lpf << "," << endl << "\t" << makeId(cfr) << ".t";		
+		if (_cfrg->isHeadCFR(cfr)) {
+			lpf << "," << endl << "\t" << makeFalseId(cfr) << ".c";
+			lpf << "," << endl << "\t" << makeFalseId(cfr) << ".t";			
+		}
+		
 	}
 	lpf << ";" << endl;
 
@@ -38,7 +76,7 @@ LPFactory::makeId(CFR *cfr) {
 	ListDigraph::Node cfr_initial = cfr->getInitial();
 	ListDigraph::Node cfg_node = cfr->toCFG(cfr_initial);
 
-
+	
 
 	FunctionCall call = cfg->getFunction(cfg_node);
 	string fstr = call.str();
@@ -51,7 +89,22 @@ LPFactory::makeId(CFR *cfr) {
 	#endif 
 	
 	stringstream _id;
+	#if 0
 	_id << fstr << "_" << cfg->stringAddr(cfg_node);
+	#endif
+	_id << "n" << cfg->id(cfg_node) << "_" << cfg->stringAddr(cfg_node);
+
+	return _id.str();
+}
+
+string
+LPFactory::makeFalseId(CFR *cfr) {
+	CFG *cfg = cfr->getCFG();
+	ListDigraph::Node cfr_initial = cfr->getInitial();
+	ListDigraph::Node cfg_node = cfr->toCFG(cfr_initial);
+
+	stringstream _id;
+	_id << "f" << cfg->id(cfg_node) << "_" << cfg->stringAddr(cfg_node);
 
 	return _id.str();
 }
@@ -70,7 +123,7 @@ LPFactory::makeObjective() {
 			obj << "+ " << makeId(cfr) << ".c ";
 			break;
 		case LOOP:
-			obj << "+ " << makeId(cfr) << ".c ";
+			obj << "+ " << makeFalseId(cfr) << ".c ";
 			break;
 		case SKIP:
 			break;
@@ -79,7 +132,6 @@ LPFactory::makeObjective() {
 	obj << ";";
 
 	return obj.str();
-	
 }
 
 
@@ -88,51 +140,61 @@ LPFactory::findType(CFR *cfr) {
 	ListDigraph::Node cfr_initial = cfr->getInitial();
 	ListDigraph::Node cfg_node = cfr->toCFG(cfr_initial);
 
+	if (cfr->isHead(cfr_initial)) {
+		return LOOP;
+	}
 	if (cfr->getHead(cfr_initial) != INVALID) {
 		/* This CFR belongs to another loop */
 		return SKIP;
-	}
-	if (cfr->isHead(cfr_initial)) {
-		return LOOP;
 	}
 	return PLAIN;
 }
 
 
+/**
+ * 
+ *
+ */
 string
 LPFactory::makeWCETO(CFR *cfr) {
-	stringstream wceto;
-	string id = makeId(cfr);
 	switch(findType(cfr)) {
 	case PLAIN:
-		wceto << id << ".c = "
-		      << cfr->loadCost() << " " << id << ".b + "
-		      << cfr->exeCost() << " " << id << ".t;";
 		break;
 	case LOOP:
-		return makeLoopWCETO(cfr);
-		break;
 	case SKIP:
-		wceto << id << ".c = 0;";
-		break;
 	case ERROR:
 	default:
 		throw runtime_error("Unknown type");
 	}
-	
+
+	stringstream wceto;
+	string id = makeId(cfr);
+	wceto << "\t/* WCETO */" << endl;
+	wceto << "\t" << id << ".c = "
+	      << cfr->loadCost() << " " << id << ".b + "
+	      << cfr->exeCost() << " " << id << ".t;";
+
 	return wceto.str();
 }
 
 string
 LPFactory::makeLoopWCETO(CFR *cfr) {
+	switch(findType(cfr)) {
+	case LOOP:
+		break;
+	case PLAIN:
+	case SKIP:
+	case ERROR:
+	default:
+		throw runtime_error("Unknown type");
+	}
 	string id = makeId(cfr);
+	string fake = makeFalseId(cfr); 
 	stringstream obj;
-
-	obj << "/* Loop head WCETO */" << endl;
+	obj << "\t/* Loop WCETO ";
 
 	/* Get the maximum number of iterations */
 	uint32_t iters = cfr->getIters(cfr->getInitial());
-
 	/* Make a set of ECBs */
 	ECBs ecbs;
 	
@@ -148,48 +210,42 @@ LPFactory::makeLoopWCETO(CFR *cfr) {
 		ecbs.sort();
 		delete in_ecbs;
 	}
-	obj << "/* ECBs: " << ecbs.str() << " */" << endl;
+	obj << "ECBs[" <<ecbs.size() << "]: " << ecbs.str() << " */" << endl;
 	uint32_t brt = cfr->getCache()->memLatency();
 	uint32_t dupeC = ecbs.dupeCount();
-	obj << id << ".c = ";
-	obj << ecbs.size() * brt << " " << id << ".b"
-	    << " + " << iters * dupeC * brt << " ";
+	obj << "\t" << fake << ".c = ";
+	obj << ecbs.size() * brt << " " << fake << ".b + "
+	    << iters * dupeC * brt << " ";
 	for (it = list->begin(); it != list->end(); ++it) {
 		CFR *in_cfr = *it;
-		obj << endl << "\t+ ";
-		if (in_cfr == cfr) {
-			/* special case for the head of the loop */
-			obj << iters * in_cfr->exeCost() << " " << id << ".t";
-		} else {
-			string in_id = makeId(in_cfr);
-			obj << iters << " " << in_id << ".c ";
-		}
+		obj << endl << "\t\t+ ";
+		string in_id = makeId(in_cfr);
+		obj << iters << " " << in_id << ".c ";
 	}
 	obj << ";" << endl;
-	obj << "/*    In loop WCET values */" << endl;
-	/* WCET assignments for individual nodes of the loop */
-	for (it = list->begin(); it != list->end(); ++it) {
-		CFR *in_cfr = *it;
-		if (in_cfr == cfr) {
-			/* Newp, not the startnig node */
-			continue;
-		}
-		string id = makeId(in_cfr);
-		obj << id << ".c = " << in_cfr->exeCost()
-		    << " " << id << ".t " << id << ".b;" << endl;
-	}
+	obj << makeInnerWCETO(cfr);
 	delete list;
 
 	return obj.str();
+}
 
+string
+LPFactory::makeInnerWCETO(CFR *cfr) {
+	stringstream ct;
+	string id = makeId(cfr);
+	ct << "\t/* WCETO */" << endl << "\t";
+	ct << id << ".c = "
+	   << cfr->exeCost() << " " << id << ".t " << id << ".b;";
+
+	return ct.str();
 }
 
 string
 LPFactory::makePredThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
-	ct << "/* Predecessor Threads */" << endl;
-	ct << id << ".t = ";
+	ct << "\t/* Predecessor Threads */" << endl;
+	ct << "\t" << id << ".t = ";
 
 	if (_cfrg->getInitialCFR() == cfr) {
 		ct << "m";
@@ -201,19 +257,74 @@ LPFactory::makePredThread(CFR *cfr) {
 	CFRList::iterator it = list->begin();
 	for ( ; it != list->end(); ++it) {
 		CFR *pred_cfr = *it;
-		if (_cfrg->sameLoop(cfr, pred_cfr)) {
-			string pred_id = makeId(pred_cfr);
-			ct << endl << "\t";
-			if (it != list->begin()) {
-				ct << "+ ";
-			}
-			ct << pred_id << "." << id << ".t ";
+		ct << endl << "\t\t";
+		if (it != list->begin()) {
+			ct << "+ ";
+		}
+		if (_cfrg->isHeadCFR(pred_cfr) ||
+		    !_cfrg->sameLoop(cfr, pred_cfr)) {
+			pred_cfr = _cfrg->crown(pred_cfr);
+			ct << makeFalseId(pred_cfr) << "." << id << ".t";
 			continue;
 		}
-		/* Not in the same loop level */
-		if (_cfrg->isLoopPartCFR(pred_cfr)) {
-			pred_cfr = _cfrg->crown(pred_cfr);
+		
+		string pred_id = makeId(pred_cfr);
+		ct << pred_id << "." << id << ".t";
+	}
+	delete list;
+	ct << ";";
+	return ct.str();
+}
+
+string
+LPFactory::makeLoopPredThread(CFR *cfr) {
+	stringstream ct;
+	string id = makeId(cfr);
+	string fake = makeFalseId(cfr);
+	ct << "\t/* Loop (False Head) Predecessor Thread Limit */" << endl;
+	ct << "\t" << fake << ".t = ";
+	CFRList *list = _cfrg->preds(cfr);
+	CFRList::iterator it = list->begin();
+	for ( ; it != list->end(); ++it) {
+		CFR *pred_cfr = *it;
+		if (_cfrg->inLoop(cfr, pred_cfr)) {
+			continue;
 		}
+		string pred_id = makeId(pred_cfr);
+		ct << endl << "\t\t";
+		if (it != list->begin()) {
+			ct << "+ ";
+		}
+		ct << pred_id << "." << fake << ".t";
+	}
+	delete list;
+	ct << ";" << endl;
+
+	ct << "\t/* Loop Head Predecessor Thread Limit */" << endl;
+	ct << "\t" << id << ".t = " << fake << ".t;";
+	return ct.str();
+}
+
+string
+LPFactory::makeInnerPredThread(CFR *cfr) {
+	stringstream ct;
+	string id = makeId(cfr);
+	ct << "\t/* Inner Predecessor Thread Limit */" << endl;
+	ct << "\t" << id << ".t = ";
+	CFRList *list = _cfrg->preds(cfr);
+	CFRList::iterator it = list->begin();
+	CFR *head = _cfrg->getHead(cfr);
+	for ( ; it != list->end(); ++it) {
+		CFR *pred_cfr = *it;
+		if (!_cfrg->inLoop(head, pred_cfr)) {
+			continue;
+		}
+		string pred_id = makeId(pred_cfr);
+		ct << endl << "\t\t";
+		if (it != list->begin()) {
+			ct << "+ ";
+		}
+		ct << pred_id << "." << id << ".t";
 	}
 	delete list;
 	ct << ";";
@@ -224,17 +335,16 @@ string
 LPFactory::makeSuccThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
-	ct << "/* Successor Threads */" << endl;
+	ct << "\t/* Successor Threads */";
 
 	CFRList *list = NULL;
 	switch(findType(cfr)) {
 	case PLAIN:
+	case SKIP:
 		list = _cfrg->succs(cfr);
 		break;
 	case LOOP:
 		list = _cfrg->exitOfCFR(cfr);
-		break;
-	case SKIP:
 		break;
 	case ERROR:
 	default:
@@ -250,12 +360,53 @@ LPFactory::makeSuccThread(CFR *cfr) {
 	for (it = list->begin(); it != list->end(); ++it) {
 		CFR *succ = *it;
 		string succ_id = makeId(succ);
+		ct << endl << "\t";
 		if (it != list->begin()) {
-			ct << "+ ";
+			ct << "\t+ ";
+		}
+
+		if (_cfrg->isHeadCFR(succ) ||
+		    !_cfrg->sameLoop(cfr, succ)) {
+			succ = _cfrg->crown(succ);
+			ct << id << "." << makeFalseId(succ) << ".t" << endl;
+			continue;
 		}
 		ct << id << "." << succ_id << ".t " << endl;
 	}
-	ct << "\t= " << id << ".t;";
+	ct << "\t\t= " << id << ".t;";
+	return ct.str();
+}
+
+string
+LPFactory::makeLoopSuccThread(CFR *cfr) {
+	stringstream ct;
+	string id = makeId(cfr);
+	string fake = makeFalseId(cfr);
+	ct << "\t/* Loop (False Head) Successor Thread Limit */";
+	CFRList *list = _cfrg->exitOfCFR(cfr);
+	CFRList::iterator it = list->begin();
+	for ( ; it != list->end(); ++it) {
+		CFR *succ_cfr = *it;
+		string succ_id = makeId(succ_cfr);
+		ct << endl << "\t";
+		if (it != list->begin()) {
+			ct << " + ";
+		}
+		ct << fake << "." << succ_id << ".t";
+	}
+	if (list->size() > 0) {
+		ct << endl << "\t\t= " << fake << ".t;";
+	}
+	delete list;
+	
+	return ct.str();
+}
+
+string
+LPFactory::makeInnerSuccThread(CFR *cfr) {
+	stringstream ct;
+	string id = makeId(cfr);
+
 	return ct.str();
 }
 
@@ -264,9 +415,32 @@ LPFactory::makeBin(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 
-	ct << "/* Selector */" << endl;
+	ct << "\t/* Selector */" << endl << "\t";
 	ct << id << ".b <= " << id << ".t;";
 
+
+	return ct.str();
+}
+
+string
+LPFactory::makeLoopBin(CFR *cfr) {
+	stringstream ct;
+	string id = makeId(cfr);
+	string fake = makeFalseId(cfr);
+
+	ct << "\t/* Selector (False Head) */" << endl << "\t";
+	ct << fake << ".b <= " << fake << ".t;" << endl;
+	ct << "\t/* Selector */" << endl << "\t";	
+	ct << id << ".b <= " << id << ".t;";
+
+	return ct.str();
+}
+
+string
+LPFactory::makeInnerBin(CFR *cfr) {
+	stringstream ct;
+
+	ct << "\t/* Selector (Inner) */";
 
 	return ct.str();
 }

@@ -99,6 +99,8 @@ public:
 	bool sameLoop(CFR *a, CFR *b);
 	/**
 	 * Returns true if the cfr is in the loop started by the heading cfr
+	 *
+	 * Also returns true if head == cfr
 	 */
 	bool inLoop(CFR* head, CFR* cfr);
 	bool inLoopNode(ListDigraph::Node cfrg_head_node,
