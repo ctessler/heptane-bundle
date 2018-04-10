@@ -53,6 +53,8 @@ CFRDOT(CFR &cfr, WCETOFactory &fact, int generation, unsigned int threads) {
 	}
 	label << "<TR><TD>Single EXE</TD><TD>" << (dmnd ? dmnd->getEXE() :0)
 	      << "</TD></TR>" << endl
+	      << "<TR><TD>1-Thread EXE</TD><TD>" << cfr.exeCost()
+	      << "</TD></TR>" << endl
 	      << "<TR><TD>Load Cost</TD><TD>" << (dmnd ? dmnd->getLoad() : 0)
 	      << "</TD></TR>" << endl
 	      << "<TR><TD>Demand ECBs</TD><TD>" << cfr_ecb 
