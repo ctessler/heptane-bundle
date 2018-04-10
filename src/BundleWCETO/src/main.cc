@@ -228,11 +228,9 @@ main(int argc, char** argv) {
 
 		/* Drop the WCET table per cache level */
 		EntryFactory entries(*cfrg);
-		/*
-		ss.str(""); ss << pre << ".entry";
+		ss.str(""); ss << pre << ".entry-w-unswitched";
 		entries.setPath(ss.str());
 		entries.produce();
-		*/
 		entries.setPath(pre + ".entry");
 		entries.produceAllSwitched();
 		

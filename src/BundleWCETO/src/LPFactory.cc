@@ -149,9 +149,9 @@ LPFactory::makeWCETO(CFR *cfr) {
 	string id = makeId(cfr);
 	wceto << "\t/* WCETO */" << endl;
 	wceto << "\t" << id << ".c = "
-	      << cfr->loadCost() << " " << id << ".b + "
-	      << cfr->exeCost() << " " << id << ".t;";
-
+	      << cfr->loadCost() << " " << id << ".b + " /* Memory Load Cost */
+	      << cfr->exeCost() << " " << id << ".t + "  /* Execution cost */
+	      << _ctx_cost << " " << id << ".t;";        /* Context switch cost */
 	return wceto.str();
 }
 
@@ -216,7 +216,8 @@ LPFactory::makeInnerWCETO(CFR *cfr) {
 	string id = makeId(cfr);
 	ct << "\t/* WCETO */" << endl << "\t";
 	ct << id << ".c = "
-	   << cfr->exeCost() << " " << id << ".t;";
+	   << cfr->exeCost() << " " << id << ".t " /* Execution cost */
+	   << _ctx_cost << " " << id << ".t;";     /* Context switch cost */
 
 	return ct.str();
 }
