@@ -52,23 +52,6 @@ LPFactory::produce() {
 		
 	}
 	lpf << ";" << endl;
-
-	#if 0
-	lpf << "int i";
-	for (ListDigraph::NodeIt nit(*_cfrg); nit != INVALID; ++nit) {
-		ListDigraph::Node cfr_node = nit;
-		CFR *cfr = _cfrg->findCFR(cfr_node);
-		lpf << "," << endl << "\t" << makeId(cfr) << ".c";
-		lpf << "," << endl << "\t" << makeId(cfr) << ".t";		
-		if (_cfrg->isHeadCFR(cfr)) {
-			lpf << "," << endl << "\t" << makeFalseId(cfr) << ".c";
-			lpf << "," << endl << "\t" << makeFalseId(cfr) << ".t";			
-		}
-		
-	}
-	lpf << ";" << endl;
-	#endif
-
 	lpf.close();
 }
 
@@ -85,15 +68,8 @@ LPFactory::makeId(CFR *cfr) {
 	replace(fstr.begin(), fstr.end(), ' ', '_');
 	replace(fstr.begin(), fstr.end(), ':', '_');
 	fstr.erase(std::remove(fstr.begin(), fstr.end(), ','), fstr.end());
-	#if 0
-	fstr.erase(std::remove(fstr.begin(), fstr.end(), '['), fstr.end());
-	fstr.erase(std::remove(fstr.begin(), fstr.end(), ']'), fstr.end());
-	#endif 
 	
 	stringstream _id;
-	#if 0
-	_id << fstr << "_" << cfg->stringAddr(cfg_node);
-	#endif
 	_id << "n" << cfg->id(cfg_node) << "_" << cfg->stringAddr(cfg_node);
 
 	return _id.str();
@@ -493,11 +469,6 @@ LPFactory::makeLoopBin(CFR *cfr) {
 
 	ct << "\t/* Selector (False Head) */" << endl << "\t";
 	ct << fake << ".b <= " << fake << ".t;";
-	#if 0
-	ct << endl;
-	ct << "\t/* Selector */" << endl << "\t";	
-	ct << id << ".b <= " << id << ".t;";
-	#endif
 
 	return ct.str();
 }
