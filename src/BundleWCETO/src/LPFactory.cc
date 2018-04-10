@@ -316,13 +316,19 @@ LPFactory::makeInnerPredThread(CFR *cfr) {
 	string id = makeId(cfr);
 	ct << "\t/* Inner Predecessor Thread Limit */" << endl;
 	ct << "\t" << id << ".t = ";
+
 	CFRList *list = _cfrg->preds(cfr);
 	CFRList::iterator it = list->begin();
 	CFR *head = _cfrg->getHead(cfr);
 	for ( ; it != list->end(); ++it) {
 		CFR *pred_cfr = *it;
-		if (!_cfrg->inLoop(head, pred_cfr)) {
+		if (!_cfrg->inDerivedLoop(head, pred_cfr)) {
+			/* Predecessor comes from outside of the loop */
 			continue;
+		}
+		while (!_cfrg->inLoop(head, pred_cfr)) {
+			/* Find the same loop level predecessor */
+			pred_cfr = _cfrg->getHead(pred_cfr);
 		}
 		string pred_id = makeId(pred_cfr);
 		if (pred_cfr != head && _cfrg->isHeadCFR(pred_cfr)) {
@@ -408,6 +414,7 @@ LPFactory::makeLoopSuccThread(CFR *cfr) {
 	delete list;
 	int count=0;
 	list = _cfrg->succs(cfr);
+	ct << "\t/* Loop Head Node Successor Thread Limit */";
 	for (it = list->begin(); it != list->end(); ++it) {
 		CFR *succ_cfr = *it;
 		if (_cfrg->getHead(succ_cfr) != cfr) {
@@ -415,6 +422,9 @@ LPFactory::makeLoopSuccThread(CFR *cfr) {
 		}
 		++count;
 		string succ_id = makeId(succ_cfr);
+		if (_cfrg->isHeadCFR(succ_cfr)) {
+			succ_id = makeFalseId(succ_cfr);
+		}
 		ct << endl << "\t";
 		if (it != list->begin()) {
 			ct << " + ";
@@ -422,7 +432,7 @@ LPFactory::makeLoopSuccThread(CFR *cfr) {
 		ct << id << "." << succ_id << ".t";
 	}
 	if (count > 0) {
-		ct << endl << "\t\t= " << fake << ".t;";
+		ct << endl << "\t\t= " << id << ".t;";
 	}
 	delete list;
 	
