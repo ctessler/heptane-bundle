@@ -13,6 +13,7 @@ public:
 		return _path;
 	}
 	void produce();
+	void produceAllSwitched();	
 private:
 	CFRG &_cfrg;
 	string _path;

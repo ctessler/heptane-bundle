@@ -1,5 +1,59 @@
 #include "EntryFactory.h"
 
+void EntryFactory::produceAllSwitched() {
+	_cfrg.dupeCheck();
+
+	ofstream ofile(_path.c_str());
+	ofile << "cfrs = (" << endl;
+	ofile << " // (CFR addr, priority, ((succ addr, prio),"
+	      << " (succ addr, prio) ... )" << endl;
+	ListDigraph::NodeIt nit(_cfrg);
+	for ( ; nit != INVALID; ++nit) {
+		ListDigraph::Node node = nit;
+		CFR *cfr = _cfrg.findCFR(node);
+
+		/** Collect switching successors */
+		CFRList *succs = _cfrg.succs(cfr);
+		stringstream bs;
+		bs << "(";
+		for (CFRList::iterator cit = succs->begin() ;
+		     cit != succs->end() ; ++cit) {
+			CFR *succ = *cit;
+			ListDigraph::Node cfrg_node = _cfrg.findNode(succ);
+			if (cit != succs->begin()) {
+				bs << ", ";
+			}
+			
+			bs << "(0x" << hex << succ->getAddr(succ->getInitial())
+			   << dec << ", "
+			   << _cfrg.getGeneration(cfrg_node)
+			   << ")";
+		}
+		bs << ")";
+		delete succs;
+
+		/** Output the CFR entry item */
+		ListDigraph::Node initial = cfr->getInitial();
+		iaddr_t addr = cfr->getAddr(initial);
+
+		ofile << "    (0x" << hex << addr << ", "
+		      << dec << _cfrg.getGeneration(node)
+		      << ", " << bs.str()
+		      << ")";
+
+		/** Following comma check */
+		ListDigraph::NodeIt tit(_cfrg);
+		tit = nit;
+		++tit;
+		if (tit != INVALID) {
+			ofile << ",";
+		}
+		ofile << endl;
+	}
+	ofile << ");" << endl;
+	ofile.close();
+}
+
 void
 EntryFactory::produce() {
 	_cfrg.dupeCheck();
