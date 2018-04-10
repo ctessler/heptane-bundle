@@ -228,10 +228,14 @@ main(int argc, char** argv) {
 
 		/* Drop the WCET table per cache level */
 		EntryFactory entries(*cfrg);
+		/*
 		ss.str(""); ss << pre << ".entry";
 		entries.setPath(ss.str());
 		entries.produce();
-
+		*/
+		entries.setPath(pre + ".entry");
+		entries.produceAllSwitched();
+		
 		/* Produce images for the Control Flow Graphs */
 		dot.produce();
 		JPGFactory jpg(dot);
