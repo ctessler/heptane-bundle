@@ -123,8 +123,8 @@ main(int argc, char** argv) {
 	}
 	
 	cout << "Configuration file: " << cfgfile << endl
-	     << "Bundle CFG file: " << bcfg_file << "\t"
-	     << "Thread Count: " << n_threads << "\t"
+	     << "Bundle CFG file: " << bcfg_file << endl
+	     << "Thread Count: " << n_threads << endl
 	     << "Context Switch Cost (in Cycles): " << ctx_cost << endl;
 
 	/*
@@ -150,7 +150,8 @@ main(int argc, char** argv) {
 	CFG cfg;
 	CFGReader cfgr(cfg);
 	cfgr.read(bcfg_file);
-	cout << "CFG initial: " << cfg.stringNode(cfg.getInitial()) << endl;
+	cout << "CFG initial:\t" << cfg.stringNode(cfg.getInitial()) << endl;
+	cout << "CFG terminal:\t" << cfg.stringNode(cfg.getTerminal()) << endl;
 
 	map<int, Cache*>::iterator mit;
 	for (mit = ins_cache.begin(); mit != ins_cache.end(); ++mit) {
@@ -210,6 +211,7 @@ main(int argc, char** argv) {
 		cout << "Ordering CFRs" << endl;
 		cfrg->order();
 
+		ss.str(""); ss << pre << ".wceto";
 
 		/* Calculate the WCETO for each CFR */
 		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
@@ -238,10 +240,13 @@ main(int argc, char** argv) {
 		dot.produce();
 		JPGFactory jpg(dot);
 		jpg.produce();
-		cout << "JPG : " << jpg.getPath() << endl;
-
-		wceto_fact.dumpCFRs();
-		ss.str(""); ss << pre << ".wceto";
+		cout << "CFRG: " << jpg.getPath() << endl;
+		
+#ifdef DEBUG
+		wceto_fact.dumpCFRs(); 
+#endif
+		cout << "WCETO: " << wceto_fact.value(cfrg->findCFR(cfrg->getTerminal()))
+		     << endl;
 		ofstream result(ss.str().c_str());
 		result << "WCETO" << endl 
 		       << wceto_fact.value(cfrg->findCFR(cfrg->getTerminal()))

@@ -10,7 +10,9 @@ CFRGDFS::search(CFR* start) {
 
 	while (!stk.empty()) {
 		CFR *cur = stk.top(); stk.pop();
+		#ifdef DEBUG
 		cout << prefix << *cur << endl;
+		#endif
 
 		if ((cur != start) && _sel_fn) {
 			if (_sel_fn(_cfrg, cur, _userdata)) {

@@ -28,7 +28,9 @@ lfs_top_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 		rv = false;
 	}
 	fact->dbg.buf << "pass the filter." << endl;
+	#ifdef DEBUG
 	fact->dbg.flush(cout);
+	#endif
 	fact->dbg.dec();
 	return rv;
 }
@@ -102,8 +104,10 @@ lfs_top_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	} else {
 		dout << *cfr << " is not ready." << endl;
 	}
-	
+
+	#ifdef DEBUG
 	fact->dbg.flush(cout);
+	#endif
 	/* change to return rv after the work portion has been
 	   completed */
 	return rv;
@@ -130,7 +134,9 @@ lfs_top_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 		dout << *cfr << " is an independent CFR" << endl;
 		fact->inDemand(cfr);
 	}
+	#ifdef DEBUG
 	fact->dbg.flush(cout);
+	#endif 
 	fact->dbg.dec();
 	#undef dout
 }
@@ -148,7 +154,9 @@ WCETOFactory::produce() {
 	lfs.search(initial);
 
 	dbg.dec();
+	#ifdef DEBUG
 	dbg.flush(cout);
+	#endif
 }
 #undef dout
 
@@ -170,7 +178,10 @@ WCETOFactory::inDemand(CFR* cfr) {
 	CFRDemand *cfrd = _cfrt.present(cfr);
 	if (cfrd) {
 		dout << *cfr << " is present" << endl;
-		dbg.flush(cout); dbg.dec();
+		#ifdef DEBUG
+		dbg.flush(cout);
+		#endif
+		dbg.dec();
 		return cfrd;
 	}
 	cfrd = _cfrt.request(cfr);
@@ -218,7 +229,9 @@ WCETOFactory::inDemand(CFR* cfr) {
 	     << cfrd->str(dbg.start) << endl;
 	delete preds;
 
-	dbg.flush(cout);	
+	#ifdef DEBUG
+	dbg.flush(cout);
+	#endif
 	dbg.dec(); 
 	return cfrd;
 }
@@ -250,7 +263,9 @@ lfs_loop_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 
 	if (head == cfr) {
 		dout << *cfr << " head is not filtered" << endl;
+		#ifdef DEBUG
 		fact.dbg.flush(cout);
+		#endif
 		fact.dbg.dec();
 		return true;
 	}
@@ -266,7 +281,9 @@ lfs_loop_filter(CFRG &cfrg, CFR *cfr, void *userdata) {
 		dout << "rejected CFR " << *cfr << fact.dbg.cont
 		     << "head is not " << *head << endl;
 	}
+	#ifdef DEBUG
 	fact.dbg.flush(cout);
+	#endif
 	fact.dbg.dec();
 	return rv;
 }
@@ -305,7 +322,9 @@ lfs_loop_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	bool rv = true;
 	if (head == cfr) {
 		dout << "head element, all done" << endl;
+		#ifdef DEBUG
 		fact.dbg.flush(cout);
+		#endif
 		fact.dbg.dec();
 		return rv;
 	}
@@ -351,7 +370,9 @@ lfs_loop_test(CFRG &cfrg, CFR *cfr, void *userdata) {
 	}
 
 	delete preds;
-	fact.dbg.flush(cout);	
+	#ifdef DEBUG
+	fact.dbg.flush(cout);
+	#endif
 	fact.dbg.dec();
 	return rv;
 }
@@ -371,7 +392,9 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 
 	if (head == cfr) {
 		dout << "head element, all done" << endl;
+		#ifdef DEBUG
 		fact.dbg.flush(cout);
+		#endif
 		fact.dbg.dec();
 		return;
 	}
@@ -429,7 +452,9 @@ lfs_loop_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 
 	dout << "(work) Demand after merging predecessors: " << endl
 	     << dmnd->str(fact.dbg.start) << endl;
+	#ifdef DEBUG
 	fact.dbg.flush(cout);
+	#endif
 	fact.dbg.dec();
 	#undef dout
 }
@@ -443,7 +468,9 @@ WCETOFactory::loopDemand(CFR *cfr) {
 	CFRDemand *cfrd = _loopt.present(cfr);
 	if (cfrd) {
 		dout << *cfr << " is present, returning" << endl;
+		#ifdef DEBUG
 		dbg.flush(cout);
+		#endif
 		dbg.dec();
 		return cfrd;
 	}
@@ -566,7 +593,9 @@ WCETOFactory::loopDemand(CFR *cfr) {
 	
 	delete data;
 	dout << "end " << *cfr << endl;
+	#ifdef DEBUG
 	dbg.flush(cout);
+	#endif
 	dbg.dec();
 	#undef dout
 	return cfrd;
@@ -619,7 +648,9 @@ WCETOFactory::maxMerge(CFRDemand &dem, CFRDemandMap &map, bool includeLoad) {
 	dbg.inc(pfx);
 	dout << "Merging " << map.size() << " sets of demands" << endl;
 	if (map.size() == 0) {
+		#ifdef DEBUG
 		dbg.flush(cout);
+		#endif
 		dbg.dec();
 		return;
 	}
@@ -642,7 +673,9 @@ WCETOFactory::maxMerge(CFRDemand &dem, CFRDemandMap &map, bool includeLoad) {
 		(*max_twmap)[max_idx] = 0;
 		dem.getWCETOMap()[i] += max_wceto;
 	}
-	dbg.flush(cout);	
+	#ifdef DEBUG
+	dbg.flush(cout);
+	#endif
 	dbg.dec(); 
 	#undef dout
 }
@@ -660,7 +693,9 @@ WCETOFactory::maxEle(ThreadWCETOMap &twmap, uint32_t &idx) {
 		}
 	}
 
+	#ifdef DEBUG
 	dbg.flush(cout);
+	#endif
 	dbg.dec(); 
 	#undef dout
 	return wceto;
@@ -687,7 +722,9 @@ WCETOFactory::dumpCFRs() {
 		dbg.dec();
 	}
 
+	#ifdef DEBUG
 	dbg.flush(cout);
+	#endif
 	dbg.dec(); 
 	#undef dout
 }
@@ -802,7 +839,10 @@ dfs_mask(CFRG &cfrg, CFR *cfr, void *userdata) {
 		}
 	}
 	dout << *cfr << " END (" << rv << ")" << endl;
-	fact.dbg.dec(); fact.dbg.flush(cout);
+	fact.dbg.dec();
+	#ifdef DEBUG
+	fact.dbg.flush(cout);
+	#endif
 	return rv;
 }
 
@@ -908,7 +948,10 @@ WCETOFactory::switchPass() {
 	}
 	
 	
-	dbg.dec(); dbg.flush(cout);
+	dbg.dec();
+	#ifdef DEBUG
+	dbg.flush(cout);
+	#endif
 }
 
 #undef dout

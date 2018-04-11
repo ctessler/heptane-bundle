@@ -144,7 +144,6 @@ EntryFactory::nextSwitches(ListDigraph::Node cfrg_node) {
 				visited[succ_node] = true;
 				continue;
 			}
-			cout << *cfr << " pushing " << *succ_cfr << endl;			
 			s.push(succ_node);
 		}
 	}

@@ -308,9 +308,13 @@ dfs_iloc_work(CFRG &cfrg, CFR *cfr, void *userdata) {
 	CFR *head = data->head;
 	CFRList *list = data->list;
 
+	#ifdef DEBUG
 	cout << "ILOCWORK: Adding " << cfr->str() << " to list" << endl;
+	#endif
 	list->push_back(cfr);
+	#ifdef DEBUG
 	cout << "ILOCWORK: list size: " << list->size() << endl;
+	#endif
 }
 
 CFRList*
