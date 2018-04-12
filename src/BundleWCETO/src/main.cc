@@ -122,10 +122,10 @@ main(int argc, char** argv) {
 		return -1;
 	}
 	
-	cout << "Configuration file: " << cfgfile << endl
-	     << "Bundle CFG file: " << bcfg_file << endl
-	     << "Thread Count: " << n_threads << endl
-	     << "Context Switch Cost (in Cycles): " << ctx_cost << endl;
+	cout << "BWCETO> Configuration file: " << cfgfile << endl
+	     << "BWCETO> Bundle CFG file: " << bcfg_file << endl
+	     << "BWCETO> Thread Count: " << n_threads << endl
+	     << "BWCETO> Context Switch Cost (in Cycles): " << ctx_cost << endl;
 
 	/*
 	 * Command line arguments have been parsed.
@@ -150,8 +150,8 @@ main(int argc, char** argv) {
 	CFG cfg;
 	CFGReader cfgr(cfg);
 	cfgr.read(bcfg_file);
-	cout << "CFG initial:\t" << cfg.stringNode(cfg.getInitial()) << endl;
-	cout << "CFG terminal:\t" << cfg.stringNode(cfg.getTerminal()) << endl;
+	cout << "BWCETO> CFG initial:\t" << cfg.stringNode(cfg.getInitial()) << endl;
+	cout << "BWECTO> CFG terminal:\t" << cfg.stringNode(cfg.getTerminal()) << endl;
 
 	map<int, Cache*>::iterator mit;
 	for (mit = ins_cache.begin(); mit != ins_cache.end(); ++mit) {
@@ -167,7 +167,7 @@ main(int argc, char** argv) {
 		DOTFactory dot(copy);
 		dot.setPath(ss.str());
 		dot.setCache(cache);
-		cout << "DOT : " << ss.str() << endl;
+		cout << "BWCETO> DOT : " << ss.str() << endl;
 		
 		/* Export CFRs to JPGs */
 		CFRFactory cfr_fact(copy, *cache);
@@ -208,14 +208,14 @@ main(int argc, char** argv) {
 		nowcet.produce();
 
 		/* Assigns generation IDs to CFRG nodes */
-		cout << "Ordering CFRs" << endl;
+		cout << "BWECTO> Ordering CFRs" << endl;
 		cfrg->order();
 
 		ss.str(""); ss << pre << ".wceto";
 
 		/* Calculate the WCETO for each CFR */
 		CFR *initial_cfr = cfrg->findCFR(cfrg->getInitial());
-		cout << "Calculating WCETO" << endl;
+		cout << "BWCETO> Calculating WCETO" << endl;
 		wceto_fact.produce();
 		
 		/* Produce the images for the Control Flow Region Graph */
@@ -227,6 +227,7 @@ main(int argc, char** argv) {
 		string path = cfrg_dot.getPath();
 		JPGFactory cfrg_jpg(path);
 		cfrg_jpg.produce();
+		cout << "BWCETO> CFRG:\t" << cfrg_jpg.getPath() << endl;		
 
 		/* Drop the WCET table per cache level */
 		EntryFactory entries(*cfrg);
@@ -240,14 +241,15 @@ main(int argc, char** argv) {
 		dot.produce();
 		JPGFactory jpg(dot);
 		jpg.produce();
-		cout << "CFRG: " << jpg.getPath() << endl;
+		cout << "BWCETO> CFG:\t" << jpg.getPath() << endl;
 		
 #ifdef DEBUG
 		wceto_fact.dumpCFRs(); 
 #endif
-		cout << "WCETO: " << wceto_fact.value(cfrg->findCFR(cfrg->getTerminal()))
+		cout << "BWECTO> WCETO: "
+		     << wceto_fact.value(cfrg->findCFR(cfrg->getTerminal()))
 		     << endl;
-		ofstream result(ss.str().c_str());
+		ofstream result(pre + ".wceto");
 		result << "WCETO" << endl 
 		       << wceto_fact.value(cfrg->findCFR(cfrg->getTerminal()))
 		       << endl;

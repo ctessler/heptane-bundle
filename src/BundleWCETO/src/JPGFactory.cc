@@ -29,7 +29,7 @@ JPGFactory::getPath() {
 
 void
 JPGFactory::produce() {
-	string command = "dot -Tjpg " + _src_path + " > " + _path;
+	string command = "dot -Tjpg " + _src_path + " > " + _path + "&2>/dev/null";
 	#ifdef DEBUG
 	cout << "Producing JPG: " << _path << " with command " << endl
 	     << "    " << command << endl;
