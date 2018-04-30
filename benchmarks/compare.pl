@@ -42,7 +42,7 @@ sub main {
 			    or die "Could not open results-sim-$cfg.cfg-$t";
 			print "\n# Threads: $t\n";
 			while (my $line = <$RES>) {
-				if ($line !~ /\# bmark/) {
+				if ($line !~ /\# MARK/) {
 					next;
 				}
 				print $line;
