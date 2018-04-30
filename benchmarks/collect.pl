@@ -29,7 +29,10 @@ sub main {
 		select $OFH
 	}
 
-	print_hdr();
+	my $ctxcost = get_ctx_cost(sprintf("%s/bundle/summary-%i.txt",
+					   $ARGV[0], $threads));
+
+	print_hdr($ctxcost);
 	foreach my $mark (@ARGV) {
 		my $resname = sprintf("%s/bundle/summary-%i.txt", $mark, $threads);
 		proc_file($mark, $threads, $resname);
@@ -41,9 +44,11 @@ sub main {
 	}
 }
 sub print_hdr {
+	my $ctxcost = shift @_;
 	print
 	    "# Header Field Key:\n" .
 	    "# All execution times include the thread level context switch costs\n" .
+	    "# Thread level context switch cost: $ctxcost\n".
 	    "#\tMARK\t Benchmark name\n" .
 	    "#\tT\t Number of threads\n" .
 	    "#\tHWCET\t Heptane WCET\n" .
@@ -123,4 +128,20 @@ sub proc_file {
 	close($h);
 }
 
+sub get_ctx_cost {
+	my ($ctx, $file, $dmatch, $h);
+	$dmatch='(\d+)\.{0,1}\d*';	
+	$file = shift @_;
+	open($h, '<', $file) or die "Could not open $file";
+	while (my $line = <$h>) {
+		my $regex = 'CTX:\s+' . "$dmatch";
+		if ($line =~ /$regex/) {
+			$ctx = $1;
+			last;
+		}
+	}
+	close($h);
+	die "Unable to open read $file" if (!defined($ctx));
+	return $ctx;
+}
 main(@ARGV);
