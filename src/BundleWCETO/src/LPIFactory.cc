@@ -1,7 +1,7 @@
-#include"LPFactory.h"
+#include"LPIFactory.h"
 
 void
-LPFactory::produce() {
+LPIFactory::produce() {
 	ofstream lpf(_path.c_str());
 
 	lpf << makeObjective() << endl;
@@ -56,7 +56,7 @@ LPFactory::produce() {
 }
 
 string
-LPFactory::makeId(CFR *cfr) {
+LPIFactory::makeId(CFR *cfr) {
 	CFG *cfg = cfr->getCFG();
 	ListDigraph::Node cfr_initial = cfr->getInitial();
 	ListDigraph::Node cfg_node = cfr->toCFG(cfr_initial);
@@ -74,7 +74,7 @@ LPFactory::makeId(CFR *cfr) {
 }
 
 string
-LPFactory::makeFalseId(CFR *cfr) {
+LPIFactory::makeFalseId(CFR *cfr) {
 	CFG *cfg = cfr->getCFG();
 	ListDigraph::Node cfr_initial = cfr->getInitial();
 	ListDigraph::Node cfg_node = cfr->toCFG(cfr_initial);
@@ -86,7 +86,7 @@ LPFactory::makeFalseId(CFR *cfr) {
 }
 
 string
-LPFactory::makeObjective() {
+LPIFactory::makeObjective() {
 	stringstream obj;
 	obj << "max: 0 ";
 
@@ -111,8 +111,8 @@ LPFactory::makeObjective() {
 }
 
 
-LPFactory::wceto_type_t
-LPFactory::findType(CFR *cfr) {
+LPIFactory::wceto_type_t
+LPIFactory::findType(CFR *cfr) {
 	ListDigraph::Node cfr_initial = cfr->getInitial();
 	ListDigraph::Node cfg_node = cfr->toCFG(cfr_initial);
 
@@ -131,7 +131,7 @@ LPFactory::findType(CFR *cfr) {
  *
  */
 string
-LPFactory::makeWCETO(CFR *cfr) {
+LPIFactory::makeWCETO(CFR *cfr) {
 	switch(findType(cfr)) {
 	case PLAIN:
 		break;
@@ -147,13 +147,18 @@ LPFactory::makeWCETO(CFR *cfr) {
 	wceto << "\t/* WCETO */" << endl;
 	wceto << "\t" << id << ".c = "
 	      << cfr->loadCost() << " " << id << ".b + " /* Memory Load Cost */
-	      << cfr->exeCost() << " " << id << ".t + "  /* Execution cost */
-	      << _ctx_cost << " " << id << ".t;";        /* Context switch cost */
+	      << cfr->exeCost() << " " << id << ".t";    /* Execution cost */
+	if (_ctx_cost > 0) {
+		/* Context switch cost */		
+		wceto << " + " << _ctx_cost << " " << id << ".t";
+	}
+	wceto << ";";
+
 	return wceto.str();
 }
 
 string
-LPFactory::makeLoopWCETO(CFR *cfr) {
+LPIFactory::makeLoopWCETO(CFR *cfr) {
 	switch(findType(cfr)) {
 	case LOOP:
 		break;
@@ -171,56 +176,74 @@ LPFactory::makeLoopWCETO(CFR *cfr) {
 	/* Get the maximum number of iterations */
 	uint32_t iters = cfr->getIters(cfr->getInitial());
 	/* Make a set of ECBs */
-	ECBs ecbs;
-	
+	ECBs *ecbs = getECBsOfLoop(cfr);
+	obj << "ECBs[" << ecbs->size() << "]: " << ecbs->str() << " */" << endl;
+	uint32_t brt = cfr->getCache()->memLatency();
+
+	/* WCETO for the false head */
+	obj << "\t" << fake << ".c = ";
+	obj << ecbs->size() * brt << " " << fake << ".b"; // c.fn = gamma.fn * b.fn
+	// I.n * ( sum of interior nodes WCETO )
 	CFRList *list = _cfrg->inLoopOfCFR(cfr);
 	CFRList::iterator it;
 	for (it = list->begin(); it != list->end(); ++it) {
 		CFR *in_cfr = *it;
-
-		/* Collect the ECBS from this CFR */
-		in_cfr->calcECBs();		
-		ECBs *in_ecbs = in_cfr->getECBs();
-		ecbs.insert(ecbs.begin(), in_ecbs->begin(), in_ecbs->end());
-		ecbs.sort();
-		delete in_ecbs;
-	}
-	obj << "ECBs[" <<ecbs.size() << "]: " << ecbs.str() << " */" << endl;
-	uint32_t brt = cfr->getCache()->memLatency();
-	uint32_t dupeC = ecbs.dupeCount();
-	obj << "\t" << fake << ".c = ";
-	obj << ecbs.size() * brt << " " << fake << ".b + "
-	    << iters * dupeC * brt << " ";
-	for (it = list->begin(); it != list->end(); ++it) {
-		CFR *in_cfr = *it;
-		obj << endl << "\t\t+ ";
 		string in_id = makeId(in_cfr);
 		if (in_cfr != cfr && _cfrg->isHeadCFR(in_cfr)) {
 			in_id = makeFalseId(in_cfr);
 		}
-		obj << iters << " " << in_id << ".c ";
+		obj << endl << "\t\t+ " << iters << " " << in_id << ".c ";
 	}
 	obj << ";" << endl;
 	obj << makeInnerWCETO(cfr) << endl;
+	obj << makeInnerBin(cfr) << endl;
 	delete list;
+	delete ecbs;
 
 	return obj.str();
 }
 
 string
-LPFactory::makeInnerWCETO(CFR *cfr) {
+LPIFactory::makeInnerWCETO(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
+	ECBs *dupecbs = getECBsOfLoop(cfr);
+	dupecbs->dupesOnly();
+	ECBs *cfrecbs = cfr->getECBs();
+	ECBs isect;
+	set_intersection(dupecbs->begin(), dupecbs->end(),
+			 cfrecbs->begin(), cfrecbs->end(), back_inserter(isect));
+	ct << "\t/* G2 ECBs[" << dupecbs->size() << "] " << dupecbs->str() << " */"
+	   << endl;
+	ct << "\t/* CFR ECBs[" << cfrecbs->size() << "] " << cfrecbs->str() << " */"
+	   << endl;
+	ct << "\t/* isect ECBs[" << isect.size() << "] " << isect.str() << " */"
+	   << endl;
+	delete dupecbs;
+	delete cfrecbs;
+	      
+	uint32_t brt = cfr->getCache()->memLatency();
+	uint32_t ic = isect.size();
+									   
 	ct << "\t/* WCETO */" << endl << "\t";
 	ct << id << ".c = "
-	   << cfr->exeCost() << " " << id << ".t + " /* Execution cost */
-	   << _ctx_cost << " " << id << ".t;";     /* Context switch cost */
+	   << cfr->exeCost() << " " << id << ".t"; /* Execution cost */
+	if (_ctx_cost > 0) {
+		/* Context switch cost */		
+		ct << " + " << _ctx_cost << " " << id << ".t";
+	}
+	uint32_t bi = brt * ic;
+	if (ic > 0 && brt > 0) {
+		/* per iteration penalty */		
+		ct << " + " << bi << " " << id << ".b";
+	}
+	ct << ";";
 
 	return ct.str();
 }
 
 string
-LPFactory::makePredThread(CFR *cfr) {
+LPIFactory::makePredThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 	ct << "\t/* Predecessor Threads */" << endl;
@@ -256,7 +279,7 @@ LPFactory::makePredThread(CFR *cfr) {
 }
 
 string
-LPFactory::makeLoopPredThread(CFR *cfr) {
+LPIFactory::makeLoopPredThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 	string fake = makeFalseId(cfr);
@@ -285,7 +308,7 @@ LPFactory::makeLoopPredThread(CFR *cfr) {
 }
 
 string
-LPFactory::makeInnerPredThread(CFR *cfr) {
+LPIFactory::makeInnerPredThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 	ct << "\t/* Inner Predecessor Thread Limit */" << endl;
@@ -320,7 +343,7 @@ LPFactory::makeInnerPredThread(CFR *cfr) {
 }
 
 string
-LPFactory::makeSuccThread(CFR *cfr) {
+LPIFactory::makeSuccThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 	ct << "\t/* Successor Threads */";
@@ -366,7 +389,7 @@ LPFactory::makeSuccThread(CFR *cfr) {
 }
 
 string
-LPFactory::makeLoopSuccThread(CFR *cfr) {
+LPIFactory::makeLoopSuccThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 	string fake = makeFalseId(cfr);
@@ -414,7 +437,7 @@ LPFactory::makeLoopSuccThread(CFR *cfr) {
 }
 
 string
-LPFactory::makeInnerSuccThread(CFR *cfr) {
+LPIFactory::makeInnerSuccThread(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 
@@ -448,7 +471,7 @@ LPFactory::makeInnerSuccThread(CFR *cfr) {
 }
 
 string
-LPFactory::makeBin(CFR *cfr) {
+LPIFactory::makeBin(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 
@@ -460,7 +483,7 @@ LPFactory::makeBin(CFR *cfr) {
 }
 
 string
-LPFactory::makeLoopBin(CFR *cfr) {
+LPIFactory::makeLoopBin(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
 	string fake = makeFalseId(cfr);
@@ -472,10 +495,41 @@ LPFactory::makeLoopBin(CFR *cfr) {
 }
 
 string
-LPFactory::makeInnerBin(CFR *cfr) {
+LPIFactory::makeInnerBin(CFR *cfr) {
 	stringstream ct;
-
-	ct << "\t/* Selector (Inner) */";
+	string id = makeId(cfr);
+	ct << "\t/* Selector (Inner) */" << endl << "\t";
+	ct << id << ".b <= " << id << ".t;";
 
 	return ct.str();
+}
+
+
+/**
+ * Caller must free return value
+ *
+ * Returns the gamma(2) set of the loop to which cfr belongs
+ */
+ECBs *
+LPIFactory::getECBsOfLoop(CFR *cfr) {
+	/* Make a set of ECBs */
+	ECBs *ecbs = new ECBs();
+
+	CFR *loopHead = cfr;
+	if (!_cfrg->isHeadCFR(cfr)) {
+		loopHead = _cfrg->getHead(cfr);
+	} 
+	CFRList *list = _cfrg->inLoopOfCFR(loopHead);
+	CFRList::iterator it;
+	for (it = list->begin(); it != list->end(); ++it) {
+		CFR *in_cfr = *it;
+
+		/* Collect the ECBS from this CFR */
+		in_cfr->calcECBs();		
+		ECBs *in_ecbs = in_cfr->getECBs();
+		ecbs->insert(ecbs->begin(), in_ecbs->begin(), in_ecbs->end());
+		ecbs->sort();
+		delete in_ecbs;
+	}
+	return ecbs;
 }

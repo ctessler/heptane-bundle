@@ -305,7 +305,10 @@ CFRFactory::expandCFR(ListDigraph::Node entry) {
 				/* Finishing a loop */
 				cfr_kid = cfr_entry;
 			} else {
-				cfr_kid = cfr->addNode(kid);
+				cfr_kid = cfr->fromCFG(kid);
+				if (cfr_kid == INVALID) {
+					cfr_kid = cfr->addNode(kid);
+				}
 			}
 			dout << cstr << " → " << ks << endl;
 			cfr->addArc(cfr_node, cfr_kid);

@@ -17,6 +17,7 @@ public:
 	ECBs ();
 	ECBs (ECBs &src);
 	ECBs (ECBs *src);
+	void dupesOnly();
 	uint32_t dupeCount();
 
 	string str(string prefix="") const;

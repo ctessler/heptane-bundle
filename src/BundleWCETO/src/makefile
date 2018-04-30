@@ -16,7 +16,7 @@ lcl_srcs= main.cc CFRFactory.cc CFR.cc DOTfromCFRG.cc CFRG.cc
 lcl_srcs+=DOTfromCFR.cc EntryFactory.cc CFRGWCETOFactory.cc CFRGDFS.cc CFRGLFS.cc
 lcl_srcs+=CFGDFS.cc PQueue.cc CFGTopSort.cc CFRGTopSort.cc
 lcl_srcs+=WCETOFactory.cc ThreadWCETOMap.cc CFRWCETOMap.cc  CFRDemandMap.cc
-lcl_srcs+=CFRECBs.cc LPFactory.cc
+lcl_srcs+=CFRECBs.cc LPFactory.cc LPIFactory.cc
 lcl_objs=$(patsubst %.cc,../objs/%.o,$(lcl_srcs))
 
 all: $(tgt) ../objs test

@@ -73,3 +73,26 @@ ECBs::dupeCount() {
 	}
 	return rval;
 }
+
+void
+ECBs::dupesOnly() {
+	ECBs u(*this);
+	ECBs dupes;
+	sort();
+	u.unique();
+	u.sort();
+	ECBs::iterator eit = begin();
+	for (ECBs::iterator uit = u.begin(); uit != u.end(); ++uit) {
+		uint32_t value = *uit;
+		uint32_t count = 0;
+		while (eit != end() && value == *eit) {
+			count++;
+			eit++;
+		}
+		for (int i=0; count > 1 && i < count; i++) {
+			dupes.push_back(value);
+		}
+	}
+	clear();
+	insert(begin(), dupes.begin(), dupes.end());
+}

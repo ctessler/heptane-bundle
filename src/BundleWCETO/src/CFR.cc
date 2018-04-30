@@ -14,6 +14,10 @@ ListDigraph::Node
 CFR::addNode(ListDigraph::Node from_cfg) {
 	ListDigraph::Node rv = CFG::addNode();
 
+	if (fromCFG(from_cfg) != INVALID) {
+		throw runtime_error( _cfg.stringNode(from_cfg) + " being added twice");
+	}
+
 	_to_cfg[rv] = from_cfg;
 	_from_cfg.insert(make_pair(from_cfg, rv));
 	
