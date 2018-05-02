@@ -201,7 +201,7 @@ main(int argc, char** argv) {
 		LPFactory lp_fact(cfrg, n_threads, ctx_cost, pre + ".lp");
 		lp_fact.produce();
 		LPIFactory lpi_fact(cfrg, n_threads, ctx_cost, pre + ".lp2");
-		lpi_fact.produce();		
+		lpi_fact.produce();
 		WCETOFactory wceto_fact(*cfrg, n_threads, ctx_cost);		
 		DOTfromCFRG cfrg_nowceto(*cfrg, wceto_fact);
 		ss.str(""); ss << pre << "-cfrg-nowceto.dot";
