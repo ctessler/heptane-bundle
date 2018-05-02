@@ -115,7 +115,6 @@ sub proc_file {
 	}
 	# Calculate the maximum CTX switch for the two methods to be equal
 	my $slack = $hexe - $bexe;
-	my $ctxm = $slack / $threads;
 	
 	# Incorporate CTX costs
 	$hwcet = ($hwcet + $ctx) * $threads;
@@ -123,7 +122,7 @@ sub proc_file {
 	$hexe += $ctx * $threads;
 
 	printf($LINEFMT, $mark, $threads, $hwcet, $i1wceto, $i2wceto,
-	       $hwcet - $i2wceto, $bexe, $hexe, $hexe - $bexe, $bctx, $ctxm);
+	       $hwcet - $i2wceto, $bexe, $hexe, $slack, $bctx);
 	
 	close($h);
 }

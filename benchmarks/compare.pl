@@ -25,9 +25,10 @@ sub usage {
 # XXX-todo should handle @ARGV as @_ instead.
 sub main {
 	my ($simcfg, $ofname, $threads, $OFH);
-	GetOptions("c=s", \$simcfg,
-		   "t=i", \$threads,
-		   "output|o=s", \$ofname)
+	Getopt::Long::GetOptionsFromArray(\@_,
+			    "c=s", \$simcfg,
+			    "t=i", \$threads,
+			    "output|o=s", \$ofname)
 	    or die usage();
 	die usage() if (!defined($simcfg));
 
