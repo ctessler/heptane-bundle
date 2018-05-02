@@ -38,14 +38,20 @@ sub main {
 		}
 		print $DH "\n";
 		foreach my $sim ('a' .. $simcfg) {
-			print $DH get_sim_description($sim);
+			my ($brt, $cpi, $sets);
 			for (my $t = 1; $t <= $threads; $t *= 2) {
-				my $sfile = "results-sim-$sim.cfg-$t";
+				my ($sfile, @file, @match, @fields, $ben);
+				$sfile = "results-sim-$sim.cfg-$t";
 				open(my $SH, '<', $sfile) or die "Couldn't open $sfile";
-				my @file = <$SH>;
-				my @match = grep(/^$bm\W/, @file);
+				@file = <$SH>;
+				@match = grep(/^$bm\W/, @file);
 				die "Too many matches" if ($#match > 1);
-				my $ben = (split(/\s+/,$match[0]))[5];
+				@fields = split(/\s+/,$match[0]);
+				if (!defined($brt)) {
+					($brt, $cpi, $sets) = @fields[2,3,4,11];
+					print $DH "\"($brt:$cpi, $sets)\"";
+				} 
+				$ben = $fields[8];
 				print $DH "\t$ben";
 				close($SH);
 			}

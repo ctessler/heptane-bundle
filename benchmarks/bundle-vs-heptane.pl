@@ -80,6 +80,8 @@ sub main {
 	 set style data histogram
 	 set style histogram cluster gap 1
 	 set style fill solid border -1
+	 set ylabel 'Count of benchmarks where BUNDLEP \${<}\$ Heptane WCETO'
+	 set xlabel 'Architecture (BRT:CPI, Cache Sets)'
 	 plot 'data/$fdat' using 2:xtic(1) ti col fc rgb 1, \\
 	 	'' u 4 ti col fc rgb 3, \\
 	 	'' u 6 ti col fc rgb 5, \\
@@ -96,6 +98,8 @@ sub main {
 	 set style data histogram
 	 set style histogram cluster gap 1
 	 set style fill solid border -1
+	 set ylabel 'Count of benchmarks where BUNDLEP \${<}\$ Serial Execution'
+	 set xlabel 'Architecture (BRT:CPI, Cache Sets)'
 	 plot 'data/$fdat' using 3:xtic(1) ti col fc rgb 2, \\
 		'' u 5 ti col fc rgb 4, \\
 		'' u 7 ti col fc rgb 6, \\

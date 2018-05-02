@@ -65,12 +65,9 @@ sub print_hdr {
 	    "#\tCTXT\t Observed thread level context switches for BUNDLEP\n" .
 	    "#\tBX\t Cycles per BUNDLE level context switch\n" .
 	    "#\tTX\t Cycles per thread level context switch\n";
-	#               %-8s      %3s  %10s     %10s     %10s     %10s
 	printf($HDRFMT, "# MARK", "T", "B", "I", "S", "HWECT", "I.CWO",
 	                "I.PWO", "H-I.C", "HEXE", "BEXE", "HE-BE", "CTXB", "CTXT",
-	#               %-10s    %-10s    %-10s   %-10s   %-10s    %-6s    %-8s
 	                "BX", "TX");
-	#               %-4s  %-3s
 }
 
 sub proc_file {
