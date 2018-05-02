@@ -38,14 +38,20 @@ sub main {
 		}
 		print $DH "\n";
 		foreach my $sim ('a' .. $simcfg) {
-			print $DH get_sim_description($sim);
+			my ($brt, $cpi, $sets);
 			for (my $t = 1; $t <= $threads; $t *= 2) {
-				my $sfile = "results-sim-$sim.cfg-$t";
+				my (@fields, $sfile, @file, @match, $ben);
+				$sfile = "results-sim-$sim.cfg-$t";
 				open(my $SH, '<', $sfile) or die "Couldn't open $sfile";
-				my @file = <$SH>;
-				my @match = grep(/^$bm\W/, @file);
+				@file = <$SH>;
+				@match = grep(/^$bm\W/, @file);
 				die "Too many matches" if ($#match > 1);
-				my $ben = (split(/\s+/,$match[0]))[8];
+				@fields = split(/\s+/,$match[0]);
+				if (!defined($brt)) {
+					($brt, $cpi, $sets) = @fields[2,3,4];
+					print $DH "\"($brt:$cpi, $sets)\"";
+				} 
+				$ben = $fields[11];
 				print $DH "\t$ben";
 				close($SH);
 			}
@@ -89,27 +95,4 @@ sub get_names {
 	return @names;
 }
 
-sub get_sim_description {
-	my $sim = shift;
-	if ($sim eq 'a') {
-		return "\"(100:1, 8)\"";
-	}
-	if ($sim eq 'b') {
-		return "\"(100:10, 8)\"";
-	}
-	if ($sim eq 'c') {
-		return "\"(100:1, 16)\"";
-	}
-	if ($sim eq 'd') {
-		return "\"(100:10, 16)\"";
-	}
-	if ($sim eq 'e') {
-		return "\"(100:1, 32)\"";
-	}
-	if ($sim eq 'f') {
-		return "\"(100:10, 32)\"";
-	}
-	return "unknown";
-}
-    
 main(@ARGV);
