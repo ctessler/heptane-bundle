@@ -1,13 +1,40 @@
 #!/bin/bash
+CTXZERO=${CTXZERO:-0}
+datespec=`date +%F.%H:%M`
+odirname=${ODIRNAME:=${datespec}}
+nthreads="1 2 4 8 16"
 
-for t in 1 2 4 8 16 32
+for t in ${nthreads}
 do
-	command="l($t)/l(2) * 55"
-	c=$(echo -e "$command" | bc -l)
 	for s in sim-?.cfg
 	do
 		make clean
-		make -j3 THREADS=$t SIMCFG=../../$s CTXCOST=$c
+		if [ "${CTXZERO}" -ne "0" ] ; then
+			BX=0
+			TX=0
+		else
+			command="l($t)/l(2) * 55"
+			BX=$(echo -e "$command" | bc -l)
+			TX=10
+		fi
+			
+		if [ "$t" -eq "1" ] ; then
+			BX=0
+			TX=0
+		fi
+			
+		make ODIR=$odirname THREADS=$t SIMCFG=../../$s \
+		     BUNDLE_CTX=${BX} THREAD_CTX=${TX}
 	done
 done
-		  
+
+echo "Generating plots and data"
+pushd $odirname
+../bundle-vs-heptane.pl -c f -t 16
+../exe-vs-sets.pl -c f -t 16
+../wcetoben-vs-sets.pl -c f -t 16
+popd
+
+echo "----------------------------------------"
+echo "Results are in $odirname"
+echo "----------------------------------------"

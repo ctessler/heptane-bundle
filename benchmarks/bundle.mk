@@ -18,6 +18,9 @@ bundle-cycles=$(name)-bundle.cycles
 bundle-cycles-ctx=$(name)-bundle-ctx.cycles
 serial-cycles=$(name)-serial.cycles
 serial-cycles-ctx=$(name)-serial-ctx.cycles
+cache-sets=$(name)-sets.cache
+cache-brt=$(name)-brt.cache
+cache-cpi=$(name)-cpi.cache
 sim-done=$(name)-sim.done
 
 # Analysis 
@@ -38,13 +41,19 @@ ifndef SIM
 endif
 
 summary.txt: $(bundle-done) $(sim-done) $(heptane) $(heptane-total)
-	@echo "THREADS:		$(THREADS)" > $@
+	@echo -n "CACHE SETS:		" > $@
+	@cat $(cache-sets) >> $@
+	@echo -n "CACHE BRT:		" >> $@
+	@cat $(cache-brt) >> $@
+	@echo -n "CACHE CPI:		" >> $@
+	@cat $(cache-cpi) >> $@
+	@echo "THREADS:		$(THREADS)" >> $@
 	@echo "BUNDLE CTX:		$(BUNDLE_CTX)" >> $@
 	@echo "THREAD CTX:		$(THREAD_CTX)" >> $@
 	@echo -n "ILP WCETO (Current):	" >> $@
 	@cat $(ilp-current) >> $@
 	@echo -n "ILP WCETO (Previous):	" >> $@
-	@cat $(ilp-current) >> $@
+	@cat $(ilp-prev) >> $@
 	@echo -n "Heptane WCET(1):	" >> $@
 	@cat $(heptane) >> $@
 	@echo -n "Hept. WCET($(THREADS) + CTXS):	" >> $@
@@ -61,6 +70,7 @@ summary.txt: $(bundle-done) $(sim-done) $(heptane) $(heptane-total)
 	@cat $(serial-cycles) >> $@
 	@echo -n "Serial EXE(W/ CTX):	" >> $@
 	@cat $(serial-cycles-ctx) >> $@
+	@echo ----------------------------------------
 	@cat summary.txt
 
 #
@@ -71,7 +81,7 @@ $(heptane): configBUNDLE.xml
 	    | grep WCET | awk '{print $$2}' > $(heptane)
 $(heptane-total): hwcet=$(shell cat $(heptane))
 $(heptane-total): $(heptane)
-	echo "$(hwcet) * $(THREADS) * $(BUNDLE_CTX)" | bc -l > $@
+	echo "($(hwcet) + $(BUNDLE_CTX)) * $(THREADS)" | bc -l > $@
 
 # Extract the control flow graph
 $(name).cfg: configBUNDLE.xml ../../../bin/BundleCFG
@@ -120,10 +130,19 @@ $(serial-cycles-ctx): lcl-cycles=$(shell cat $(serial-cycles))
 $(serial-cycles-ctx): lcl-bctxs=$(shell cat $(nserial-ctxs))
 $(serial-cycles-ctx): $(serial-cycles) $(serial-ctxs)
 	echo "$(lcl-cycles) + $(lcl-bctxs) * $(BUNDLE_CTX)" | bc -l > $@
+
+$(cache-sets): $(SIMCFG)
+	grep 'sets =' $(SIMCFG) | awk '{print $$3}' | sed s/\;// > $@
+$(cache-brt): $(SIMCFG)
+	grep 'memory_latency = ' $(SIMCFG) | awk '{print $$3}' | sed s/\;// > $@
+$(cache-cpi): $(SIMCFG)
+	grep ' latency = ' $(SIMCFG) | awk '{print $$3}' | sed s/\;// > $@
+
+
 # False target to encapsulate the others
 $(sim-done): $(bundle-sim) $(serial-sim) $(nbundle-ctxs) $(nthread-ctxs) \
 	$(nserial-ctxs) $(bundle-cycles) $(serial-cycles) $(bundle-cycles-ctx) \
-	$(serial-cycles-ctx)
+	$(serial-cycles-ctx) $(cache-sets) $(cache-brt) $(cache-cpi)
 	touch $@
 
 
@@ -132,7 +151,7 @@ clean:
 	@-mv summary.txt summary-$(datespec).txt
 	rm -f $(name).cfg *.dot *.jpg *.entry vgcore.* *.wceto simulator-*.cfg
 	rm -f *.lp *.lp2 *.wcet *.ctxs *.done *.sim *.cycles *.analysis
-	rm -f *.log *.entry-w-unswitched
+	rm -f *.log *.entry-w-unswitched *.cache
 
 reallyclean: clean
 	rm -f summary*.txt	
