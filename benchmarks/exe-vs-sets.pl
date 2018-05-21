@@ -32,7 +32,7 @@ sub main {
 		my $dfile = "$bm-02.dat";
 		open(my $DH, '>', $dfile) or die "Couldn't open $dfile";
 		print $DH "# $bm Configuration vs Benefit vs Thread Count\n";
-		print $DH "\"Sim CFG\"";
+		print $DH "# \"Sim CFG\"";
 		for (my $t = 1; $t <= $threads; $t *= 2) {
 			print $DH "\t$t";
 		}
@@ -59,18 +59,32 @@ sub main {
 		}
 		close($DH);
 
+		my $terminal='set terminal epslatex standalone ", 12" header "\\\\usepackage{amssymb}"';
+		my $xtics='set xtics rotate by 25 offset -4,-2';
+		my $xlabel='set xlabel offset 0,-1.1';
+		my $key='set key outside right top';
+		$key='set key outside box left top width 2 opaque';
+		$key='set key horizontal center tmargin opaque';
+		my $rmargin='set rmargin 0.02';
+		
 		my $pfile = "$bm-02.plot";
 		(my $plot = qq{
-		 set terminal epslatex standalone ", 8"
-		 set title "Execution Benefit of BUNDLEP for $bm by Threads"
+		 $terminal
+		 set title '\${\\Delta_B}\$ for Benchmark \\texttt{$bm}'
+		 $key
 		 set style data histogram
-		 set style histogram cluster gap 1
+		 set style histogram cluster gap 2
 		 set style fill solid border -1
-		 plot 'data/$dfile' using 2:xtic(1) ti col fc rgb 1, \\
-		 	'' u 3 ti col fc rgb 2, \\
-		 	'' u 4 ti col fc rgb 4, \\
-		 	'' u 5 ti col fc rgb 8, \\
-		 	'' u 6 ti col fc rgb 16
+		 set xlabel 'Architecture (\${\\mathbb{B}}\$:\${\\mathbb{I}}\$, \${\\ell}\$)'
+		 set ylabel 'Cycles' 
+		 $xtics
+		 $xlabel
+		 $rmargin
+		 plot 'data/$dfile' using 2:xtic(1) ti '\${m=1}\$' fc rgb 1, \\
+		 	'' u 3 ti '\${m=2}\$' fc rgb 2, \\
+		 	'' u 4 ti '\${m=4}\$' fc rgb 4, \\
+		 	'' u 5 ti '\${m=8}\$' fc rgb 8, \\
+		 	'' u 6 ti '\${m=16}\$' fc rgb 16
 		 }) =~ s/^\t\t//mg;
 		open(my $PH, '>', $pfile) or die "Couldn't open $pfile";
 		print $PH $plot;

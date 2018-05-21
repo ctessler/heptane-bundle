@@ -34,7 +34,7 @@ sub main {
 	open(my $DH, '>', $fdat);
 	# Print the header
 	print $DH "# BUNDLE Benefit vs Architecture Configuration\n";
-	print $DH "\"Arch\"\t";
+	print $DH "# \"Arch\"\t";
 	for (my $t = 1; $t <= $threads; $t *= 2) {
 		print $DH "\t$t:WECTO\t$t:EXE";
 	}
@@ -72,39 +72,47 @@ sub main {
 	}
 	close($DH);
 
+	my $terminal='set terminal epslatex standalone ", 10" header "\\\\usepackage{amssymb}"';
+	my $xtics='set xtics rotate by 25 offset -4,-2';
+	my $xlabel='set xlabel offset 0,-1.1';
+
 	my $PH;
 	open($PH, '>', "$fplot-01.plot");
 	(my $plot = qq{
-	 set terminal epslatex standalone ", 8"
-	 set title "BUNDLEP WCETO Performance vs Heptane WCET" 
+	 $terminal
+#	 set title "BUNDLEP WCETO Performance vs Heptane WCET" 
 	 set style data histogram
-	 set style histogram cluster gap 1
+	 set style histogram cluster gap 2
 	 set style fill solid border -1
-	 set ylabel 'Count of benchmarks where BUNDLEP \${<}\$ Heptane WCETO'
-	 set xlabel 'Architecture (BRT:CPI, Cache Sets)'
-	 plot 'data/$fdat' using 2:xtic(1) ti col fc rgb 1, \\
-	 	'' u 4 ti col fc rgb 3, \\
-	 	'' u 6 ti col fc rgb 5, \\
-	 	'' u 8 ti col fc rgb 7, \\
-	 	'' u 10 ti col fc rgb 9
+	 set ylabel 'Count of Benchmarks \${\\Delta_\\omega > 0}\$'
+	 set xlabel 'Architecture (\${\\mathbb{B}}\$:\${\\mathbb{I}}\$, \${\\ell}\$)'
+	 $xtics
+	 $xlabel
+	 plot 'data/$fdat' using 2:xtic(1) ti '\${m=1}\$' fc rgb 1, \\
+	 	'' u 4 ti '\${m=2}\$' fc rgb 3, \\
+	 	'' u 6 ti '\${m=4}\$' fc rgb 5, \\
+	 	'' u 8 ti '\${m=8}\$' fc rgb 7, \\
+	 	'' u 10 ti '\${m=16}\$' fc rgb 9
 	 }) =~ s/^\t//mg;
 	print $PH $plot;
 	close($PH);
 
 	open($PH, '>', "$fplot-02.plot");
 	$plot = qq{
-	 set terminal epslatex standalone ", 8"
-	 set title "BUNDLEP Execution Performance vs Serial Execution"
+	 $terminal
+#	 set title "BUNDLEP Execution Performance vs Serial Execution"
 	 set style data histogram
 	 set style histogram cluster gap 1
 	 set style fill solid border -1
-	 set ylabel 'Count of benchmarks where BUNDLEP \${<}\$ Serial Execution'
-	 set xlabel 'Architecture (BRT:CPI, Cache Sets)'
-	 plot 'data/$fdat' using 3:xtic(1) ti col fc rgb 2, \\
-		'' u 5 ti col fc rgb 4, \\
-		'' u 7 ti col fc rgb 6, \\
-	 	'' u 9 ti col fc rgb 8, \\
-	 	'' u 11 ti col fc rgb 10
+	 set ylabel 'Count of Benchmarks where \${\\Delta_B > 0}\$'
+	 set xlabel 'Architecture (\${\\mathbb{B}}\$:\${\\mathbb{I}}\$, \${\\ell}\$)'
+	 $xtics
+	 $xlabel
+	 plot 'data/$fdat' using 3:xtic(1) ti '\${m=1}\$' fc rgb 2, \\
+		'' u 5 ti '\${m=2}\$' fc rgb 4, \\
+		'' u 7 ti '\${m=4}\$' fc rgb 6, \\
+	 	'' u 9 ti '\${m=8}\$' fc rgb 8, \\
+	 	'' u 11 ti '\${m=16}\$' fc rgb 10
 	};
 	$plot =~ s/^\t//mg;
 	print $PH $plot;
