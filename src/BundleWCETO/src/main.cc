@@ -26,8 +26,8 @@ usage(void) {
 	     << "	-c/--CFG <file> Control Flow Graph from BundleCFG" << endl
 	     << "	-m/--threads #	Number of threads to use" << endl
 	     << "	-h/--help	this message" << endl
-	     << "	-t/--trace	enable tracing" << endl
-	     << "	-x/--ctx-cost #	Cycles per context switch" << endl
+	     << "	-t/--ctx-thread	Cycles per thread context switch" << endl
+	     << "	-x/--ctx-bndl #	Cycles per bundle context switch" << endl
 	     << "	-v/--verbose	enable verbose output" << endl
 	     << endl;
 }
@@ -44,7 +44,8 @@ main(int argc, char** argv) {
 
 	/* Long form command line options */
 	static struct option long_options[] = {
-		{"ctx-cost", required_argument, NULL, 'x'},
+		{"ctx-bndl", required_argument, NULL, 'x'},
+		{"ctx-thread", required_argument, NULL, 't'},		
 		{"CFG", required_argument, NULL, 'c'},
 		{"help", no_argument, &hflag, 1},
 		{"threads", required_argument, NULL, 'm'},
@@ -55,11 +56,11 @@ main(int argc, char** argv) {
 
 	string cfgfile, bcfg_file, base;
 	unsigned int n_threads = 0;
-	int ctx_cost = -1;
+	int bundle_ctx = -1, thread_ctx = -1;
 		
 	while (1) {
 		int opt_ind, c;
-		c = getopt_long(argc, argv, "c:hm:tvx:", long_options, &opt_ind);
+		c = getopt_long(argc, argv, "c:hm:t:vx:", long_options, &opt_ind);
 		if (c == -1) {
 			/* End of parsed options */
 			break;
@@ -80,10 +81,10 @@ main(int argc, char** argv) {
 			n_threads = atoi(optarg);
 			break;
 		case 't':
-			tflag = 1;
+			thread_ctx = atoi(optarg);
 			break;
 		case 'x':
-			ctx_cost = atoi(optarg);
+			bundle_ctx = atoi(optarg);
 			break;
 		case 'v':
 			vflag = 1;
@@ -117,16 +118,23 @@ main(int argc, char** argv) {
 		usage();
 		return -1;
 	}
-	if (ctx_cost == -1) {
-		cout << "No context switch cost [-x] given." << endl;
+	if (bundle_ctx == -1) {
+		cout << "No bundle context switch cost [-x] given." << endl;
 		usage();
 		return -1;
 	}
-	
+
+	if (thread_ctx == -1) {
+		cout << "No thread context switch cost [-t] given." << endl;
+		usage();
+		return -1;
+	}
+
 	cout << "BWCETO> Configuration file: " << cfgfile << endl
 	     << "BWCETO> Bundle CFG file: " << bcfg_file << endl
 	     << "BWCETO> Thread Count: " << n_threads << endl
-	     << "BWCETO> Context Switch Cost (in Cycles): " << ctx_cost << endl;
+	     << "BWCETO> Bundle Context Switch Cost (in Cycles): " << bundle_ctx << endl
+	     << "BWCETO> Thread Context Switch Cost (in Cycles): " << thread_ctx << endl;
 
 	/*
 	 * Command line arguments have been parsed.
@@ -198,11 +206,11 @@ main(int argc, char** argv) {
 		CFRG *cfrg = cfr_fact.getCFRG();
 
 		/* Make a graph before doing WCETO processing */
-		LPFactory lp_fact(cfrg, n_threads, ctx_cost, pre + ".lp");
+		LPFactory lp_fact(cfrg, n_threads, bundle_ctx, thread_ctx, pre + ".lp");
 		lp_fact.produce();
-		LPIFactory lpi_fact(cfrg, n_threads, ctx_cost, pre + ".lp2");
+		LPIFactory lpi_fact(cfrg, n_threads, bundle_ctx, pre + ".lp2");
 		lpi_fact.produce();
-		WCETOFactory wceto_fact(*cfrg, n_threads, ctx_cost);		
+		WCETOFactory wceto_fact(*cfrg, n_threads, bundle_ctx);		
 		DOTfromCFRG cfrg_nowceto(*cfrg, wceto_fact);
 		ss.str(""); ss << pre << "-cfrg-nowceto.dot";
 		cfrg_nowceto.setPath(ss.str());

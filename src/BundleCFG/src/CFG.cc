@@ -275,8 +275,9 @@ CFG::sameLoop(ListDigraph::Node a, ListDigraph::Node b) {
 		#endif /* SAMELOOPDBG */
 		return true;
 	}
-
+	#if SAMELOOPDBG
 	cout << "not in the same loop" << endl;
+	#endif
 	return false;
 }
 

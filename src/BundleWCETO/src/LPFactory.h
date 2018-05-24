@@ -10,11 +10,13 @@ using namespace std;
  */
 class LPFactory {
 public:
-	LPFactory(CFRG *cfrg, uint32_t threads, uint32_t ctx_cost, string path)	{
+	LPFactory(CFRG *cfrg, uint32_t threads, uint32_t bundle_ctx,
+		  uint32_t thread_ctx, string path) {
 		_cfrg = cfrg;
 		setPath(path);
 		setThreads(threads);
-		setCTXCost(ctx_cost);
+		setBundleCTX(bundle_ctx);
+		setThreadCTX(thread_ctx);
 	}
 	/* Gets and sets the path of the lp_solve file */
 	string getPath() { return _path; }
@@ -23,9 +25,12 @@ public:
 	uint32_t getThreads() { return _threads; }
 	void setThreads(uint32_t t) { _threads = t; }
 
-	uint32_t getCTXCost() { return _ctx_cost; }
-	void setCTXCost(uint32_t c) { _ctx_cost = c; }
-	
+	uint32_t getBundleCTX() { return _bundle_ctx; }
+	void setBundleCTX(uint32_t c) { _bundle_ctx = c; }
+
+	uint32_t getThreadCTX() { return _thread_ctx; }
+	void setThreadCTX(uint32_t c) { _thread_ctx = c; }
+
 	void produce();
 
 private:
@@ -58,10 +63,11 @@ private:
 	string makeInnerSuccThread(CFR *cfr);
 	
 	wceto_type_t findType(CFR *cfr);
+	ECBs *getECBsOfLoop(CFR *cfr);
 	
 	CFRG *_cfrg;
 	string _path;
-	uint32_t _threads, _ctx_cost;
+	uint32_t _threads, _bundle_ctx, _thread_ctx;
 };
 
 

@@ -147,8 +147,18 @@ LPFactory::makeWCETO(CFR *cfr) {
 	wceto << "\t/* WCETO */" << endl;
 	wceto << "\t" << id << ".c = "
 	      << cfr->loadCost() << " " << id << ".b + " /* Memory Load Cost */
-	      << cfr->exeCost() << " " << id << ".t + "  /* Execution cost */
-	      << _ctx_cost << " " << id << ".t;";        /* Context switch cost */
+	      << cfr->exeCost() << " " << id << ".t";    /* Execution cost */
+	if (_bundle_ctx > 0) {
+		/* Bundle Context switch cost */		
+		wceto << " + " << _bundle_ctx << " " << id << ".b";
+	}
+	if (_thread_ctx > 0) {
+		/* Thread Context switch cost */
+		wceto << " + " << _thread_ctx << " " << id << ".t";
+	}
+
+	wceto << ";";
+
 	return wceto.str();
 }
 
@@ -171,38 +181,29 @@ LPFactory::makeLoopWCETO(CFR *cfr) {
 	/* Get the maximum number of iterations */
 	uint32_t iters = cfr->getIters(cfr->getInitial());
 	/* Make a set of ECBs */
-	ECBs ecbs;
-	
+	ECBs *ecbs = getECBsOfLoop(cfr);
+	obj << "ECBs[" << ecbs->size() << "]: " << ecbs->str() << " */" << endl;
+	uint32_t brt = cfr->getCache()->memLatency();
+
+	/* WCETO for the false head */
+	obj << "\t" << fake << ".c = ";
+	obj << ecbs->size() * brt << " " << fake << ".b"; // c.fn = gamma.fn * b.fn
+	// I.n * ( sum of interior nodes WCETO )
 	CFRList *list = _cfrg->inLoopOfCFR(cfr);
 	CFRList::iterator it;
 	for (it = list->begin(); it != list->end(); ++it) {
 		CFR *in_cfr = *it;
-
-		/* Collect the ECBS from this CFR */
-		in_cfr->calcECBs();		
-		ECBs *in_ecbs = in_cfr->getECBs();
-		ecbs.insert(ecbs.begin(), in_ecbs->begin(), in_ecbs->end());
-		ecbs.sort();
-		delete in_ecbs;
-	}
-	obj << "ECBs[" <<ecbs.size() << "]: " << ecbs.str() << " */" << endl;
-	uint32_t brt = cfr->getCache()->memLatency();
-	uint32_t dupeC = ecbs.dupeCount();
-	obj << "\t" << fake << ".c = ";
-	obj << ecbs.size() * brt << " " << fake << ".b + "
-	    << iters * dupeC * brt << " ";
-	for (it = list->begin(); it != list->end(); ++it) {
-		CFR *in_cfr = *it;
-		obj << endl << "\t\t+ ";
 		string in_id = makeId(in_cfr);
 		if (in_cfr != cfr && _cfrg->isHeadCFR(in_cfr)) {
 			in_id = makeFalseId(in_cfr);
 		}
-		obj << iters << " " << in_id << ".c ";
+		obj << endl << "\t\t+ " << iters << " " << in_id << ".c ";
 	}
 	obj << ";" << endl;
 	obj << makeInnerWCETO(cfr) << endl;
+	obj << makeInnerBin(cfr) << endl;
 	delete list;
+	delete ecbs;
 
 	return obj.str();
 }
@@ -211,10 +212,40 @@ string
 LPFactory::makeInnerWCETO(CFR *cfr) {
 	stringstream ct;
 	string id = makeId(cfr);
+	ECBs *dupecbs = getECBsOfLoop(cfr);
+	dupecbs->dupesOnly();
+	ECBs *cfrecbs = cfr->getECBs();
+	ECBs isect;
+	set_intersection(dupecbs->begin(), dupecbs->end(),
+			 cfrecbs->begin(), cfrecbs->end(), back_inserter(isect));
+	ct << "\t/* G2 ECBs[" << dupecbs->size() << "] " << dupecbs->str() << " */"
+	   << endl;
+	ct << "\t/* CFR ECBs[" << cfrecbs->size() << "] " << cfrecbs->str() << " */"
+	   << endl;
+	ct << "\t/* isect ECBs[" << isect.size() << "] " << isect.str() << " */"
+	   << endl;
+	delete dupecbs;
+	delete cfrecbs;
+	      
+	uint32_t brt = cfr->getCache()->memLatency();
+	uint32_t ic = isect.size();
+									   
 	ct << "\t/* WCETO */" << endl << "\t";
 	ct << id << ".c = "
-	   << cfr->exeCost() << " " << id << ".t + " /* Execution cost */
-	   << _ctx_cost << " " << id << ".t;";     /* Context switch cost */
+	   << cfr->exeCost() << " " << id << ".t"; /* Execution cost */
+	if (_bundle_ctx > 0) {
+		/* Context switch cost */		
+		ct << " + " << _bundle_ctx << " " << id << ".b";
+	}
+	if (_thread_ctx > 0) {
+		ct << " + " << _thread_ctx << " " << id << ".t";
+	}
+	uint32_t bi = brt * ic;
+	if (ic > 0 && brt > 0) {
+		/* per iteration penalty */		
+		ct << " + " << bi << " " << id << ".b";
+	}
+	ct << ";";
 
 	return ct.str();
 }
@@ -474,8 +505,39 @@ LPFactory::makeLoopBin(CFR *cfr) {
 string
 LPFactory::makeInnerBin(CFR *cfr) {
 	stringstream ct;
-
-	ct << "\t/* Selector (Inner) */";
+	string id = makeId(cfr);
+	ct << "\t/* Selector (Inner) */" << endl << "\t";
+	ct << id << ".b <= " << id << ".t;";
 
 	return ct.str();
+}
+
+
+/**
+ * Caller must free return value
+ *
+ * Returns the gamma(2) set of the loop to which cfr belongs
+ */
+ECBs *
+LPFactory::getECBsOfLoop(CFR *cfr) {
+	/* Make a set of ECBs */
+	ECBs *ecbs = new ECBs();
+
+	CFR *loopHead = cfr;
+	if (!_cfrg->isHeadCFR(cfr)) {
+		loopHead = _cfrg->getHead(cfr);
+	} 
+	CFRList *list = _cfrg->inLoopOfCFR(loopHead);
+	CFRList::iterator it;
+	for (it = list->begin(); it != list->end(); ++it) {
+		CFR *in_cfr = *it;
+
+		/* Collect the ECBS from this CFR */
+		in_cfr->calcECBs();		
+		ECBs *in_ecbs = in_cfr->getECBs();
+		ecbs->insert(ecbs->begin(), in_ecbs->begin(), in_ecbs->end());
+		ecbs->sort();
+		delete in_ecbs;
+	}
+	return ecbs;
 }
