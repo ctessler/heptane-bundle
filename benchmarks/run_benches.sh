@@ -33,6 +33,7 @@ pushd $odirname
 ../bundle-vs-heptane.pl -c f -t 16
 ../exe-vs-sets.pl -c f -t 16
 ../wcetoben-vs-sets.pl -c f -t 16
+../bmark-table.pl -c f -t 16
 popd
 
 echo "----------------------------------------"

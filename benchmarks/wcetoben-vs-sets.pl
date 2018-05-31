@@ -80,11 +80,11 @@ sub main {
 		 $xtics
 		 $xlabel
 		 $rmargin
-		 plot 'data/$dfile' using 2:xtic(1) ti '\${m=1}\$' fc rgb 1, \\
-		 	'' u 3 ti '\${2}\$' fc rgb 2, \\
-		 	'' u 4 ti '\${4}\$' fc rgb 4, \\
-		 	'' u 5 ti '\${8}\$' fc rgb 8, \\
-		 	'' u 6 ti '\${16}\$' fc rgb 16
+		 plot 'data/$dfile' using 2:xtic(1) ti '\${m=1}\$' fillstyle pattern 0 fc rgb 1, \\
+		 	'' u 3 ti '\${2}\$' fillstyle pattern 1 fc rgb 2, \\
+		 	'' u 4 ti '\${4}\$' fillstyle pattern 2 fc rgb 4, \\
+		 	'' u 5 ti '\${8}\$' fillstyle pattern 6 fc rgb 3, \\
+		 	'' u 6 ti '\${16}\$' fillstyle pattern 3 fc rgb 5
 		 }) =~ s/^\t\t//mg;
 		open(my $PH, '>', $pfile) or die "Couldn't open $pfile";
 		print $PH $plot;

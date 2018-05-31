@@ -75,6 +75,8 @@ sub main {
 	my $terminal='set terminal epslatex standalone ", 10" header "\\\\usepackage{amssymb}"';
 	my $xtics='set xtics rotate by 25 offset -4,-2';
 	my $xlabel='set xlabel offset 0,-1.1';
+	my $style='set style fill solid border -1';
+	$style='set style fill pattern border';	
 
 	my $PH;
 	open($PH, '>', "$fplot-01.plot");
@@ -83,16 +85,16 @@ sub main {
 #	 set title "BUNDLEP WCETO Performance vs Heptane WCET" 
 	 set style data histogram
 	 set style histogram cluster gap 2
-	 set style fill solid border -1
-	 set ylabel 'Count of Benchmarks \${\\Delta_\\omega > 0}\$'
+	 $style
+	 set ylabel 'Count of Benchmarks where \${\\Delta_\\omega > 0}\$'
 	 set xlabel 'Architecture (\${\\mathbb{B}}\$:\${\\mathbb{I}}\$, \${\\ell}\$)'
 	 $xtics
 	 $xlabel
-	 plot 'data/$fdat' using 2:xtic(1) ti '\${m=1}\$' fc rgb 1, \\
-	 	'' u 4 ti '\${m=2}\$' fc rgb 3, \\
-	 	'' u 6 ti '\${m=4}\$' fc rgb 5, \\
-	 	'' u 8 ti '\${m=8}\$' fc rgb 7, \\
-	 	'' u 10 ti '\${m=16}\$' fc rgb 9
+	 plot 'data/$fdat' using 2:xtic(1) ti '\${m=1}\$' fillstyle pattern 0 fc rgb 1, \\
+	 	'' u 4 ti '\${2}\$' fillstyle pattern 1 fc rgb 2, \\
+	 	'' u 6 ti '\${4}\$' fillstyle pattern 2 fc rgb 4, \\
+	 	'' u 8 ti '\${8}\$' fillstyle pattern 6 fc rgb 3, \\
+	 	'' u 10 ti '\${16}\$' fillstyle pattern 3 fc rgb 5
 	 }) =~ s/^\t//mg;
 	print $PH $plot;
 	close($PH);
@@ -103,16 +105,16 @@ sub main {
 #	 set title "BUNDLEP Execution Performance vs Serial Execution"
 	 set style data histogram
 	 set style histogram cluster gap 1
-	 set style fill solid border -1
+	 $style
 	 set ylabel 'Count of Benchmarks where \${\\Delta_B > 0}\$'
 	 set xlabel 'Architecture (\${\\mathbb{B}}\$:\${\\mathbb{I}}\$, \${\\ell}\$)'
 	 $xtics
 	 $xlabel
-	 plot 'data/$fdat' using 3:xtic(1) ti '\${m=1}\$' fc rgb 2, \\
-		'' u 5 ti '\${m=2}\$' fc rgb 4, \\
-		'' u 7 ti '\${m=4}\$' fc rgb 6, \\
-	 	'' u 9 ti '\${m=8}\$' fc rgb 8, \\
-	 	'' u 11 ti '\${m=16}\$' fc rgb 10
+	 plot 'data/$fdat' using 3:xtic(1) ti '\${m=1}\$' fillstyle pattern 0 fc rgb 1, \\
+		'' u 5 ti '\${2}\$' fillstyle pattern 1 fc rgb 1, \\
+		'' u 7 ti '\${4}\$' fillstyle pattern 2 fc rgb 4, \\
+	 	'' u 9 ti '\${8}\$' fillstyle pattern 6 fc rgb 3, \\
+	 	'' u 11 ti '\${16}\$' fillstyle pattern 3 fc rgb 5
 	};
 	$plot =~ s/^\t//mg;
 	print $PH $plot;
