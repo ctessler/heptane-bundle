@@ -34,6 +34,11 @@ pushd $odirname
 ../exe-vs-sets.pl -c f -t 16
 ../wcetoben-vs-sets.pl -c f -t 16
 ../bmark-table.pl -c f -t 16
+echo "Making graphs"
+cp ../plot.mk makefile
+mkdir data
+cp *.dat data/.
+make
 popd
 
 echo "----------------------------------------"
