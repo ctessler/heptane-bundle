@@ -192,6 +192,19 @@ if [ $HEPTANE_CORE_INSTALL -eq 1 ];
     cd "${ROOT_DIR}"
 fi
 
+######################
+# BUNDLE Installation
+######################
+echo "Installing BUNDLEP Analysis"
+pushd src/BundleCFG
+  make ${MAKE_OPTIONS} ${PARALLEL}
+popd #BundleCFG
+
+pushd src/BundleWCETO
+  make ${MAKE_OPTIONS} ${PARALLEL}
+popd #BundleCFG
+
+
 ####################################
 # template files generation
 ####################################
