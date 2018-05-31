@@ -30,7 +30,7 @@ test:
 cfr_test: $(test_objs)
 	$(CXX) $(CXXFLAGS) -o $@ $(test_objs)
 
-$(tgt): $(lcl_objs) $(cfg_objs)
+$(tgt): ../objs $(lcl_objs) $(cfg_objs)
 	echo "CFG OBJS: " $(cfg_objs)
 	$(CXX) $(CXXFLAGS) -o $@ $(lcl_objs) $(cfg_objs)
 
