@@ -19,7 +19,7 @@
 <!-- ******************************************************* -->
 
 <!-- Where to find the program to analyze and to put analysis results -->
-<INPUTOUTPUTDIR name="/home/corey/ws/wsu-hept/heptane/benchmarks/bsort100"/>
+<INPUTOUTPUTDIR name="../" />
 
 <!-- Architecture description -->
 <ARCHITECTURE>
